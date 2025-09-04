@@ -16,7 +16,14 @@ COPY ./aci/server /workdir/aci/server
 COPY ./aci/common /workdir/aci/common
 COPY ./aci/__init__.py /workdir/aci/__init__.py
 
+# Copy mock files for local development/testing
+COPY ./mock /workdir/mock
+
 # remove unecessary or sensitive files (.env files are skipped by default specified in .dockerignore)
 RUN rm -rf /workdir/aci/server/tests
 
-CMD ["uvicorn", "aci.server.main:app", "--proxy-headers", "--forwarded-allow-ips=*", "--host", "0.0.0.0", "--port", "8000", "--no-access-log"]
+# Copy and make startup script executable
+COPY ./start.sh /workdir/start.sh
+RUN chmod +x /workdir/start.sh
+
+CMD ["/workdir/start.sh"]
