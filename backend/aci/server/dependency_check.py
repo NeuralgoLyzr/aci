@@ -1,3 +1,4 @@
+import os
 from aci.common.encryption import decrypt, encrypt
 from aci.common.exceptions import DependencyCheckError
 
@@ -16,4 +17,9 @@ def check_aws_kms_dependency() -> None:
 
 
 def check_dependencies() -> None:
+    # Skip KMS check in local environment
+    if os.getenv("SERVER_ENVIRONMENT") == "local":
+        print("Skipping KMS dependency check for local environment")
+        return
+    
     check_aws_kms_dependency()
