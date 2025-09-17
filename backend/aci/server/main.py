@@ -39,6 +39,15 @@ check_dependencies()
 
 setup_sentry()
 
+# Lambda-based seeding for ECS deployment
+try:
+    from aci.server.lambda_seeding import lambda_based_seeding
+    lambda_based_seeding()
+except Exception as e:
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.warning(f"Lambda-based seeding failed, continuing startup: {e}")
+
 setup_logging(
     formatter=JsonFormatter(
         "{levelname} {asctime} {name} {message}",
