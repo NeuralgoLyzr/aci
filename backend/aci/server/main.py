@@ -39,14 +39,7 @@ check_dependencies()
 
 setup_sentry()
 
-# Lambda-based seeding for ECS deployment
-try:
-    from aci.server.lambda_seeding import lambda_based_seeding
-    lambda_based_seeding()
-except Exception as e:
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.warning(f"Lambda-based seeding failed, continuing startup: {e}")
+# Lambda-based seeding will run in background after server starts
 
 setup_logging(
     formatter=JsonFormatter(
@@ -76,6 +69,33 @@ app = FastAPI(
 )
 
 auth = get_propelauth()
+
+
+# Background seeding task
+import asyncio
+import threading
+
+def run_background_seeding():
+    """Run seeding in background thread"""
+    try:
+        import time
+        time.sleep(5)  # Wait 5 seconds for server to be ready
+        
+        from aci.server.lambda_seeding import lambda_based_seeding
+        logger = logging.getLogger(__name__)
+        logger.info("Starting background seeding...")
+        lambda_based_seeding()
+        logger.info("Background seeding completed")
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Background seeding failed: {e}")
+
+# Start seeding in background thread
+import os
+if os.getenv("SKIP_AUTO_SEED", "false").lower() != "true":
+    seeding_thread = threading.Thread(target=run_background_seeding, daemon=True)
+    seeding_thread.start()
 
 
 def scrubbing_callback(m: logfire.ScrubMatch) -> Any:
