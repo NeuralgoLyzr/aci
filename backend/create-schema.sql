@@ -97,12 +97,14 @@ CREATE TABLE IF NOT EXISTS organizations (
 -- Create projects table
 CREATE TABLE IF NOT EXISTS projects (
     id UUID PRIMARY KEY,
-    owner_id UUID NOT NULL REFERENCES entities(id),
+    org_id UUID NOT NULL,
     name VARCHAR(255) NOT NULL,
     visibility_access visibility NOT NULL,
     daily_quota_used INTEGER NOT NULL,
     daily_quota_reset_at TIMESTAMP DEFAULT NOW() NOT NULL,
     total_quota_used INTEGER NOT NULL,
+    api_quota_monthly_used INTEGER DEFAULT 0,
+    api_quota_last_reset TIMESTAMP DEFAULT NOW(),
     created_at TIMESTAMP DEFAULT NOW() NOT NULL,
     updated_at TIMESTAMP DEFAULT NOW() NOT NULL
 );
@@ -213,7 +215,7 @@ ON CONFLICT (version_num) DO NOTHING;
 CREATE INDEX IF NOT EXISTS idx_apps_name ON apps(name);
 CREATE INDEX IF NOT EXISTS idx_functions_name ON functions(name);
 CREATE INDEX IF NOT EXISTS idx_functions_app_id ON functions(app_id);
-CREATE INDEX IF NOT EXISTS idx_projects_owner_id ON projects(owner_id);
+CREATE INDEX IF NOT EXISTS idx_projects_org_id ON projects(org_id);
 CREATE INDEX IF NOT EXISTS idx_agents_project_id ON agents(project_id);
 CREATE INDEX IF NOT EXISTS idx_api_keys_agent_id ON api_keys(agent_id);
 CREATE INDEX IF NOT EXISTS idx_api_keys_hashed_key ON api_keys(hashed_key);

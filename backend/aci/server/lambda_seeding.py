@@ -122,13 +122,19 @@ def check_if_schema_exists() -> bool:
 
 
 def ensure_billing_tables_exist() -> bool:
-    """Ensure billing tables exist (plans, subscriptions, etc.)"""
+    """Ensure billing tables exist and projects table is updated"""
     try:
-        logger.info("Ensuring billing tables exist...")
+        logger.info("Ensuring billing tables exist and projects table is updated...")
         
         billing_file = Path("/workdir/add-missing-billing-tables.sql")
+        projects_fix_file = Path("/workdir/fix-projects-table.sql")
+        
         if not billing_file.exists():
             logger.error(f"Billing tables file not found at {billing_file}")
+            return False
+            
+        if not projects_fix_file.exists():
+            logger.error(f"Projects fix file not found at {projects_fix_file}")
             return False
         
         # Build psql command
@@ -143,7 +149,8 @@ def ensure_billing_tables_exist() -> bool:
         env["PGPASSWORD"] = db_password
         
         try:
-            # Run psql to execute billing tables creation
+            # First, run billing tables creation
+            logger.info("Running billing tables creation...")
             result = subprocess.run(
                 [
                     "psql", 
@@ -162,11 +169,35 @@ def ensure_billing_tables_exist() -> bool:
             if result.returncode == 0:
                 logger.info("Billing tables ensured successfully")
                 logger.info(f"Billing tables output: {result.stdout}")
+            else:
+                logger.warning(f"Billing tables creation returned code {result.returncode}")
+                logger.warning(f"Billing tables stderr: {result.stderr}")
+            
+            # Second, run projects table fix
+            logger.info("Running projects table fix...")
+            result2 = subprocess.run(
+                [
+                    "psql", 
+                    "-h", db_host,
+                    "-U", db_user,
+                    "-d", db_name,
+                    "-p", db_port,
+                    "-f", str(projects_fix_file)
+                ],
+                capture_output=True,
+                text=True,
+                timeout=60,  # 1 minute timeout
+                env=env
+            )
+            
+            if result2.returncode == 0:
+                logger.info("Projects table fixed successfully")
+                logger.info(f"Projects fix output: {result2.stdout}")
                 return True
             else:
-                logger.warning(f"Billing tables creation returned code {result.returncode} but may have succeeded")
-                logger.warning(f"Billing tables stderr: {result.stderr}")
-                logger.warning(f"Billing tables stdout: {result.stdout}")
+                logger.warning(f"Projects table fix returned code {result2.returncode} but may have succeeded")
+                logger.warning(f"Projects fix stderr: {result2.stderr}")
+                logger.warning(f"Projects fix stdout: {result2.stdout}")
                 return True  # Consider success even if some warnings
                 
         except subprocess.TimeoutExpired:
