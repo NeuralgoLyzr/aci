@@ -14,6 +14,7 @@ ENV PYTHONPATH=/workdir
 # .env files will be skipped by default specified in .dockerignore
 COPY ./aci/server /workdir/aci/server
 COPY ./aci/common /workdir/aci/common
+COPY ./aci/cli /workdir/aci/cli
 COPY ./aci/__init__.py /workdir/aci/__init__.py
 
 # Copy mock files for local development/testing
