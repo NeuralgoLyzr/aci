@@ -214,7 +214,34 @@ def run_seed_db_script() -> bool:
             
             if result.returncode == 0:
                 logger.info("seed_db.sh completed successfully")
-                logger.info(f"Script output (last 1000 chars): {result.stdout[-1000:]}")
+                
+                # Extract and log the API key information
+                stdout = result.stdout
+                logger.info("=== SEEDING COMPLETED SUCCESSFULLY ===")
+                
+                # Look for the API key output in the stdout
+                if "Project Id" in stdout and "API Key" in stdout:
+                    # Extract the API key section
+                    lines = stdout.split('\n')
+                    api_key_section = []
+                    capture = False
+                    
+                    for line in lines:
+                        if "Project Id" in line or capture:
+                            api_key_section.append(line)
+                            capture = True
+                            if "API Key" in line:
+                                break
+                    
+                    if api_key_section:
+                        logger.info("=== API KEY INFORMATION ===")
+                        for line in api_key_section:
+                            if line.strip():
+                                logger.info(line.strip())
+                        logger.info("=== USE THIS API KEY FOR TESTING ===")
+                
+                # Also log the last part of output for debugging
+                logger.info(f"Script output (last 1000 chars): {stdout[-1000:]}")
                 return True
             else:
                 logger.error(f"seed_db.sh failed with return code {result.returncode}")

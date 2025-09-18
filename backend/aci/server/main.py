@@ -31,6 +31,7 @@ from aci.server.routes import (
     linked_accounts,
     organizations,
     projects,
+    seeding_info,
     webhooks,
 )
 from aci.server.sentry import setup_sentry
