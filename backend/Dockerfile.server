@@ -31,6 +31,7 @@ COPY ./scripts /workdir/scripts
 
 # Copy complete SQL schema file (includes all migrations)
 COPY ./complete-schema.sql /workdir/complete-schema.sql
+COPY ./fix-existing-database.sql /workdir/fix-existing-database.sql
 
 # Copy essential seeding script
 COPY ./seed-essential-only.sh /workdir/seed-essential-only.sh
