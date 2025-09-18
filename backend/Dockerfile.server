@@ -1,4 +1,4 @@
-FROM python:3.12
+FROM public.ecr.aws/docker/library/python:3.12
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /workdir
@@ -31,6 +31,10 @@ COPY ./scripts /workdir/scripts
 
 # Copy SQL schema file for database creation
 COPY ./create-schema.sql /workdir/create-schema.sql
+
+# Copy essential seeding script
+COPY ./seed-essential-only.sh /workdir/seed-essential-only.sh
+RUN chmod +x /workdir/seed-essential-only.sh
 
 # remove unecessary or sensitive files (.env files are skipped by default specified in .dockerignore)
 RUN rm -rf /workdir/aci/server/tests

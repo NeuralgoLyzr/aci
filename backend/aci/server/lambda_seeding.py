@@ -74,8 +74,8 @@ def get_default_scripts() -> List[Dict[str, Any]]:
     """Default seeding scripts (fallback)"""
     return [
         {
-            'name': 'run_seed_db_sh',
-            'description': 'Run the seed_db.sh script with --all --mock flags',
+            'name': 'run_essential_seeding',
+            'description': 'Run essential seeding only (faster, no timeout issues)',
             'order': 1,
             'enabled': True,
             'type': 'shell'
@@ -184,6 +184,85 @@ def create_database_schema() -> bool:
         return False
 
 
+def run_essential_seeding() -> bool:
+    """Run essential seeding only (no CONNECTOR apps, faster)"""
+    try:
+        script_path = Path("/workdir/seed-essential-only.sh")
+        
+        if not script_path.exists():
+            logger.error(f"Essential seeding script not found at {script_path}")
+            return False
+        
+        logger.info("Running essential seeding script...")
+        logger.info("This should complete in 1-2 minutes...")
+        
+        # Change to workdir to ensure proper paths
+        original_cwd = os.getcwd()
+        os.chdir("/workdir")
+        
+        try:
+            # Run the essential seeding script
+            logger.info("Starting subprocess for essential seeding...")
+            result = subprocess.run(
+                ["bash", "seed-essential-only.sh"],
+                capture_output=True,
+                text=True,
+                timeout=300  # 5 minute timeout (should be enough for essential apps)
+            )
+            
+            logger.info(f"Essential seeding subprocess completed with return code: {result.returncode}")
+            
+            if result.returncode == 0:
+                logger.info("Essential seeding completed successfully")
+                
+                # Extract and log the API key information
+                stdout = result.stdout
+                logger.info("=== ESSENTIAL SEEDING COMPLETED SUCCESSFULLY ===")
+                
+                # Look for the API key output in the stdout
+                if "Project Id" in stdout and "API Key" in stdout:
+                    # Extract the API key section
+                    lines = stdout.split('\n')
+                    api_key_section = []
+                    capture = False
+                    
+                    for line in lines:
+                        if "Project Id" in line or capture:
+                            api_key_section.append(line)
+                            capture = True
+                            if "API Key" in line:
+                                break
+                    
+                    if api_key_section:
+                        logger.info("=== API KEY INFORMATION ===")
+                        for line in api_key_section:
+                            if line.strip():
+                                logger.info(line.strip())
+                        logger.info("=== USE THIS API KEY FOR TESTING ===")
+                
+                # Also log the complete output for debugging
+                logger.info(f"Complete essential seeding output: {stdout}")
+                return True
+            else:
+                logger.error(f"Essential seeding failed with return code {result.returncode}")
+                logger.error(f"Script stderr: {result.stderr}")
+                logger.error(f"Script stdout: {result.stdout}")
+                return False
+                
+        finally:
+            # Restore original working directory
+            os.chdir(original_cwd)
+            
+    except subprocess.TimeoutExpired:
+        logger.error("Essential seeding script timed out after 5 minutes")
+        return False
+    except Exception as e:
+        logger.error(f"Error running essential seeding script: {e}")
+        import traceback
+        logger.error(f"Essential seeding traceback: {traceback.format_exc()}")
+        return False
+
+
 def run_seed_db_script() -> bool:
     """Run the actual seed_db.sh script"""
     try:
@@ -207,7 +286,7 @@ def run_seed_db_script() -> bool:
                 ["bash", "scripts/seed_db.sh", "--all", "--mock"],
                 capture_output=True,
                 text=True,
-                timeout=600  # 10 minute timeout (increased)
+                timeout=2000  # 20 minute timeout (for 600+ apps)
             )
             
             logger.info(f"seed_db.sh subprocess completed with return code: {result.returncode}")
@@ -281,6 +360,15 @@ def execute_seeding_script(script: Dict[str, Any]) -> bool:
             
             logger.info("Schema created, now running seeding...")
             return run_seed_db_script()
+        elif script_name == 'run_essential_seeding':
+            # First create schema, then run essential seeding only
+            logger.info("Creating database schema first...")
+            if not create_database_schema():
+                logger.error("Failed to create database schema")
+                return False
+            
+            logger.info("Schema created, now running essential seeding...")
+            return run_essential_seeding()
         else:
             logger.warning(f"Unknown seeding script: {script_name}")
             return True
