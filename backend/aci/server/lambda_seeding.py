@@ -83,6 +83,64 @@ def get_default_scripts() -> List[Dict[str, Any]]:
     ]
 
 
+def create_database_schema() -> bool:
+    """Create database schema using SQL script"""
+    try:
+        logger.info("Creating database schema using SQL script...")
+        
+        schema_file = Path("/workdir/create-schema.sql")
+        if not schema_file.exists():
+            logger.error(f"Schema file not found at {schema_file}")
+            return False
+        
+        # Build psql command
+        db_host = os.getenv("SERVER_DB_HOST", "localhost")
+        db_user = os.getenv("SERVER_DB_USER", "postgres")
+        db_password = os.getenv("SERVER_DB_PASSWORD", "password")
+        db_name = os.getenv("SERVER_DB_NAME", "my_app_db")
+        db_port = os.getenv("SERVER_DB_PORT", "5432")
+        
+        # Set password environment variable for psql
+        env = os.environ.copy()
+        env["PGPASSWORD"] = db_password
+        
+        try:
+            # Run psql to execute schema creation
+            result = subprocess.run(
+                [
+                    "psql", 
+                    "-h", db_host,
+                    "-U", db_user,
+                    "-d", db_name,
+                    "-p", db_port,
+                    "-f", str(schema_file),
+                    "-v", "ON_ERROR_STOP=1"  # Stop on first error
+                ],
+                capture_output=True,
+                text=True,
+                timeout=120,  # 2 minute timeout
+                env=env
+            )
+            
+            if result.returncode == 0:
+                logger.info("Database schema created successfully")
+                logger.info(f"Schema creation output: {result.stdout}")
+                return True
+            else:
+                logger.error(f"Schema creation failed with return code {result.returncode}")
+                logger.error(f"Schema stderr: {result.stderr}")
+                logger.error(f"Schema stdout: {result.stdout}")
+                return False
+                
+        except subprocess.TimeoutExpired:
+            logger.error("Schema creation timed out after 2 minutes")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Error creating database schema: {e}")
+        return False
+
+
 def run_seed_db_script() -> bool:
     """Run the actual seed_db.sh script"""
     try:
@@ -139,6 +197,13 @@ def execute_seeding_script(script: Dict[str, Any]) -> bool:
         logger.info(f"Executing seeding script: {script_name}")
         
         if script_name == 'run_seed_db_sh':
+            # First create schema, then seed
+            logger.info("Creating database schema first...")
+            if not create_database_schema():
+                logger.error("Failed to create database schema")
+                return False
+            
+            logger.info("Schema created, now running seeding...")
             return run_seed_db_script()
         else:
             logger.warning(f"Unknown seeding script: {script_name}")

@@ -6,6 +6,9 @@ WORKDIR /workdir
 COPY ./pyproject.toml ./uv.lock /workdir/
 RUN uv sync --no-dev --no-install-project
 
+# Install PostgreSQL client for schema creation
+RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
+
 ENV PATH="/workdir/.venv/bin:$PATH"
 ENV PYTHONPATH=/workdir
 
@@ -25,6 +28,9 @@ COPY ./apps /workdir/apps
 
 # Copy scripts directory for seeding
 COPY ./scripts /workdir/scripts
+
+# Copy SQL schema file for database creation
+COPY ./create-schema.sql /workdir/create-schema.sql
 
 # remove unecessary or sensitive files (.env files are skipped by default specified in .dockerignore)
 RUN rm -rf /workdir/aci/server/tests
