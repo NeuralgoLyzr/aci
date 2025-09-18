@@ -1,7 +1,6 @@
 import time
 from datetime import datetime
 from typing import Annotated
-from uuid import UUID
 
 import stripe
 from fastapi import APIRouter, Body, Depends, Header, Request, status
@@ -40,7 +39,7 @@ auth = acl.get_propelauth()
 @router.get("/get-subscription", response_model=SubscriptionPublic)
 async def get_subscription(
     db_session: Annotated[Session, Depends(deps.yield_db_session)],
-    org_id: Annotated[UUID, Header(alias=config.ACI_ORG_ID_HEADER)],
+    org_id: Annotated[str, Header(alias=config.ACI_ORG_ID_HEADER)],
     user: Annotated[User, Depends(auth.require_user)],
 ) -> SubscriptionPublic:
     acl.require_org_member(user, org_id)
@@ -52,7 +51,7 @@ async def get_subscription(
             extra={"org_id": org_id},
         )
         return SubscriptionPublic(
-            plan="free",
+            plan="team",
             status=StripeSubscriptionStatus.ACTIVE,
         )
 
@@ -72,7 +71,7 @@ async def get_subscription(
 @router.get("/quota-usage", response_model=QuotaUsageResponse)
 async def get_quota_usage(
     db_session: Annotated[Session, Depends(deps.yield_db_session)],
-    org_id: Annotated[UUID, Header(alias="X-ACI-ORG-ID")],
+    org_id: Annotated[str, Header(alias="X-ACI-ORG-ID")],
     user: Annotated[User, Depends(auth.require_user)],
 ) -> QuotaUsageResponse:
     acl.require_org_member(user, org_id)
@@ -104,7 +103,7 @@ async def get_quota_usage(
 async def create_checkout_session(
     user: Annotated[User, Depends(auth.require_user)],
     db_session: Annotated[Session, Depends(deps.yield_db_session)],
-    org_id: Annotated[UUID, Header(alias=config.ACI_ORG_ID_HEADER)],
+    org_id: Annotated[str, Header(alias=config.ACI_ORG_ID_HEADER)],
     body: Annotated[StripeCheckoutSessionCreate, Body()],
 ) -> str:
     acl.require_org_member_with_minimum_role(user, org_id, OrganizationRole.ADMIN)
@@ -156,7 +155,7 @@ async def create_checkout_session(
 async def create_customer_portal_session(
     user: Annotated[User, Depends(auth.require_user)],
     db_session: Annotated[Session, Depends(deps.yield_db_session)],
-    org_id: Annotated[UUID, Header(alias=config.ACI_ORG_ID_HEADER)],
+    org_id: Annotated[str, Header(alias=config.ACI_ORG_ID_HEADER)],
 ) -> str:
     acl.require_org_member_with_minimum_role(user, org_id, OrganizationRole.ADMIN)
 

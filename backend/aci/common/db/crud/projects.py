@@ -22,7 +22,7 @@ logger = get_logger(__name__)
 
 def create_project(
     db_session: Session,
-    org_id: UUID,
+    org_id: str,
     name: str,
     visibility_access: Visibility = Visibility.PUBLIC,
 ) -> Project:
@@ -54,7 +54,7 @@ def get_project(db_session: Session, project_id: UUID) -> Project | None:
     return project
 
 
-def get_projects_by_org(db_session: Session, org_id: UUID) -> list[Project]:
+def get_projects_by_org(db_session: Session, org_id: str) -> list[Project]:
     projects = list(db_session.execute(select(Project).filter_by(org_id=org_id)).scalars().all())
     return projects
 
@@ -167,9 +167,7 @@ def increment_api_monthly_quota_usage(
     return True
 
 
-def reset_api_monthly_quota_for_org(
-    db_session: Session, org_id: UUID, reset_date: datetime
-) -> None:
+def reset_api_monthly_quota_for_org(db_session: Session, org_id: str, reset_date: datetime) -> None:
     """Reset api monthly quota for all projects in an organization"""
     statement = (
         update(Project)
@@ -184,7 +182,7 @@ def reset_api_monthly_quota_for_org(
     db_session.execute(statement)
 
 
-def get_total_monthly_quota_usage_for_org(db_session: Session, org_id: UUID) -> int:
+def get_total_monthly_quota_usage_for_org(db_session: Session, org_id: str) -> int:
     """Get the total monthly quota usage across all projects in an organization"""
     result = db_session.execute(
         select(func.sum(Project.api_quota_monthly_used)).where(Project.org_id == org_id)

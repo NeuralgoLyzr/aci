@@ -78,7 +78,7 @@ class Project(Base):
         PGUUID(as_uuid=True), primary_key=True, default_factory=uuid4, init=False
     )
 
-    org_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False)
+    org_id: Mapped[str] = mapped_column(String(MAX_STRING_LENGTH), nullable=False)
 
     name: Mapped[str] = mapped_column(String(MAX_STRING_LENGTH), nullable=False)
     # if public, the project can only access public apps and functions
@@ -557,7 +557,7 @@ class Subscription(Base):
     id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True), primary_key=True, default_factory=uuid4, init=False
     )
-    org_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False, unique=True)
+    org_id: Mapped[str] = mapped_column(String(MAX_STRING_LENGTH), nullable=False, unique=True)
     plan_id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("plans.id"), nullable=False
     )

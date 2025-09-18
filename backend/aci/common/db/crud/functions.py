@@ -174,6 +174,33 @@ def get_function(
     return db_session.execute(statement).scalar_one_or_none()
 
 
+def get_functions_by_names(
+    db_session: Session, function_names: list[str], public_only: bool, active_only: bool
+) -> list[Function]:
+    """Get functions by a list of function names with the same filtering logic as get_function."""
+    if not function_names:
+        return []
+
+    statement = select(Function).filter(Function.name.in_(function_names))
+
+    # filter out all functions of inactive apps and all inactive functions
+    # (where app is active buy specific functions can be inactive)
+    if active_only:
+        statement = (
+            statement.join(App, Function.app_id == App.id)
+            .filter(App.active)
+            .filter(Function.active)
+        )
+    # if the corresponding project (api key belongs to) can only access public apps and functions,
+    # filter out all functions of private apps and all private functions (where app is public but specific function is private)
+    if public_only:
+        statement = statement.filter(App.visibility == Visibility.PUBLIC).filter(
+            Function.visibility == Visibility.PUBLIC
+        )
+
+    return list(db_session.execute(statement).scalars().all())
+
+
 def set_function_active_status(db_session: Session, function_name: str, active: bool) -> None:
     statement = update(Function).filter_by(name=function_name).values(active=active)
     db_session.execute(statement)

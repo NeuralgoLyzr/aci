@@ -22,7 +22,7 @@ console = Console()
     "--org-id",
     "org_id",
     required=True,
-    type=UUID,
+    type=str,
     help="organization id",
 )
 @click.option(
@@ -39,7 +39,7 @@ console = Console()
 )
 def create_project(
     name: str,
-    org_id: UUID,
+    org_id: str,
     visibility_access: Visibility,
     skip_dry_run: bool,
 ) -> UUID:
@@ -52,7 +52,7 @@ def create_project(
 
 def create_project_helper(
     name: str,
-    org_id: UUID,
+    org_id: str,
     visibility_access: Visibility,
     skip_dry_run: bool,
 ) -> UUID:

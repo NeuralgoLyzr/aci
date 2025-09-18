@@ -168,7 +168,7 @@ app.include_router(
     projects.router,
     prefix=config.ROUTER_PREFIX_PROJECTS,
     tags=[config.ROUTER_PREFIX_PROJECTS.split("/")[-1]],
-    dependencies=[Depends(auth.require_user)],
+    # dependencies=[Depends(auth.require_user)],
 )
 # TODO: add validate_project_quota to all routes
 app.include_router(

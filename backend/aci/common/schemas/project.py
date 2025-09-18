@@ -11,7 +11,7 @@ class ProjectCreate(BaseModel):
     """Project can be created under a user or an organization."""
 
     name: str = Field(min_length=1, description="Project name cannot be empty")
-    org_id: UUID = Field(
+    org_id: str = Field(
         description="Organization ID if project is to be created under an organization",
     )
 
@@ -24,7 +24,7 @@ class ProjectUpdate(BaseModel):
 
 class ProjectPublic(BaseModel):
     id: UUID
-    org_id: UUID
+    org_id: str
     name: str
     visibility_access: Visibility
     daily_quota_used: int

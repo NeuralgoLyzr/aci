@@ -19,11 +19,11 @@ def get_propelauth() -> FastAPIAuth:
     return _auth
 
 
-def validate_user_access_to_org(user: User, org_id: UUID) -> None:
+def validate_user_access_to_org(user: User, org_id: str) -> None:
     # TODO: Change to require_org_member_with_minimum_role and require_org_member once projects have been refactored to use
     # TODO: org_id in the header. Currently they we have project_id so this function and validate_user_access_to_project are still useful.
     # Use PropelAuth's built-in method to validate organization role
-    get_propelauth().require_org_member(user, str(org_id))
+    get_propelauth().require_org_member(user, org_id)
 
 
 def validate_user_access_to_project(db_session: Session, user: User, project_id: UUID) -> None:
@@ -36,11 +36,11 @@ def validate_user_access_to_project(db_session: Session, user: User, project_id:
     validate_user_access_to_org(user, project.org_id)
 
 
-def require_org_member(user: User, org_id: UUID) -> None:
-    get_propelauth().require_org_member(user, str(org_id))
+def require_org_member(user: User, org_id: str) -> None:
+    get_propelauth().require_org_member(user, org_id)
 
 
 def require_org_member_with_minimum_role(
-    user: User, org_id: UUID, minimum_role: OrganizationRole
+    user: User, org_id: str, minimum_role: OrganizationRole
 ) -> None:
-    get_propelauth().require_org_member_with_minimum_role(user, str(org_id), minimum_role)
+    get_propelauth().require_org_member_with_minimum_role(user, org_id, minimum_role)

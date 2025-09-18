@@ -107,6 +107,24 @@ class FunctionsList(BaseModel):
     offset: int = Field(default=0, ge=0, description="Pagination offset.")
 
 
+class FunctionsBulkDefinitions(BaseModel):
+    function_names: list[str] = Field(
+        ..., description="List of function names to get definitions for."
+    )
+    format: FunctionDefinitionFormat = Field(
+        default=FunctionDefinitionFormat.OPENAI,
+        description="The format to use for the function definition (e.g., 'openai' or 'anthropic'). "
+        "There is also a 'basic' format that only returns name and description.",
+    )
+
+    @field_validator("function_names")
+    def validate_function_names(cls, v: list[str]) -> list[str]:
+        # remove empty strings and duplicates
+        if v is not None:
+            v = list({name for name in v if name.strip()})
+        return v
+
+
 class FunctionsSearch(BaseModel):
     app_names: list[str] | None = Field(
         default=None,

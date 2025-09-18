@@ -1,5 +1,4 @@
 from typing import Annotated
-from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, status
 from propelauth_fastapi import User
@@ -19,7 +18,7 @@ auth = acl.get_propelauth()
 @router.post("/invite-user", status_code=status.HTTP_204_NO_CONTENT)
 async def invite_user(
     user: Annotated[User, Depends(auth.require_user)],
-    org_id: Annotated[UUID, Header(alias=config.ACI_ORG_ID_HEADER)],
+    org_id: Annotated[str, Header(alias=config.ACI_ORG_ID_HEADER)],
     body: InviteMemberRequest,
 ) -> None:
     """
@@ -53,7 +52,7 @@ async def invite_user(
 @router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def remove_user(
     user: Annotated[User, Depends(auth.require_user)],
-    org_id: Annotated[UUID, Header(alias=config.ACI_ORG_ID_HEADER)],
+    org_id: Annotated[str, Header(alias=config.ACI_ORG_ID_HEADER)],
     user_id: str,
 ) -> None:
     """
@@ -95,7 +94,7 @@ async def remove_user(
 @router.get("/users", response_model=list[dict], status_code=status.HTTP_200_OK)
 async def list_users(
     user: Annotated[User, Depends(auth.require_user)],
-    org_id: Annotated[UUID, Header(alias=config.ACI_ORG_ID_HEADER)],
+    org_id: Annotated[str, Header(alias=config.ACI_ORG_ID_HEADER)],
 ) -> list[dict]:
     """
     List all users of the organization.
