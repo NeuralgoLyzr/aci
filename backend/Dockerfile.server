@@ -29,9 +29,8 @@ COPY ./apps /workdir/apps
 # Copy scripts directory for seeding
 COPY ./scripts /workdir/scripts
 
-# Copy Alembic configuration and migrations
-COPY ./alembic.ini /workdir/alembic.ini
-COPY ./aci/alembic /workdir/aci/alembic
+# Copy reset and create schema (drops all tables and recreates them correctly)
+COPY ./reset-and-create-schema.sql /workdir/reset-and-create-schema.sql
 
 # Copy essential seeding script
 COPY ./seed-essential-only.sh /workdir/seed-essential-only.sh

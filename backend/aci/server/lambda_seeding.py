@@ -255,10 +255,56 @@ def run_alembic_upgrade() -> bool:
 
 
 def create_database_schema() -> bool:
-    """Create database schema using Alembic migrations"""
+    """Create database schema by resetting and recreating all tables"""
     try:
-        logger.info("Creating database schema using Alembic migrations...")
-        return run_alembic_upgrade()
+        logger.info("Resetting and creating database schema...")
+        
+        schema_file = Path("/workdir/reset-and-create-schema.sql")
+        if not schema_file.exists():
+            logger.error(f"Reset schema file not found at {schema_file}")
+            return False
+        
+        # Build psql command
+        db_host = os.getenv("SERVER_DB_HOST", "localhost")
+        db_user = os.getenv("SERVER_DB_USER", "postgres")
+        db_password = os.getenv("SERVER_DB_PASSWORD", "password")
+        db_name = os.getenv("SERVER_DB_NAME", "my_app_db")
+        db_port = os.getenv("SERVER_DB_PORT", "5432")
+        
+        # Set password environment variable for psql
+        env = os.environ.copy()
+        env["PGPASSWORD"] = db_password
+        
+        try:
+            # Run psql to execute complete schema creation
+            result = subprocess.run(
+                [
+                    "psql", 
+                    "-h", db_host,
+                    "-U", db_user,
+                    "-d", db_name,
+                    "-p", db_port,
+                    "-f", str(schema_file)
+                ],
+                capture_output=True,
+                text=True,
+                timeout=120,  # 2 minute timeout
+                env=env
+            )
+            
+            if result.returncode == 0:
+                logger.info("Database schema reset and created successfully")
+                logger.info(f"Schema reset output: {result.stdout}")
+                return True
+            else:
+                logger.error(f"Schema reset failed with return code {result.returncode}")
+                logger.error(f"Schema reset stderr: {result.stderr}")
+                logger.error(f"Schema reset stdout: {result.stdout}")
+                return False
+                
+        except subprocess.TimeoutExpired:
+            logger.error("Schema creation timed out after 2 minutes")
+            return False
             
     except Exception as e:
         logger.error(f"Error creating database schema: {e}")
