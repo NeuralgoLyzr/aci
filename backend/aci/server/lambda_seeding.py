@@ -194,6 +194,7 @@ def run_seed_db_script() -> bool:
             return False
         
         logger.info("Running seed_db.sh script with --all --mock flags...")
+        logger.info("This may take 2-5 minutes to complete...")
         
         # Change to workdir to ensure proper paths
         original_cwd = os.getcwd()
@@ -201,21 +202,24 @@ def run_seed_db_script() -> bool:
         
         try:
             # Run the seed script with --all --mock flags
+            logger.info("Starting subprocess for seed_db.sh...")
             result = subprocess.run(
                 ["bash", "scripts/seed_db.sh", "--all", "--mock"],
                 capture_output=True,
                 text=True,
-                timeout=300  # 5 minute timeout
+                timeout=600  # 10 minute timeout (increased)
             )
+            
+            logger.info(f"seed_db.sh subprocess completed with return code: {result.returncode}")
             
             if result.returncode == 0:
                 logger.info("seed_db.sh completed successfully")
-                logger.info(f"Script output: {result.stdout}")
+                logger.info(f"Script output (last 1000 chars): {result.stdout[-1000:]}")
                 return True
             else:
                 logger.error(f"seed_db.sh failed with return code {result.returncode}")
                 logger.error(f"Script stderr: {result.stderr}")
-                logger.error(f"Script stdout: {result.stdout}")
+                logger.error(f"Script stdout (last 1000 chars): {result.stdout[-1000:]}")
                 return False
                 
         finally:
@@ -223,10 +227,12 @@ def run_seed_db_script() -> bool:
             os.chdir(original_cwd)
             
     except subprocess.TimeoutExpired:
-        logger.error("seed_db.sh script timed out after 5 minutes")
+        logger.error("seed_db.sh script timed out after 10 minutes")
         return False
     except Exception as e:
         logger.error(f"Error running seed_db.sh script: {e}")
+        import traceback
+        logger.error(f"Seed script traceback: {traceback.format_exc()}")
         return False
 
 
@@ -262,22 +268,28 @@ def execute_seeding_script(script: Dict[str, Any]) -> bool:
 
 def lambda_based_seeding() -> None:
     """Main function to perform Lambda-based seeding"""
-    logger.info("Starting Lambda-based seeding check...")
+    logger.info("=== Starting Lambda-based seeding check ===")
     
     # Skip if environment variable is set
-    if os.getenv("SKIP_AUTO_SEED", "false").lower() == "true":
+    skip_seed = os.getenv("SKIP_AUTO_SEED", "false").lower()
+    logger.info(f"SKIP_AUTO_SEED environment variable: {skip_seed}")
+    if skip_seed == "true":
         logger.info("Auto-seeding skipped (SKIP_AUTO_SEED=true)")
         return
     
     # Skip if no Lambda URL provided
-    if not os.getenv("SEEDING_LAMBDA_URL"):
+    lambda_url = os.getenv("SEEDING_LAMBDA_URL")
+    logger.info(f"SEEDING_LAMBDA_URL: {lambda_url}")
+    if not lambda_url:
         logger.info("No SEEDING_LAMBDA_URL provided, skipping Lambda-based seeding")
         return
     
     try:
         # Check seeding status
+        logger.info("Checking seeding status from Lambda...")
         status = check_seeding_status()
         is_seeded = status.get("isSeeded", False)
+        logger.info(f"Lambda seeding status: {status}")
         
         if is_seeded:
             logger.info("Database already seeded according to Lambda, skipping auto-seed")
@@ -286,24 +298,30 @@ def lambda_based_seeding() -> None:
         logger.info("Database not seeded, starting seeding process...")
         
         # Get seeding scripts
+        logger.info("Getting seeding scripts...")
         scripts = get_seeding_scripts()
         enabled_scripts = [s for s in scripts if s.get('enabled', True)]
         enabled_scripts.sort(key=lambda x: x.get('order', 999))
         
-        logger.info(f"Found {len(enabled_scripts)} enabled seeding scripts")
+        logger.info(f"Found {len(enabled_scripts)} enabled seeding scripts: {[s.get('name') for s in enabled_scripts]}")
         
         # Execute scripts
         all_successful = True
-        for script in enabled_scripts:
+        for i, script in enumerate(enabled_scripts):
+            script_name = script.get('name')
+            logger.info(f"Executing script {i+1}/{len(enabled_scripts)}: {script_name}")
             success = execute_seeding_script(script)
             if not success:
                 all_successful = False
-                logger.error(f"Seeding script failed: {script.get('name')}")
+                logger.error(f"Seeding script failed: {script_name}")
                 break
+            else:
+                logger.info(f"Seeding script completed successfully: {script_name}")
         
         if all_successful:
             # Update seeding status
             environment = os.getenv("SERVER_ENVIRONMENT", "local")
+            logger.info(f"All seeding scripts completed, updating Lambda status for environment: {environment}")
             update_success = update_seeding_status(True, environment)
             
             if update_success:
@@ -315,4 +333,6 @@ def lambda_based_seeding() -> None:
             
     except Exception as e:
         logger.error(f"Error during Lambda-based seeding: {e}")
+        import traceback
+        logger.error(f"Lambda seeding traceback: {traceback.format_exc()}")
         # Don't raise - allow application to continue starting

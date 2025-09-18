@@ -77,19 +77,24 @@ import threading
 
 def run_background_seeding():
     """Run seeding in background thread"""
+    import logging
+    import time
+    
+    logger = logging.getLogger(__name__)
+    
     try:
-        import time
+        logger.info("Background seeding thread started, waiting 5 seconds...")
         time.sleep(5)  # Wait 5 seconds for server to be ready
         
+        logger.info("Starting Lambda-based seeding...")
         from aci.server.lambda_seeding import lambda_based_seeding
-        logger = logging.getLogger(__name__)
-        logger.info("Starting background seeding...")
         lambda_based_seeding()
-        logger.info("Background seeding completed")
+        logger.info("Background seeding completed successfully!")
+        
     except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.warning(f"Background seeding failed: {e}")
+        logger.error(f"Background seeding failed: {e}")
+        import traceback
+        logger.error(f"Seeding traceback: {traceback.format_exc()}")
 
 # Start seeding in background thread
 import os
