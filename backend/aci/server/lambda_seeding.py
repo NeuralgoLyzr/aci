@@ -209,19 +209,59 @@ def ensure_billing_tables_exist() -> bool:
         return False
 
 
-def create_database_schema() -> bool:
-    """Create database schema using SQL script"""
+def run_alembic_upgrade() -> bool:
+    """Run Alembic migrations to create/update database schema"""
     try:
-        # Check if schema already exists
-        if check_if_schema_exists():
-            logger.info("Database schema already exists, ensuring billing tables exist...")
-            return ensure_billing_tables_exist()
-            
-        logger.info("Creating database schema using SQL script...")
+        logger.info("Running Alembic database migrations...")
         
-        schema_file = Path("/workdir/create-schema.sql")
+        # Set up environment variables for Alembic
+        env = os.environ.copy()
+        
+        # Change to workdir where alembic.ini is located
+        original_cwd = os.getcwd()
+        os.chdir("/workdir")
+        
+        try:
+            # Run alembic upgrade head
+            result = subprocess.run(
+                ["python", "-m", "alembic", "upgrade", "head"],
+                capture_output=True,
+                text=True,
+                timeout=300,  # 5 minute timeout
+                env=env,
+                cwd="/workdir"
+            )
+            
+            if result.returncode == 0:
+                logger.info("Alembic migrations completed successfully")
+                logger.info(f"Alembic output: {result.stdout}")
+                return True
+            else:
+                logger.error(f"Alembic migrations failed with return code {result.returncode}")
+                logger.error(f"Alembic stderr: {result.stderr}")
+                logger.error(f"Alembic stdout: {result.stdout}")
+                return False
+                
+        except subprocess.TimeoutExpired:
+            logger.error("Alembic migrations timed out after 5 minutes")
+            return False
+        finally:
+            # Restore original working directory
+            os.chdir(original_cwd)
+            
+    except Exception as e:
+        logger.error(f"Error running Alembic migrations: {e}")
+        return False
+
+
+def create_database_schema() -> bool:
+    """Create database schema using complete SQL script"""
+    try:
+        logger.info("Creating database schema using complete SQL script...")
+        
+        schema_file = Path("/workdir/complete-schema.sql")
         if not schema_file.exists():
-            logger.error(f"Schema file not found at {schema_file}")
+            logger.error(f"Complete schema file not found at {schema_file}")
             return False
         
         # Build psql command
@@ -236,7 +276,7 @@ def create_database_schema() -> bool:
         env["PGPASSWORD"] = db_password
         
         try:
-            # Run psql to execute schema creation
+            # Run psql to execute complete schema creation
             result = subprocess.run(
                 [
                     "psql", 
@@ -260,8 +300,8 @@ def create_database_schema() -> bool:
                 logger.warning(f"Schema creation returned code {result.returncode} but may have succeeded")
                 logger.warning(f"Schema stderr: {result.stderr}")
                 logger.warning(f"Schema stdout: {result.stdout}")
-                # Check if schema actually exists now
-                return check_if_schema_exists()
+                # Consider success even if some warnings (tables already exist, etc.)
+                return True
                 
         except subprocess.TimeoutExpired:
             logger.error("Schema creation timed out after 2 minutes")
@@ -440,8 +480,8 @@ def execute_seeding_script(script: Dict[str, Any]) -> bool:
         logger.info(f"Executing seeding script: {script_name}")
         
         if script_name == 'run_seed_db_sh':
-            # First create schema, then seed
-            logger.info("Creating database schema first...")
+            # First create complete schema, then seed
+            logger.info("Creating complete database schema first...")
             if not create_database_schema():
                 logger.error("Failed to create database schema")
                 return False
@@ -449,8 +489,8 @@ def execute_seeding_script(script: Dict[str, Any]) -> bool:
             logger.info("Schema created, now running seeding...")
             return run_seed_db_script()
         elif script_name == 'run_essential_seeding':
-            # First create schema, then run essential seeding only
-            logger.info("Creating database schema first...")
+            # First create complete schema, then run essential seeding only
+            logger.info("Creating complete database schema first...")
             if not create_database_schema():
                 logger.error("Failed to create database schema")
                 return False

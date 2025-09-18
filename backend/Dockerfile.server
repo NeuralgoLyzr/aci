@@ -29,10 +29,8 @@ COPY ./apps /workdir/apps
 # Copy scripts directory for seeding
 COPY ./scripts /workdir/scripts
 
-# Copy SQL schema file for database creation
-COPY ./create-schema.sql /workdir/create-schema.sql
-COPY ./add-missing-billing-tables.sql /workdir/add-missing-billing-tables.sql
-COPY ./fix-projects-table.sql /workdir/fix-projects-table.sql
+# Copy complete SQL schema file (includes all migrations)
+COPY ./complete-schema.sql /workdir/complete-schema.sql
 
 # Copy essential seeding script
 COPY ./seed-essential-only.sh /workdir/seed-essential-only.sh
