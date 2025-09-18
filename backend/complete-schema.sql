@@ -47,6 +47,12 @@ EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
 
+DO $$ BEGIN
+    CREATE TYPE websiteevaluationstatus AS ENUM ('IN_PROGRESS', 'COMPLETED', 'FAILED');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
 -- Create apps table
 CREATE TABLE IF NOT EXISTS apps (
     id UUID PRIMARY KEY,
@@ -165,6 +171,44 @@ CREATE TABLE IF NOT EXISTS function_executions (
     updated_at TIMESTAMP DEFAULT NOW() NOT NULL
 );
 
+-- Create linked_accounts table
+CREATE TABLE IF NOT EXISTS linked_accounts (
+    id UUID PRIMARY KEY,
+    project_id UUID NOT NULL REFERENCES projects(id),
+    app_id UUID NOT NULL REFERENCES apps(id),
+    linked_account_owner_id VARCHAR(255) NOT NULL,
+    security_scheme securityscheme NOT NULL,
+    security_credentials JSONB NOT NULL,
+    enabled BOOLEAN NOT NULL,
+    last_used_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+    updated_at TIMESTAMP DEFAULT NOW() NOT NULL,
+    UNIQUE(project_id, app_id, linked_account_owner_id)
+);
+
+-- Create secrets table
+CREATE TABLE IF NOT EXISTS secrets (
+    id UUID PRIMARY KEY,
+    linked_account_id UUID NOT NULL REFERENCES linked_accounts(id),
+    key VARCHAR(255) NOT NULL,
+    value BYTEA NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+    updated_at TIMESTAMP DEFAULT NOW() NOT NULL,
+    UNIQUE(linked_account_id, key)
+);
+
+-- Create website_evaluations table
+CREATE TABLE IF NOT EXISTS website_evaluations (
+    id UUID PRIMARY KEY,
+    linked_account_id UUID NOT NULL REFERENCES linked_accounts(id),
+    url VARCHAR(255) NOT NULL,
+    status websiteevaluationstatus NOT NULL,
+    result TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+    updated_at TIMESTAMP DEFAULT NOW() NOT NULL,
+    UNIQUE(linked_account_id, url)
+);
+
 -- Create billing tables
 CREATE TABLE IF NOT EXISTS plans (
     id UUID PRIMARY KEY,
@@ -220,6 +264,10 @@ CREATE INDEX IF NOT EXISTS idx_app_configurations_project_id ON app_configuratio
 CREATE INDEX IF NOT EXISTS idx_app_configurations_app_id ON app_configurations(app_id);
 CREATE INDEX IF NOT EXISTS idx_function_executions_function_name ON function_executions(function_name);
 CREATE INDEX IF NOT EXISTS idx_function_executions_agent_id ON function_executions(agent_id);
+CREATE INDEX IF NOT EXISTS idx_linked_accounts_project_id ON linked_accounts(project_id);
+CREATE INDEX IF NOT EXISTS idx_linked_accounts_app_id ON linked_accounts(app_id);
+CREATE INDEX IF NOT EXISTS idx_secrets_linked_account_id ON secrets(linked_account_id);
+CREATE INDEX IF NOT EXISTS idx_website_evaluations_linked_account_id ON website_evaluations(linked_account_id);
 CREATE INDEX IF NOT EXISTS idx_plans_name ON plans(name);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_org_id ON subscriptions(org_id);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_plan_id ON subscriptions(plan_id);
