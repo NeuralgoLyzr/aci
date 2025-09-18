@@ -29,6 +29,18 @@ EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
 
+DO $$ BEGIN
+    CREATE TYPE stripesubscriptionstatus AS ENUM ('INCOMPLETE', 'INCOMPLETE_EXPIRED', 'TRIALING', 'ACTIVE', 'PAST_DUE', 'CANCELED', 'UNPAID', 'PAUSED');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE stripesubscriptioninterval AS ENUM ('MONTH', 'YEAR');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
 -- Create entities table
 CREATE TABLE IF NOT EXISTS entities (
     id UUID PRIMARY KEY,
@@ -158,8 +170,43 @@ CREATE TABLE IF NOT EXISTS alembic_version (
     version_num VARCHAR(32) NOT NULL PRIMARY KEY
 );
 
+-- Create billing-related tables (from migration 068b47f44d83)
+CREATE TABLE IF NOT EXISTS plans (
+    id UUID PRIMARY KEY,
+    name VARCHAR(255) NOT NULL UNIQUE,
+    stripe_product_id VARCHAR(255) NOT NULL UNIQUE,
+    stripe_monthly_price_id VARCHAR(255) NOT NULL UNIQUE,
+    stripe_yearly_price_id VARCHAR(255) NOT NULL UNIQUE,
+    features JSONB NOT NULL,
+    is_public BOOLEAN NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+    updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS processed_stripe_events (
+    id UUID PRIMARY KEY,
+    event_id VARCHAR(255) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+    updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS subscriptions (
+    id UUID PRIMARY KEY,
+    org_id UUID NOT NULL UNIQUE,
+    plan_id UUID NOT NULL,
+    stripe_customer_id VARCHAR(255) NOT NULL UNIQUE,
+    stripe_subscription_id VARCHAR(255) NOT NULL UNIQUE,
+    status stripesubscriptionstatus NOT NULL,
+    interval stripesubscriptioninterval NOT NULL,
+    current_period_end TIMESTAMP NOT NULL,
+    cancel_at_period_end BOOLEAN NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+    updated_at TIMESTAMP DEFAULT NOW() NOT NULL,
+    FOREIGN KEY (plan_id) REFERENCES plans(id)
+);
+
 -- Insert the current migration version (only if not exists)
-INSERT INTO alembic_version (version_num) VALUES ('c6f47d7d2fa1')
+INSERT INTO alembic_version (version_num) VALUES ('068b47f44d83')
 ON CONFLICT (version_num) DO NOTHING;
 
 -- Create indexes for better performance (only if not exists)
@@ -174,6 +221,9 @@ CREATE INDEX IF NOT EXISTS idx_app_configurations_app_name ON app_configurations
 CREATE INDEX IF NOT EXISTS idx_app_configurations_entity_id ON app_configurations(entity_id);
 CREATE INDEX IF NOT EXISTS idx_function_executions_function_name ON function_executions(function_name);
 CREATE INDEX IF NOT EXISTS idx_function_executions_agent_id ON function_executions(agent_id);
+CREATE INDEX IF NOT EXISTS idx_plans_name ON plans(name);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_org_id ON subscriptions(org_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_plan_id ON subscriptions(plan_id);
 
 -- Grant permissions (adjust as needed)
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO postgres;

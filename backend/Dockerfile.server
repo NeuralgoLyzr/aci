@@ -31,6 +31,7 @@ COPY ./scripts /workdir/scripts
 
 # Copy SQL schema file for database creation
 COPY ./create-schema.sql /workdir/create-schema.sql
+COPY ./add-missing-billing-tables.sql /workdir/add-missing-billing-tables.sql
 
 # Copy essential seeding script
 COPY ./seed-essential-only.sh /workdir/seed-essential-only.sh

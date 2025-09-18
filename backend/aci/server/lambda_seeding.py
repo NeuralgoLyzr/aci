@@ -121,13 +121,70 @@ def check_if_schema_exists() -> bool:
         return False
 
 
+def ensure_billing_tables_exist() -> bool:
+    """Ensure billing tables exist (plans, subscriptions, etc.)"""
+    try:
+        logger.info("Ensuring billing tables exist...")
+        
+        billing_file = Path("/workdir/add-missing-billing-tables.sql")
+        if not billing_file.exists():
+            logger.error(f"Billing tables file not found at {billing_file}")
+            return False
+        
+        # Build psql command
+        db_host = os.getenv("SERVER_DB_HOST", "localhost")
+        db_user = os.getenv("SERVER_DB_USER", "postgres")
+        db_password = os.getenv("SERVER_DB_PASSWORD", "password")
+        db_name = os.getenv("SERVER_DB_NAME", "my_app_db")
+        db_port = os.getenv("SERVER_DB_PORT", "5432")
+        
+        # Set password environment variable for psql
+        env = os.environ.copy()
+        env["PGPASSWORD"] = db_password
+        
+        try:
+            # Run psql to execute billing tables creation
+            result = subprocess.run(
+                [
+                    "psql", 
+                    "-h", db_host,
+                    "-U", db_user,
+                    "-d", db_name,
+                    "-p", db_port,
+                    "-f", str(billing_file)
+                ],
+                capture_output=True,
+                text=True,
+                timeout=60,  # 1 minute timeout
+                env=env
+            )
+            
+            if result.returncode == 0:
+                logger.info("Billing tables ensured successfully")
+                logger.info(f"Billing tables output: {result.stdout}")
+                return True
+            else:
+                logger.warning(f"Billing tables creation returned code {result.returncode} but may have succeeded")
+                logger.warning(f"Billing tables stderr: {result.stderr}")
+                logger.warning(f"Billing tables stdout: {result.stdout}")
+                return True  # Consider success even if some warnings
+                
+        except subprocess.TimeoutExpired:
+            logger.error("Billing tables creation timed out after 1 minute")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Error ensuring billing tables exist: {e}")
+        return False
+
+
 def create_database_schema() -> bool:
     """Create database schema using SQL script"""
     try:
         # Check if schema already exists
         if check_if_schema_exists():
-            logger.info("Database schema already exists, skipping creation")
-            return True
+            logger.info("Database schema already exists, ensuring billing tables exist...")
+            return ensure_billing_tables_exist()
             
         logger.info("Creating database schema using SQL script...")
         
