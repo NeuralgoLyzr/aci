@@ -40,13 +40,13 @@ def _check_and_get_env_variable(name: str) -> str:
 
 
 def _get_db_url() -> str:
-    # construct db url from env variables
-    DB_SCHEME = _check_and_get_env_variable("ALEMBIC_DB_SCHEME")
-    DB_USER = _check_and_get_env_variable("ALEMBIC_DB_USER")
-    DB_PASSWORD = _check_and_get_env_variable("ALEMBIC_DB_PASSWORD")
-    DB_HOST = _check_and_get_env_variable("ALEMBIC_DB_HOST")
-    DB_PORT = _check_and_get_env_variable("ALEMBIC_DB_PORT")
-    DB_NAME = _check_and_get_env_variable("ALEMBIC_DB_NAME")
+    # construct db url from env variables - try ALEMBIC_* first, fallback to SERVER_*
+    DB_SCHEME = os.getenv("ALEMBIC_DB_SCHEME") or os.getenv("SERVER_DB_SCHEME") or "postgresql+psycopg"
+    DB_USER = os.getenv("ALEMBIC_DB_USER") or os.getenv("SERVER_DB_USER") or "postgres"
+    DB_PASSWORD = os.getenv("ALEMBIC_DB_PASSWORD") or os.getenv("SERVER_DB_PASSWORD") or "password"
+    DB_HOST = os.getenv("ALEMBIC_DB_HOST") or os.getenv("SERVER_DB_HOST") or "localhost"
+    DB_PORT = os.getenv("ALEMBIC_DB_PORT") or os.getenv("SERVER_DB_PORT") or "5432"
+    DB_NAME = os.getenv("ALEMBIC_DB_NAME") or os.getenv("SERVER_DB_NAME") or "my_app_db"
     return f"{DB_SCHEME}://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 

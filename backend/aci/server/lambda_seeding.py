@@ -255,87 +255,10 @@ def run_alembic_upgrade() -> bool:
 
 
 def create_database_schema() -> bool:
-    """Create database schema using complete SQL script and fix existing issues"""
+    """Create database schema using Alembic migrations"""
     try:
-        logger.info("Creating database schema using complete SQL script...")
-        
-        schema_file = Path("/workdir/complete-schema.sql")
-        fix_file = Path("/workdir/fix-existing-database.sql")
-        
-        if not schema_file.exists():
-            logger.error(f"Complete schema file not found at {schema_file}")
-            return False
-            
-        if not fix_file.exists():
-            logger.error(f"Fix database file not found at {fix_file}")
-            return False
-        
-        # Build psql command
-        db_host = os.getenv("SERVER_DB_HOST", "localhost")
-        db_user = os.getenv("SERVER_DB_USER", "postgres")
-        db_password = os.getenv("SERVER_DB_PASSWORD", "password")
-        db_name = os.getenv("SERVER_DB_NAME", "my_app_db")
-        db_port = os.getenv("SERVER_DB_PORT", "5432")
-        
-        # Set password environment variable for psql
-        env = os.environ.copy()
-        env["PGPASSWORD"] = db_password
-        
-        try:
-            # First run the complete schema creation
-            logger.info("Running complete schema creation...")
-            result1 = subprocess.run(
-                [
-                    "psql", 
-                    "-h", db_host,
-                    "-U", db_user,
-                    "-d", db_name,
-                    "-p", db_port,
-                    "-f", str(schema_file)
-                ],
-                capture_output=True,
-                text=True,
-                timeout=120,  # 2 minute timeout
-                env=env
-            )
-            
-            logger.info(f"Schema creation completed with return code: {result1.returncode}")
-            if result1.returncode == 0:
-                logger.info(f"Schema creation output: {result1.stdout}")
-            else:
-                logger.warning(f"Schema creation stderr: {result1.stderr}")
-                logger.warning(f"Schema creation stdout: {result1.stdout}")
-            
-            # Then run the database fix script to handle existing problematic tables
-            logger.info("Running database fix script...")
-            result2 = subprocess.run(
-                [
-                    "psql", 
-                    "-h", db_host,
-                    "-U", db_user,
-                    "-d", db_name,
-                    "-p", db_port,
-                    "-f", str(fix_file)
-                ],
-                capture_output=True,
-                text=True,
-                timeout=60,  # 1 minute timeout
-                env=env
-            )
-            
-            if result2.returncode == 0:
-                logger.info("Database fix completed successfully")
-                logger.info(f"Database fix output: {result2.stdout}")
-                return True
-            else:
-                logger.warning(f"Database fix returned code {result2.returncode} but may have succeeded")
-                logger.warning(f"Database fix stderr: {result2.stderr}")
-                logger.warning(f"Database fix stdout: {result2.stdout}")
-                return True  # Consider success even if some warnings
-                
-        except subprocess.TimeoutExpired:
-            logger.error("Schema creation timed out after 2 minutes")
-            return False
+        logger.info("Creating database schema using Alembic migrations...")
+        return run_alembic_upgrade()
             
     except Exception as e:
         logger.error(f"Error creating database schema: {e}")

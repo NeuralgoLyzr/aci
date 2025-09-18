@@ -47,6 +47,13 @@ class Key(TypeDecorator[str]):
         if value is not None:
             if not isinstance(value, str):
                 raise TypeError("Key type expects a string value")
+            
+            import os
+            # Skip encryption in local environment
+            if os.getenv("SERVER_ENVIRONMENT") == "local":
+                # Store as plain text with a prefix
+                return f"LOCAL_UNENCRYPTED:{value}".encode("utf-8")
+            
             plain_bytes = value.encode("utf-8")
             encrypted_bytes = encryption.encrypt(plain_bytes)
             return encrypted_bytes
@@ -56,6 +63,14 @@ class Key(TypeDecorator[str]):
         if value is not None:
             if not isinstance(value, bytes):
                 raise TypeError("Key type expects a bytes value")
+            
+            import os
+            # Handle unencrypted values in local environment
+            value_str = value.decode("utf-8")
+            if os.getenv("SERVER_ENVIRONMENT") == "local" and value_str.startswith("LOCAL_UNENCRYPTED:"):
+                return value_str.replace("LOCAL_UNENCRYPTED:", "")
+            
+            # For encrypted values, decrypt them
             decrypted_bytes = encryption.decrypt(value)
             return decrypted_bytes.decode("utf-8")
         return None
