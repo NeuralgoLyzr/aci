@@ -12,6 +12,13 @@ from aci.common.enums import SecurityScheme
 
 def _encrypt_value(value: str) -> str:
     """Encrypt a string value and return base64-encoded result."""
+    import os
+    
+    # Skip encryption in local environment (for testing/development)
+    if os.getenv("SERVER_ENVIRONMENT") == "local":
+        # Return the value with a prefix to indicate it's not encrypted
+        return f"LOCAL_UNENCRYPTED:{value}"
+    
     encrypted_bytes = encryption.encrypt(value.encode("utf-8"))
     # The bytes returned by the encryption.encrypt method can be any bytes,
     # which is not always valid for utf-8 decoding, so we need to encode it
@@ -22,6 +29,12 @@ def _encrypt_value(value: str) -> str:
 
 def _decrypt_value(value: str) -> str:
     """Decrypt a base64-encoded encrypted string."""
+    import os
+    
+    # Handle unencrypted values in local environment
+    if os.getenv("SERVER_ENVIRONMENT") == "local" and value.startswith("LOCAL_UNENCRYPTED:"):
+        return value.replace("LOCAL_UNENCRYPTED:", "")
+    
     encrypted_bytes = base64.b64decode(value)
     return encryption.decrypt(encrypted_bytes).decode("utf-8")
 
