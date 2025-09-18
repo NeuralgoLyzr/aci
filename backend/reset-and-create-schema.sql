@@ -6,7 +6,6 @@ DROP TABLE IF EXISTS website_evaluations CASCADE;
 DROP TABLE IF EXISTS secrets CASCADE;
 DROP TABLE IF EXISTS linked_accounts CASCADE;
 DROP TABLE IF EXISTS app_configurations CASCADE;
-DROP TABLE IF EXISTS function_executions CASCADE;
 DROP TABLE IF EXISTS api_keys CASCADE;
 DROP TABLE IF EXISTS agents CASCADE;
 DROP TABLE IF EXISTS functions CASCADE;
@@ -14,8 +13,6 @@ DROP TABLE IF EXISTS subscriptions CASCADE;
 DROP TABLE IF EXISTS processed_stripe_events CASCADE;
 DROP TABLE IF EXISTS plans CASCADE;
 DROP TABLE IF EXISTS projects CASCADE;
-DROP TABLE IF EXISTS organizations CASCADE;
-DROP TABLE IF EXISTS entities CASCADE;
 DROP TABLE IF EXISTS apps CASCADE;
 DROP TABLE IF EXISTS alembic_version CASCADE;
 
@@ -28,19 +25,20 @@ DROP TYPE IF EXISTS securityscheme CASCADE;
 DROP TYPE IF EXISTS protocol CASCADE;
 DROP TYPE IF EXISTS entitytype CASCADE;
 DROP TYPE IF EXISTS visibility CASCADE;
+DROP TYPE IF EXISTS apikeystatus CASCADE;
 
 -- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS vector;
 
 -- Create custom types (enums)
 CREATE TYPE visibility AS ENUM ('PUBLIC', 'PRIVATE');
-CREATE TYPE entitytype AS ENUM ('ENTITY', 'USER', 'ORGANIZATION');
 CREATE TYPE protocol AS ENUM ('REST', 'CONNECTOR', 'rest', 'connector');
 CREATE TYPE subscriptionplan AS ENUM ('CUSTOM', 'FREE', 'PRO', 'ENTERPRISE');
 CREATE TYPE securityscheme AS ENUM ('NO_AUTH', 'API_KEY', 'HTTP_BASIC', 'HTTP_BEARER', 'OAUTH2');
 CREATE TYPE stripesubscriptionstatus AS ENUM ('INCOMPLETE', 'INCOMPLETE_EXPIRED', 'TRIALING', 'ACTIVE', 'PAST_DUE', 'CANCELED', 'UNPAID', 'PAUSED');
 CREATE TYPE stripesubscriptioninterval AS ENUM ('MONTH', 'YEAR');
 CREATE TYPE websiteevaluationstatus AS ENUM ('IN_PROGRESS', 'COMPLETED', 'FAILED');
+CREATE TYPE apikeystatus AS ENUM ('ACTIVE', 'DISABLED', 'DELETED');
 
 -- Create apps table
 CREATE TABLE apps (
@@ -61,21 +59,6 @@ CREATE TABLE apps (
     updated_at TIMESTAMP DEFAULT NOW() NOT NULL
 );
 
--- Create entities table
-CREATE TABLE entities (
-    id UUID PRIMARY KEY,
-    type entitytype NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL,
-    profile_picture TEXT,
-    created_at TIMESTAMP DEFAULT NOW() NOT NULL,
-    updated_at TIMESTAMP DEFAULT NOW() NOT NULL
-);
-
--- Create organizations table
-CREATE TABLE organizations (
-    id UUID PRIMARY KEY REFERENCES entities(id)
-);
 
 -- Create projects table (updated schema)
 CREATE TABLE projects (
@@ -96,39 +79,40 @@ CREATE TABLE projects (
 CREATE TABLE functions (
     id UUID PRIMARY KEY,
     app_id UUID NOT NULL REFERENCES apps(id),
-    name VARCHAR(255) NOT NULL,
-    display_name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL UNIQUE,
     description TEXT NOT NULL,
+    tags VARCHAR[] NOT NULL,
+    visibility visibility NOT NULL,
+    active BOOLEAN NOT NULL,
     protocol protocol NOT NULL,
     protocol_data JSONB NOT NULL,
     parameters JSONB NOT NULL,
+    response JSONB NOT NULL,
     embedding vector(1024) NOT NULL,
     created_at TIMESTAMP DEFAULT NOW() NOT NULL,
     updated_at TIMESTAMP DEFAULT NOW() NOT NULL,
     UNIQUE(app_id, name)
 );
 
--- Create agents table
+-- Create agents table (based on SQLAlchemy model)
 CREATE TABLE agents (
     id UUID PRIMARY KEY,
     project_id UUID NOT NULL REFERENCES projects(id),
     name VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
     allowed_apps VARCHAR[] NOT NULL,
-    excluded_apps VARCHAR[] NOT NULL DEFAULT '{}',
-    excluded_functions VARCHAR[] NOT NULL DEFAULT '{}',
     custom_instructions JSONB NOT NULL,
     created_at TIMESTAMP DEFAULT NOW() NOT NULL,
     updated_at TIMESTAMP DEFAULT NOW() NOT NULL
 );
 
--- Create api_keys table
+-- Create api_keys table (final schema after all migrations)
 CREATE TABLE api_keys (
     id UUID PRIMARY KEY,
-    agent_id UUID NOT NULL REFERENCES agents(id),
-    hashed_key VARCHAR(255) NOT NULL UNIQUE,
-    encrypted_key TEXT NOT NULL,
-    key_hmac TEXT NOT NULL,
+    agent_id UUID NOT NULL REFERENCES agents(id) UNIQUE,
+    key BYTEA NOT NULL UNIQUE,  -- This is the encrypted_key (renamed)
+    key_hmac VARCHAR(64) NOT NULL UNIQUE,
+    status apikeystatus NOT NULL,
     created_at TIMESTAMP DEFAULT NOW() NOT NULL,
     updated_at TIMESTAMP DEFAULT NOW() NOT NULL
 );
@@ -148,17 +132,6 @@ CREATE TABLE app_configurations (
     UNIQUE(project_id, app_id)
 );
 
--- Create function_executions table
-CREATE TABLE function_executions (
-    id UUID PRIMARY KEY,
-    function_name VARCHAR(255) NOT NULL REFERENCES functions(name),
-    agent_id UUID NOT NULL REFERENCES agents(id),
-    input_data JSONB NOT NULL,
-    output_data JSONB NOT NULL,
-    execution_time_ms INTEGER NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW() NOT NULL,
-    updated_at TIMESTAMP DEFAULT NOW() NOT NULL
-);
 
 -- Create linked_accounts table
 CREATE TABLE linked_accounts (
@@ -247,11 +220,9 @@ CREATE INDEX idx_functions_app_id ON functions(app_id);
 CREATE INDEX idx_projects_org_id ON projects(org_id);
 CREATE INDEX idx_agents_project_id ON agents(project_id);
 CREATE INDEX idx_api_keys_agent_id ON api_keys(agent_id);
-CREATE INDEX idx_api_keys_hashed_key ON api_keys(hashed_key);
+CREATE INDEX idx_api_keys_key_hmac ON api_keys(key_hmac);
 CREATE INDEX idx_app_configurations_project_id ON app_configurations(project_id);
 CREATE INDEX idx_app_configurations_app_id ON app_configurations(app_id);
-CREATE INDEX idx_function_executions_function_name ON function_executions(function_name);
-CREATE INDEX idx_function_executions_agent_id ON function_executions(agent_id);
 CREATE INDEX idx_linked_accounts_project_id ON linked_accounts(project_id);
 CREATE INDEX idx_linked_accounts_app_id ON linked_accounts(app_id);
 CREATE INDEX idx_secrets_linked_account_id ON secrets(linked_account_id);
