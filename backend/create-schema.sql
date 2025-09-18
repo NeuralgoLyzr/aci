@@ -18,7 +18,7 @@ EXCEPTION
 END $$;
 
 DO $$ BEGIN
-    CREATE TYPE protocol AS ENUM ('REST');
+    CREATE TYPE protocol AS ENUM ('REST', 'CONNECTOR', 'rest', 'connector');
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
