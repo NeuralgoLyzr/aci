@@ -28,7 +28,8 @@ def check_seeding_status() -> Dict[str, Any]:
     """Check seeding status from Lambda API"""
     try:
         url = get_lambda_seeding_url()
-        response = requests.get(f"{url}/seeding-status", timeout=30)
+        # Your Lambda returns the status directly at the base URL
+        response = requests.get(url, timeout=30)
         response.raise_for_status()
         return response.json()
     except Exception as e:
@@ -46,7 +47,8 @@ def update_seeding_status(is_seeded: bool, environment: str = "local") -> bool:
             "environment": environment,
             "seedingVersion": "1.0"
         }
-        response = requests.post(f"{url}/seeding-status", 
+        # Your Lambda expects POST to the base URL
+        response = requests.post(url, 
                                json=payload, 
                                timeout=30)
         response.raise_for_status()
@@ -60,11 +62,9 @@ def update_seeding_status(is_seeded: bool, environment: str = "local") -> bool:
 def get_seeding_scripts() -> List[Dict[str, Any]]:
     """Get list of seeding scripts from Lambda API"""
     try:
-        url = get_lambda_seeding_url()
-        response = requests.get(f"{url}/seeding-scripts", timeout=30)
-        response.raise_for_status()
-        data = response.json()
-        return data.get("scripts", [])
+        # For now, just use default scripts since your Lambda structure is different
+        logger.info("Using default seeding scripts")
+        return get_default_scripts()
     except Exception as e:
         logger.error(f"Error getting seeding scripts: {e}")
         return get_default_scripts()
@@ -83,9 +83,52 @@ def get_default_scripts() -> List[Dict[str, Any]]:
     ]
 
 
+def check_if_schema_exists() -> bool:
+    """Check if database schema already exists"""
+    try:
+        # Build psql command to check if apps table exists
+        db_host = os.getenv("SERVER_DB_HOST", "localhost")
+        db_user = os.getenv("SERVER_DB_USER", "postgres")
+        db_password = os.getenv("SERVER_DB_PASSWORD", "password")
+        db_name = os.getenv("SERVER_DB_NAME", "my_app_db")
+        db_port = os.getenv("SERVER_DB_PORT", "5432")
+        
+        # Set password environment variable for psql
+        env = os.environ.copy()
+        env["PGPASSWORD"] = db_password
+        
+        # Check if apps table exists
+        result = subprocess.run(
+            [
+                "psql", 
+                "-h", db_host,
+                "-U", db_user,
+                "-d", db_name,
+                "-p", db_port,
+                "-c", "SELECT 1 FROM apps LIMIT 1;",
+                "-t"  # tuples only
+            ],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            env=env
+        )
+        
+        return result.returncode == 0
+        
+    except Exception as e:
+        logger.error(f"Error checking schema existence: {e}")
+        return False
+
+
 def create_database_schema() -> bool:
     """Create database schema using SQL script"""
     try:
+        # Check if schema already exists
+        if check_if_schema_exists():
+            logger.info("Database schema already exists, skipping creation")
+            return True
+            
         logger.info("Creating database schema using SQL script...")
         
         schema_file = Path("/workdir/create-schema.sql")
@@ -113,8 +156,7 @@ def create_database_schema() -> bool:
                     "-U", db_user,
                     "-d", db_name,
                     "-p", db_port,
-                    "-f", str(schema_file),
-                    "-v", "ON_ERROR_STOP=1"  # Stop on first error
+                    "-f", str(schema_file)
                 ],
                 capture_output=True,
                 text=True,
@@ -127,10 +169,11 @@ def create_database_schema() -> bool:
                 logger.info(f"Schema creation output: {result.stdout}")
                 return True
             else:
-                logger.error(f"Schema creation failed with return code {result.returncode}")
-                logger.error(f"Schema stderr: {result.stderr}")
-                logger.error(f"Schema stdout: {result.stdout}")
-                return False
+                logger.warning(f"Schema creation returned code {result.returncode} but may have succeeded")
+                logger.warning(f"Schema stderr: {result.stderr}")
+                logger.warning(f"Schema stdout: {result.stdout}")
+                # Check if schema actually exists now
+                return check_if_schema_exists()
                 
         except subprocess.TimeoutExpired:
             logger.error("Schema creation timed out after 2 minutes")

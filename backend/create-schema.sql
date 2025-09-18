@@ -4,14 +4,33 @@
 -- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS vector;
 
--- Create custom types (enums)
-CREATE TYPE visibility AS ENUM ('PUBLIC', 'PRIVATE');
-CREATE TYPE entitytype AS ENUM ('ENTITY', 'USER', 'ORGANIZATION');
-CREATE TYPE protocol AS ENUM ('REST');
-CREATE TYPE subscriptionplan AS ENUM ('CUSTOM', 'FREE', 'PRO', 'ENTERPRISE');
+-- Create custom types (enums) - only if they don't exist
+DO $$ BEGIN
+    CREATE TYPE visibility AS ENUM ('PUBLIC', 'PRIVATE');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE entitytype AS ENUM ('ENTITY', 'USER', 'ORGANIZATION');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE protocol AS ENUM ('REST');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE subscriptionplan AS ENUM ('CUSTOM', 'FREE', 'PRO', 'ENTERPRISE');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- Create entities table
-CREATE TABLE entities (
+CREATE TABLE IF NOT EXISTS entities (
     id UUID PRIMARY KEY,
     type entitytype NOT NULL,
     name VARCHAR(255) NOT NULL,
@@ -22,7 +41,7 @@ CREATE TABLE entities (
 );
 
 -- Create apps table
-CREATE TABLE apps (
+CREATE TABLE IF NOT EXISTS apps (
     id UUID PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
     display_name VARCHAR(255) NOT NULL,
@@ -41,7 +60,7 @@ CREATE TABLE apps (
 );
 
 -- Create functions table
-CREATE TABLE functions (
+CREATE TABLE IF NOT EXISTS functions (
     id UUID PRIMARY KEY,
     app_id UUID NOT NULL REFERENCES apps(id),
     name VARCHAR(255) NOT NULL UNIQUE,
@@ -59,12 +78,12 @@ CREATE TABLE functions (
 );
 
 -- Create organizations table
-CREATE TABLE organizations (
+CREATE TABLE IF NOT EXISTS organizations (
     id UUID PRIMARY KEY REFERENCES entities(id)
 );
 
 -- Create projects table
-CREATE TABLE projects (
+CREATE TABLE IF NOT EXISTS projects (
     id UUID PRIMARY KEY,
     owner_id UUID NOT NULL REFERENCES entities(id),
     name VARCHAR(255) NOT NULL,
@@ -77,7 +96,7 @@ CREATE TABLE projects (
 );
 
 -- Create subscriptions table
-CREATE TABLE subscriptions (
+CREATE TABLE IF NOT EXISTS subscriptions (
     id UUID PRIMARY KEY,
     entity_id UUID NOT NULL REFERENCES entities(id),
     plan subscriptionplan NOT NULL,
@@ -88,7 +107,7 @@ CREATE TABLE subscriptions (
 );
 
 -- Create agents table
-CREATE TABLE agents (
+CREATE TABLE IF NOT EXISTS agents (
     id UUID PRIMARY KEY,
     project_id UUID NOT NULL REFERENCES projects(id),
     name VARCHAR(255) NOT NULL,
@@ -100,7 +119,7 @@ CREATE TABLE agents (
 );
 
 -- Create api_keys table
-CREATE TABLE api_keys (
+CREATE TABLE IF NOT EXISTS api_keys (
     id UUID PRIMARY KEY,
     agent_id UUID NOT NULL REFERENCES agents(id),
     hashed_key VARCHAR(255) NOT NULL UNIQUE,
@@ -109,7 +128,7 @@ CREATE TABLE api_keys (
 );
 
 -- Create app_configurations table
-CREATE TABLE app_configurations (
+CREATE TABLE IF NOT EXISTS app_configurations (
     id UUID PRIMARY KEY,
     app_name VARCHAR(100) NOT NULL REFERENCES apps(name),
     entity_id UUID NOT NULL REFERENCES entities(id),
@@ -121,7 +140,7 @@ CREATE TABLE app_configurations (
 );
 
 -- Create function_executions table
-CREATE TABLE function_executions (
+CREATE TABLE IF NOT EXISTS function_executions (
     id UUID PRIMARY KEY,
     function_name VARCHAR(255) NOT NULL REFERENCES functions(name),
     agent_id UUID NOT NULL REFERENCES agents(id),
@@ -135,25 +154,26 @@ CREATE TABLE function_executions (
 );
 
 -- Create alembic_version table (required for Alembic to track migrations)
-CREATE TABLE alembic_version (
+CREATE TABLE IF NOT EXISTS alembic_version (
     version_num VARCHAR(32) NOT NULL PRIMARY KEY
 );
 
--- Insert the current migration version
-INSERT INTO alembic_version (version_num) VALUES ('c6f47d7d2fa1');
+-- Insert the current migration version (only if not exists)
+INSERT INTO alembic_version (version_num) VALUES ('c6f47d7d2fa1')
+ON CONFLICT (version_num) DO NOTHING;
 
--- Create indexes for better performance
-CREATE INDEX idx_apps_name ON apps(name);
-CREATE INDEX idx_functions_name ON functions(name);
-CREATE INDEX idx_functions_app_id ON functions(app_id);
-CREATE INDEX idx_projects_owner_id ON projects(owner_id);
-CREATE INDEX idx_agents_project_id ON agents(project_id);
-CREATE INDEX idx_api_keys_agent_id ON api_keys(agent_id);
-CREATE INDEX idx_api_keys_hashed_key ON api_keys(hashed_key);
-CREATE INDEX idx_app_configurations_app_name ON app_configurations(app_name);
-CREATE INDEX idx_app_configurations_entity_id ON app_configurations(entity_id);
-CREATE INDEX idx_function_executions_function_name ON function_executions(function_name);
-CREATE INDEX idx_function_executions_agent_id ON function_executions(agent_id);
+-- Create indexes for better performance (only if not exists)
+CREATE INDEX IF NOT EXISTS idx_apps_name ON apps(name);
+CREATE INDEX IF NOT EXISTS idx_functions_name ON functions(name);
+CREATE INDEX IF NOT EXISTS idx_functions_app_id ON functions(app_id);
+CREATE INDEX IF NOT EXISTS idx_projects_owner_id ON projects(owner_id);
+CREATE INDEX IF NOT EXISTS idx_agents_project_id ON agents(project_id);
+CREATE INDEX IF NOT EXISTS idx_api_keys_agent_id ON api_keys(agent_id);
+CREATE INDEX IF NOT EXISTS idx_api_keys_hashed_key ON api_keys(hashed_key);
+CREATE INDEX IF NOT EXISTS idx_app_configurations_app_name ON app_configurations(app_name);
+CREATE INDEX IF NOT EXISTS idx_app_configurations_entity_id ON app_configurations(entity_id);
+CREATE INDEX IF NOT EXISTS idx_function_executions_function_name ON function_executions(function_name);
+CREATE INDEX IF NOT EXISTS idx_function_executions_agent_id ON function_executions(agent_id);
 
 -- Grant permissions (adjust as needed)
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO postgres;
