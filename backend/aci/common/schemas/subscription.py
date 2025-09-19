@@ -7,7 +7,7 @@ from aci.common.enums import StripeSubscriptionInterval, StripeSubscriptionStatu
 
 
 class SubscriptionBase(BaseModel):
-    org_id: UUID
+    org_id: str
     plan_id: UUID
     stripe_customer_id: str
     stripe_subscription_id: str
@@ -46,7 +46,7 @@ class StripeSubscriptionDetails(BaseModel):
 
 
 class StripeSubscriptionMetadata(BaseModel):
-    org_id: UUID
+    org_id: str
     checkout_user_id: str
     checkout_user_email: str
 

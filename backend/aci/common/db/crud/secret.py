@@ -70,7 +70,7 @@ def delete_secret(db_session: Session, secret: Secret) -> None:
     db_session.flush()
 
 
-def get_total_number_of_agent_secrets_for_org(db_session: Session, org_id: UUID) -> int:
+def get_total_number_of_agent_secrets_for_org(db_session: Session, org_id: str) -> int:
     """
     Get the total number of agent secrets for an organization across all its projects.
     Uses JOINs for better performance compared to nested subqueries.

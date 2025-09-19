@@ -24,7 +24,7 @@ from aci.server import billing, config
 logger = get_logger(__name__)
 
 
-def enforce_project_creation_quota(db_session: Session, org_id: UUID) -> None:
+def enforce_project_creation_quota(db_session: Session, org_id: str) -> None:
     """
     Check and enforce that the user/organization hasn't exceeded their project creation quota
     based on their subscription plan.
@@ -75,7 +75,7 @@ def enforce_agent_creation_quota(db_session: Session, project_id: UUID) -> None:
 
 
 def enforce_linked_accounts_creation_quota(
-    db_session: Session, org_id: UUID, linked_account_owner_id: str
+    db_session: Session, org_id: str, linked_account_owner_id: str
 ) -> None:
     """
     Check and enforce that the organization doesn't have a unique_account_owner_id exceeding the

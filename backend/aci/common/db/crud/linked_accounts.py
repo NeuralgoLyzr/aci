@@ -168,7 +168,7 @@ def delete_linked_accounts(db_session: Session, project_id: UUID, app_name: str)
     return len(linked_accounts_to_delete)
 
 
-def get_total_number_of_unique_linked_account_owner_ids(db_session: Session, org_id: UUID) -> int:
+def get_total_number_of_unique_linked_account_owner_ids(db_session: Session, org_id: str) -> int:
     """
     TODO: Add a lock to prevent the race condition.
     Get the total number of unique linked account owner IDs for an organization.
@@ -188,7 +188,7 @@ def get_total_number_of_unique_linked_account_owner_ids(db_session: Session, org
 
 
 def linked_account_owner_id_exists_in_org(
-    db_session: Session, org_id: UUID, linked_account_owner_id: str
+    db_session: Session, org_id: str, linked_account_owner_id: str
 ) -> bool:
     statement = select(
         exists().where(

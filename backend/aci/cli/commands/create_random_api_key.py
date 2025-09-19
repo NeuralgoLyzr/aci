@@ -49,7 +49,7 @@ def create_random_api_key_helper(visibility_access: Visibility, org_id: uuid.UUI
 
     project_id = create_project.create_project_helper(
         name=f"Test Project {random_id}",
-        org_id=org_id or uuid.uuid4(),
+        org_id=org_id or str(uuid.uuid4()),
         visibility_access=visibility_access,
         skip_dry_run=skip_dry_run,
     )

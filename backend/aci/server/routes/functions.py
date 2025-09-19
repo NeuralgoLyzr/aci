@@ -14,7 +14,6 @@ from aci.common.enums import FunctionDefinitionFormat, Visibility
 from aci.common.exceptions import (
     AppConfigurationDisabled,
     AppConfigurationNotFound,
-    AppNotAllowedForThisAgent,
     FunctionNotEnabledInAppConfiguration,
     FunctionNotFound,
     InvalidFunctionDefinitionFormat,
@@ -28,6 +27,7 @@ from aci.common.schemas.function import (
     FunctionDetails,
     FunctionExecute,
     FunctionExecutionResult,
+    FunctionsBulkDefinitions,
     FunctionsList,
     FunctionsSearch,
     OpenAIFunction,
@@ -209,6 +209,60 @@ async def get_function_definition(
     return function_definition
 
 
+@router.get(
+    "/bulk-definitions",
+    response_model_exclude_none=True,
+)
+async def get_bulk_function_definitions(
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    query_params: Annotated[FunctionsBulkDefinitions, Query()],
+) -> list[
+    BasicFunctionDefinition
+    | OpenAIFunctionDefinition
+    | OpenAIResponsesFunctionDefinition
+    | AnthropicFunctionDefinition
+]:
+    """
+    Return function definitions for multiple functions that can be used directly by LLM.
+    The actual content depends on the FunctionDefinitionFormat and the functions themselves.
+    """
+    # Get all functions in a single database call
+    functions = crud.functions.get_functions_by_names(
+        context.db_session,
+        query_params.function_names,
+        context.project.visibility_access == Visibility.PUBLIC,
+        True,
+    )
+
+    # Create a map of function names to functions for easy lookup
+    function_map = {function.name: function for function in functions}
+
+    # Find which functions were not found
+    not_found_functions = [name for name in query_params.function_names if name not in function_map]
+
+    if not_found_functions:
+        logger.error(f"Some functions not found: {not_found_functions}")
+        raise FunctionNotFound(f"functions not found: {', '.join(not_found_functions)}")
+
+    # Format all function definitions
+    function_definitions = [
+        format_function_definition(function_map[name], query_params.format)
+        for name in query_params.function_names
+    ]
+
+    logger.info(
+        "bulk function definitions to return",
+        extra={
+            "get_bulk_function_definitions": {
+                "format": query_params.format,
+                "function_names": query_params.function_names,
+                "count": len(function_definitions),
+            },
+        },
+    )
+    return function_definitions
+
+
 # TODO: is there any way to abstract and generalize the checks and validations
 # (enabled, configured, accessible, etc.)?
 @router.post(
@@ -384,14 +438,14 @@ async def execute_function(
         )
 
     # Check if the function is allowed to be executed by the agent
-    if function.app.name not in agent.allowed_apps:
-        logger.error(
-            f"Failed to execute function, App not allowed to be used by this agent, "
-            f"function_name={function_name} app_name={function.app.name} agent_id={agent.id}"
-        )
-        raise AppNotAllowedForThisAgent(
-            f"App={function.app.name} that this function belongs to is not allowed to be used by agent={agent.name}"
-        )
+    # if function.app.name not in agent.allowed_apps:
+    #     logger.error(
+    #         f"Failed to execute function, App not allowed to be used by this agent, "
+    #         f"function_name={function_name} app_name={function.app.name} agent_id={agent.id}"
+    #     )
+    #     raise AppNotAllowedForThisAgent(
+    #         f"App={function.app.name} that this function belongs to is not allowed to be used by agent={agent.name}"
+    #     )
 
     if (
         not app_configuration.all_functions_enabled

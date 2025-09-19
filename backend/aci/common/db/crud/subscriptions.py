@@ -1,5 +1,3 @@
-from uuid import UUID
-
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
@@ -11,7 +9,7 @@ logger = get_logger(__name__)
 
 
 # TODO: no need to lock for most of the reads
-def get_subscription_by_org_id(db_session: Session, org_id: UUID) -> Subscription | None:
+def get_subscription_by_org_id(db_session: Session, org_id: str) -> Subscription | None:
     """
     Get a subscription by organization ID.
     """
