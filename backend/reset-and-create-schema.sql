@@ -63,7 +63,7 @@ CREATE TABLE apps (
 -- Create projects table (updated schema)
 CREATE TABLE projects (
     id UUID PRIMARY KEY,
-    org_id UUID NOT NULL,
+    org_id VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
     visibility_access visibility NOT NULL,
     daily_quota_used INTEGER NOT NULL DEFAULT 0,
@@ -193,7 +193,7 @@ CREATE TABLE processed_stripe_events (
 
 CREATE TABLE subscriptions (
     id UUID PRIMARY KEY,
-    org_id UUID NOT NULL UNIQUE,
+    org_id VARCHAR(255) NOT NULL UNIQUE,
     plan_id UUID NOT NULL REFERENCES plans(id),
     stripe_customer_id VARCHAR(255) NOT NULL UNIQUE,
     stripe_subscription_id VARCHAR(255) NOT NULL UNIQUE,
