@@ -138,7 +138,7 @@ app.add_middleware(SessionMiddleware, secret_key=config.SIGNING_KEY)
 # )
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[config.DEV_PORTAL_URL],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
