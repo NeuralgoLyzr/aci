@@ -27,6 +27,7 @@ import { RiSettings3Line, RiLinkUnlinkM } from "react-icons/ri";
 import { AiOutlineRobot } from "react-icons/ai";
 import { HiOutlineChatBubbleBottomCenterText } from "react-icons/hi2";
 import { RiFileList3Line } from "react-icons/ri";
+import { Settings } from "lucide-react";
 import { UpgradeButton } from "./subscription-button";
 
 import {
@@ -80,6 +81,11 @@ export const sidebarItems = [
     title: "Usage",
     url: `/usage`,
     icon: VscGraph,
+  },
+  {
+    title: "Tool Seeding",
+    url: `/tool-seeding`,
+    icon: Settings,
   },
 ];
 
