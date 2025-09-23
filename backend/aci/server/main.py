@@ -32,6 +32,7 @@ from aci.server.routes import (
     organizations,
     projects,
     seeding_info,
+    tool_seeding,
     webhooks,
 )
 from aci.server.sentry import setup_sentry
@@ -231,4 +232,16 @@ app.include_router(
     docs.router,
     prefix=config.ROUTER_PREFIX_DOCS,
     tags=[config.ROUTER_PREFIX_DOCS.split("/")[-1]],
+)
+
+app.include_router(
+    seeding_info.router,
+    prefix=config.ROUTER_PREFIX_SEEDING_INFO,
+    tags=[config.ROUTER_PREFIX_SEEDING_INFO.split("/")[-1]],
+)
+
+app.include_router(
+    tool_seeding.router,
+    prefix=config.ROUTER_PREFIX_TOOL_SEEDING,
+    tags=[config.ROUTER_PREFIX_TOOL_SEEDING.split("/")[-1]],
 )
