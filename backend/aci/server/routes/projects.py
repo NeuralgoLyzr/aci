@@ -53,6 +53,45 @@ async def create_project(
     
     # Convert to ProjectPublic model to avoid DetachedInstanceError
     from aci.common.schemas.project import ProjectPublic
+    from aci.common.schemas.agent import AgentPublic
+    from aci.common.schemas.apikey import APIKeyPublic
+    
+    # Load the agent that was created
+    agents = crud.projects.get_agents_by_project(db_session, project.id)
+    
+    # Convert agents to AgentPublic models
+    agent_publics = []
+    for agent in agents:
+        # Load API key for this agent
+        api_key = crud.projects.get_api_key_by_agent_id(db_session, agent.id)
+        
+        # Convert API key to APIKeyPublic model
+        api_key_publics = []
+        if api_key:
+            api_key_public = APIKeyPublic(
+                id=api_key.id,
+                agent_id=api_key.agent_id,
+                status=api_key.status,
+                created_at=api_key.created_at,
+                updated_at=api_key.updated_at,
+            )
+            api_key_publics.append(api_key_public)
+        
+        # Create AgentPublic model
+        agent_public = AgentPublic(
+            id=agent.id,
+            project_id=agent.project_id,
+            name=agent.name,
+            description=agent.description,
+            allowed_apps=agent.allowed_apps,
+            custom_instructions=agent.custom_instructions,
+            created_at=agent.created_at,
+            updated_at=agent.updated_at,
+            api_keys=api_key_publics,
+        )
+        agent_publics.append(agent_public)
+    
+    # Create ProjectPublic model
     project_public = ProjectPublic(
         id=project.id,
         org_id=project.org_id,
@@ -65,6 +104,7 @@ async def create_project(
         total_quota_used=project.total_quota_used,
         created_at=project.created_at,
         updated_at=project.updated_at,
+        agents=agent_publics,
     )
     
     return project_public
@@ -87,8 +127,47 @@ async def get_projects(
     
     # Convert to ProjectPublic models to avoid DetachedInstanceError
     from aci.common.schemas.project import ProjectPublic
+    from aci.common.schemas.agent import AgentPublic
+    from aci.common.schemas.apikey import APIKeyPublic
+    
     project_publics = []
     for project in projects:
+        # Load agents for this project
+        agents = crud.projects.get_agents_by_project(db_session, project.id)
+        
+        # Convert agents to AgentPublic models
+        agent_publics = []
+        for agent in agents:
+            # Load API key for this agent (each agent has one API key)
+            api_key = crud.projects.get_api_key_by_agent_id(db_session, agent.id)
+            
+            # Convert API key to APIKeyPublic model
+            api_key_publics = []
+            if api_key:
+                api_key_public = APIKeyPublic(
+                    id=api_key.id,
+                    agent_id=api_key.agent_id,
+                    status=api_key.status,
+                    created_at=api_key.created_at,
+                    updated_at=api_key.updated_at,
+                )
+                api_key_publics.append(api_key_public)
+            
+            # Create AgentPublic model
+            agent_public = AgentPublic(
+                id=agent.id,
+                project_id=agent.project_id,
+                name=agent.name,
+                description=agent.description,
+                allowed_apps=agent.allowed_apps,
+                custom_instructions=agent.custom_instructions,
+                created_at=agent.created_at,
+                updated_at=agent.updated_at,
+                api_keys=api_key_publics,
+            )
+            agent_publics.append(agent_public)
+        
+        # Create ProjectPublic model
         project_public = ProjectPublic(
             id=project.id,
             org_id=project.org_id,
@@ -101,6 +180,7 @@ async def get_projects(
             total_quota_used=project.total_quota_used,
             created_at=project.created_at,
             updated_at=project.updated_at,
+            agents=agent_publics,
         )
         project_publics.append(project_public)
     
