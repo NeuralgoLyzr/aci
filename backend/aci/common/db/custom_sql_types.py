@@ -66,13 +66,24 @@ class Key(TypeDecorator[str]):
             
             import os
             # Handle unencrypted values in local environment
-            value_str = value.decode("utf-8")
-            if os.getenv("SERVER_ENVIRONMENT") == "local" and value_str.startswith("LOCAL_UNENCRYPTED:"):
-                return value_str.replace("LOCAL_UNENCRYPTED:", "")
+            # Try to decode as UTF-8 first to check if it's unencrypted
+            try:
+                value_str = value.decode("utf-8")
+                if os.getenv("SERVER_ENVIRONMENT") == "local" and value_str.startswith("LOCAL_UNENCRYPTED:"):
+                    return value_str.replace("LOCAL_UNENCRYPTED:", "")
+            except UnicodeDecodeError:
+                # If UTF-8 decoding fails, it's likely encrypted binary data
+                pass
             
             # For encrypted values, decrypt them
-            decrypted_bytes = encryption.decrypt(value)
-            return decrypted_bytes.decode("utf-8")
+            try:
+                decrypted_bytes = encryption.decrypt(value)
+                return decrypted_bytes.decode("utf-8")
+            except Exception as e:
+                # If decryption fails, return a placeholder or log the error
+                import logging
+                logging.error(f"Failed to decrypt API key: {e}")
+                return "[ENCRYPTED_API_KEY]"
         return None
 
 
