@@ -31,8 +31,6 @@ from aci.server.routes import (
     linked_accounts,
     organizations,
     projects,
-    seeding_info,
-    tool_seeding,
     webhooks,
 )
 from aci.server.sentry import setup_sentry
@@ -73,36 +71,10 @@ app = FastAPI(
 auth = get_propelauth()
 
 
-# Background seeding task
-import asyncio
-import threading
-
-def run_background_seeding():
-    """Run seeding in background thread"""
-    import logging
-    import time
-    
-    logger = logging.getLogger(__name__)
-    
-    try:
-        logger.info("Background seeding thread started, waiting 5 seconds...")
-        time.sleep(5)  # Wait 5 seconds for server to be ready
-        
-        logger.info("Starting Lambda-based seeding...")
-        from aci.server.lambda_seeding import lambda_based_seeding
-        lambda_based_seeding()
-        logger.info("Background seeding completed successfully!")
-        
-    except Exception as e:
-        logger.error(f"Background seeding failed: {e}")
-        import traceback
-        logger.error(f"Seeding traceback: {traceback.format_exc()}")
-
-# Start seeding in background thread
-import os
-if os.getenv("SKIP_AUTO_SEED", "false").lower() != "true":
-    seeding_thread = threading.Thread(target=run_background_seeding, daemon=True)
-    seeding_thread.start()
+# No auto-seeding - manual seeding only
+import logging
+logger = logging.getLogger(__name__)
+logger.info("Skipping auto-seeding - manual seeding required")
 
 
 def scrubbing_callback(m: logfire.ScrubMatch) -> Any:
@@ -110,15 +82,21 @@ def scrubbing_callback(m: logfire.ScrubMatch) -> Any:
         return m.value
 
 
-if config.ENVIRONMENT != "local":
-    logfire.configure(
-        console=False,
-        token=config.LOGFIRE_WRITE_TOKEN,
-        environment=config.ENVIRONMENT,
-        scrubbing=logfire.ScrubbingOptions(callback=scrubbing_callback),
-    )
-    logfire.instrument_fastapi(app, capture_headers=True)
-    logfire.instrument_sqlalchemy()
+# Skip logfire in production if no valid token
+if config.ENVIRONMENT != "local" and config.LOGFIRE_WRITE_TOKEN and config.LOGFIRE_WRITE_TOKEN != "dummy":
+    try:
+        logfire.configure(
+            console=False,
+            token=config.LOGFIRE_WRITE_TOKEN,
+            environment=config.ENVIRONMENT,
+            scrubbing=logfire.ScrubbingOptions(callback=scrubbing_callback),
+        )
+        logfire.instrument_fastapi(app, capture_headers=True)
+        logfire.instrument_sqlalchemy()
+    except Exception as e:
+        logger.warning(f"Failed to configure logfire: {e}")
+else:
+    logger.info("Skipping logfire configuration - no valid token provided")
 
 """middlewares are executed in the reverse order"""
 app.add_middleware(RateLimitMiddleware)
@@ -234,14 +212,3 @@ app.include_router(
     tags=[config.ROUTER_PREFIX_DOCS.split("/")[-1]],
 )
 
-app.include_router(
-    seeding_info.router,
-    prefix=config.ROUTER_PREFIX_SEEDING_INFO,
-    tags=[config.ROUTER_PREFIX_SEEDING_INFO.split("/")[-1]],
-)
-
-app.include_router(
-    tool_seeding.router,
-    prefix=config.ROUTER_PREFIX_TOOL_SEEDING,
-    tags=[config.ROUTER_PREFIX_TOOL_SEEDING.split("/")[-1]],
-)

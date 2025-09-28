@@ -1,5 +1,6 @@
 import hashlib
 import hmac
+import os
 from typing import cast
 
 import aws_encryption_sdk  # type: ignore
@@ -24,7 +25,6 @@ kms_client = boto3.client(
     endpoint_url=config.AWS_ENDPOINT_URL,
 )
 
-
 mat_prov: AwsCryptographicMaterialProviders = AwsCryptographicMaterialProviders(
     config=MaterialProvidersConfig()
 )
@@ -38,12 +38,20 @@ kms_keyring: IKeyring = mat_prov.create_aws_kms_keyring(input=keyring_input)
 
 
 def encrypt(plain_data: bytes) -> bytes:
+    # Skip encryption in local environment (for development)
+    if os.getenv("SERVER_ENVIRONMENT") == "local":
+        return plain_data
+    
     # TODO: ignore encryptor_header for now
     my_ciphertext, _ = client.encrypt(source=plain_data, keyring=kms_keyring)
     return cast(bytes, my_ciphertext)
 
 
 def decrypt(cipher_data: bytes) -> bytes:
+    # Skip decryption in local environment (for development)
+    if os.getenv("SERVER_ENVIRONMENT") == "local":
+        return cipher_data
+    
     # TODO: ignore decryptor_header for now
     my_plaintext, _ = client.decrypt(source=cipher_data, keyring=kms_keyring)
     return cast(bytes, my_plaintext)
