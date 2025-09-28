@@ -128,10 +128,44 @@ async def get_projects(
     try:
         projects = crud.projects.get_projects_by_org(db_session, org_id)
         
-        # Return a simplified response to avoid DetachedInstanceError
-        # The frontend just needs basic project info to load
+        # Return a response with agents but handle Unicode errors gracefully
         simplified_projects = []
         for project in projects:
+            # Load agents for this project
+            agents = crud.projects.get_agents_by_project(db_session, project.id)
+            
+            # Convert agents to simple dict format with error handling for API keys
+            agent_list = []
+            for agent in agents:
+                # Try to load API keys with error handling
+                api_keys_list = []
+                try:
+                    api_key = crud.projects.get_api_key_by_agent_id(db_session, agent.id)
+                    if api_key:
+                        api_keys_list.append({
+                            "id": str(api_key.id),
+                            "agent_id": str(api_key.agent_id),
+                            "status": api_key.status.value,
+                            "created_at": api_key.created_at.isoformat() if api_key.created_at else None,
+                            "updated_at": api_key.updated_at.isoformat() if api_key.updated_at else None,
+                        })
+                except Exception as e:
+                    logger.error(f"Error loading API key for agent {agent.id}: {e}")
+                    # Continue without API key - this allows the project to load
+                
+                agent_dict = {
+                    "id": str(agent.id),
+                    "project_id": str(agent.project_id),
+                    "name": agent.name,
+                    "description": agent.description,
+                    "allowed_apps": agent.allowed_apps,
+                    "custom_instructions": agent.custom_instructions,
+                    "created_at": agent.created_at.isoformat() if agent.created_at else None,
+                    "updated_at": agent.updated_at.isoformat() if agent.updated_at else None,
+                    "api_keys": api_keys_list
+                }
+                agent_list.append(agent_dict)
+            
             simplified_project = {
                 "id": str(project.id),
                 "org_id": project.org_id,
@@ -144,7 +178,7 @@ async def get_projects(
                 "total_quota_used": project.total_quota_used,
                 "created_at": project.created_at.isoformat() if project.created_at else None,
                 "updated_at": project.updated_at.isoformat() if project.updated_at else None,
-                "agents": []  # Empty for now to avoid relationship loading issues
+                "agents": agent_list
             }
             simplified_projects.append(simplified_project)
         
