@@ -20,21 +20,8 @@ COPY ./aci/common /workdir/aci/common
 COPY ./aci/cli /workdir/aci/cli
 COPY ./aci/__init__.py /workdir/aci/__init__.py
 
-# Copy mock files for local development/testing
+# Copy mock files for local development/testing (only if needed)
 COPY ./mock /workdir/mock
-
-# Copy apps directory for seeding
-COPY ./apps /workdir/apps
-
-# Copy scripts directory for seeding
-COPY ./scripts /workdir/scripts
-
-# Copy reset and create schema (drops all tables and recreates them correctly)
-COPY ./reset-and-create-schema.sql /workdir/reset-and-create-schema.sql
-
-# Copy essential seeding script
-COPY ./seed-essential-only.sh /workdir/seed-essential-only.sh
-RUN chmod +x /workdir/seed-essential-only.sh
 
 # remove unecessary or sensitive files (.env files are skipped by default specified in .dockerignore)
 RUN rm -rf /workdir/aci/server/tests

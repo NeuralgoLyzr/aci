@@ -12,20 +12,20 @@ table = dynamodb.Table(table_name)
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
     Lambda function to manage ACI seeding state
-    
+
     Endpoints:
     - GET /seeding-status -> Check if seeding is done
     - POST /seeding-status -> Update seeding status
     - GET /seeding-scripts -> Get list of seeding scripts
     - POST /seeding-scripts -> Update list of seeding scripts
     """
-    
+
     try:
         # Parse the event
         http_method = event.get('httpMethod', 'GET')
         path = event.get('path', '/seeding-status')
         body = event.get('body')
-        
+
         if body:
             try:
                 body = json.loads(body)
@@ -33,7 +33,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 body = {}
         else:
             body = {}
-        
+
         # Route to appropriate handler
         if path == '/seeding-status':
             if http_method == 'GET':
@@ -45,7 +45,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return get_seeding_scripts()
             elif http_method == 'POST':
                 return update_seeding_scripts(body)
-        
+
         return {
             'statusCode': 404,
             'headers': {
@@ -239,3 +239,5 @@ def get_default_scripts() -> List[Dict[str, Any]]:
             ]
         }
     ]
+
+

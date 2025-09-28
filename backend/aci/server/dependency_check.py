@@ -17,9 +17,9 @@ def check_aws_kms_dependency() -> None:
 
 
 def check_dependencies() -> None:
-    # Skip KMS check in local environment
-    if os.getenv("SERVER_ENVIRONMENT") == "local":
-        print("Skipping KMS dependency check for local environment")
+    # Skip KMS check in local/development environment
+    if os.getenv("SERVER_ENVIRONMENT") in ["local", "development"]:
+        print(f"Skipping KMS dependency check for {os.getenv('SERVER_ENVIRONMENT')} environment")
         return
     
     check_aws_kms_dependency()

@@ -14,8 +14,8 @@ def _encrypt_value(value: str) -> str:
     """Encrypt a string value and return base64-encoded result."""
     import os
     
-    # Skip encryption in local environment (for testing/development)
-    if os.getenv("SERVER_ENVIRONMENT") == "local":
+    # Skip encryption in local/development environment (for testing/development)
+    if os.getenv("SERVER_ENVIRONMENT") in ["local", "development"]:
         # Return the value with a prefix to indicate it's not encrypted
         return f"LOCAL_UNENCRYPTED:{value}"
     
@@ -31,8 +31,8 @@ def _decrypt_value(value: str) -> str:
     """Decrypt a base64-encoded encrypted string."""
     import os
     
-    # Handle unencrypted values in local environment
-    if os.getenv("SERVER_ENVIRONMENT") == "local" and value.startswith("LOCAL_UNENCRYPTED:"):
+    # Handle unencrypted values in local/development environment
+    if os.getenv("SERVER_ENVIRONMENT") in ["local", "development"] and value.startswith("LOCAL_UNENCRYPTED:"):
         return value.replace("LOCAL_UNENCRYPTED:", "")
     
     encrypted_bytes = base64.b64decode(value)
