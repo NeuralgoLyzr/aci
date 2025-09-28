@@ -52,22 +52,23 @@ export const MetaInfoProvider = withRequiredAuthInfo<MetaInfoProviderProps>(
 
     useEffect(() => {
       async function getOrgs() {
-        // TODO: refactor this retry logic to use TanStack Query to
-        // elegantly handle the loading and error state
-        let retrievedOrgs = userClass.getOrgs();
+        try {
+          // TODO: refactor this retry logic to use TanStack Query to
+          // elegantly handle the loading and error state
+          let retrievedOrgs = userClass.getOrgs();
 
-        let attempts = 0;
-        const maxAttempts = 5;
+          // If no orgs found, try refreshing auth info once
+          if (retrievedOrgs.length === 0) {
+            await refreshAuthInfo();
+            retrievedOrgs = userClass.getOrgs();
+          }
 
-        // Wait for the default Personal Org to be created
-        while (retrievedOrgs.length === 0 && attempts < maxAttempts) {
-          await refreshAuthInfo();
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          retrievedOrgs = userClass.getOrgs();
-          attempts++;
-          console.log("retrievedOrgs", retrievedOrgs, attempts);
+          setOrgs(retrievedOrgs);
+        } catch (error) {
+          console.error("Failed to get organizations:", error);
+          // Set empty array instead of getting stuck in loop
+          setOrgs([]);
         }
-        setOrgs(retrievedOrgs);
       }
       getOrgs();
     }, [userClass, refreshAuthInfo]);
