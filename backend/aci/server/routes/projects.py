@@ -39,7 +39,7 @@ async def create_project(
     project = crud.projects.create_project(db_session, body.org_id, body.name)
 
     # Create a default Agent for the project
-    crud.projects.create_agent(
+    agent = crud.projects.create_agent(
         db_session,
         project.id,
         name="Default Agent",
@@ -48,9 +48,26 @@ async def create_project(
         custom_instructions={},
     )
     db_session.commit()
-
+    
     logger.info(f"Created project, project_id={project.id}, org_id={body.org_id}")
-    return project
+    
+    # Convert to ProjectPublic model to avoid DetachedInstanceError
+    from aci.common.schemas.project import ProjectPublic
+    project_public = ProjectPublic(
+        id=project.id,
+        org_id=project.org_id,
+        name=project.name,
+        visibility_access=project.visibility_access,
+        daily_quota_used=project.daily_quota_used,
+        daily_quota_reset_at=project.daily_quota_reset_at,
+        api_quota_monthly_used=project.api_quota_monthly_used,
+        api_quota_last_reset=project.api_quota_last_reset,
+        total_quota_used=project.total_quota_used,
+        created_at=project.created_at,
+        updated_at=project.updated_at,
+    )
+    
+    return project_public
 
 
 @router.get("", response_model=list[ProjectPublic], include_in_schema=True)
@@ -67,8 +84,27 @@ async def get_projects(
     # logger.info(f"Get projects, user_id={user.user_id}, org_id={org_id}")
 
     projects = crud.projects.get_projects_by_org(db_session, org_id)
-
-    return projects
+    
+    # Convert to ProjectPublic models to avoid DetachedInstanceError
+    from aci.common.schemas.project import ProjectPublic
+    project_publics = []
+    for project in projects:
+        project_public = ProjectPublic(
+            id=project.id,
+            org_id=project.org_id,
+            name=project.name,
+            visibility_access=project.visibility_access,
+            daily_quota_used=project.daily_quota_used,
+            daily_quota_reset_at=project.daily_quota_reset_at,
+            api_quota_monthly_used=project.api_quota_monthly_used,
+            api_quota_last_reset=project.api_quota_last_reset,
+            total_quota_used=project.total_quota_used,
+            created_at=project.created_at,
+            updated_at=project.updated_at,
+        )
+        project_publics.append(project_public)
+    
+    return project_publics
 
 
 @router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT, include_in_schema=True)
