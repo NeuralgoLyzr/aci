@@ -23,6 +23,9 @@ COPY ./aci/__init__.py /workdir/aci/__init__.py
 # Copy mock files for local development/testing (only if needed)
 COPY ./mock /workdir/mock
 
+# Copy apps directory for tool seeding
+COPY ./apps /workdir/apps
+
 # remove unecessary or sensitive files (.env files are skipped by default specified in .dockerignore)
 RUN rm -rf /workdir/aci/server/tests
 
