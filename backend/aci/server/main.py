@@ -220,6 +220,6 @@ app.include_router(
     tool_seeding.router,
     prefix="/v1/tool-seeding",
     tags=["tool-seeding"],
-    dependencies=[Depends(deps.validate_api_key)],
+    # dependencies=[Depends(auth.require_user)],  # Use PropelAuth like projects router
 )
 

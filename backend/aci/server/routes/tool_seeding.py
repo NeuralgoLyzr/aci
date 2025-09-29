@@ -61,7 +61,9 @@ class ToolSeedingResponse(BaseModel):
 
 @router.post("/upsert-app", response_model=ToolSeedingResponse)
 async def upsert_app_via_api(
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    # user: Annotated[User, Depends(auth.require_user)],
+    org_id: Annotated[str, Header(alias=config.ACI_ORG_ID_HEADER)],
+    db_session: Annotated[Session, Depends(deps.yield_db_session)],
     request: AppUpsertRequest,
 ) -> ToolSeedingResponse:
     """
@@ -103,7 +105,7 @@ async def upsert_app_via_api(
         
         # Use the CLI helper function
         app_id = upsert_app.upsert_app_helper(
-            db_session=context.db_session,
+            db_session=db_session,
             app_file=app_file_path,
             secrets_file=secrets_file_path,
             skip_dry_run=request.skip_dry_run
@@ -131,7 +133,9 @@ async def upsert_app_via_api(
 
 @router.post("/upsert-functions", response_model=ToolSeedingResponse)
 async def upsert_functions_via_api(
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    # user: Annotated[User, Depends(auth.require_user)],
+    org_id: Annotated[str, Header(alias=config.ACI_ORG_ID_HEADER)],
+    db_session: Annotated[Session, Depends(deps.yield_db_session)],
     request: FunctionsUpsertRequest,
 ) -> ToolSeedingResponse:
     """
