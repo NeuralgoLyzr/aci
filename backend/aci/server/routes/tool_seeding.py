@@ -11,19 +11,18 @@ from pathlib import Path
 from typing import Annotated, Any, Dict, List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from aci.cli.commands import upsert_app, upsert_functions
 from aci.common.db import crud
 from aci.common.db.sql_models import App, Function
+from aci.server import config, dependencies as deps
 from aci.common.enums import Visibility
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.app import AppDetails
 from aci.common.schemas.function import FunctionDetails
-from aci.server import config
-from aci.server import dependencies as deps
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -164,7 +163,7 @@ async def upsert_functions_via_api(
         )
         
         return ToolSeedingResponse(
-            success=True,
+        success=True,
             message=f"Successfully upserted {len(function_names)} functions from path '{request.functions_path}'",
             function_names=function_names
         )
@@ -181,7 +180,9 @@ async def upsert_functions_via_api(
 
 @router.post("/seed-tool", response_model=ToolSeedingResponse)
 async def seed_tool(
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    # user: Annotated[User, Depends(auth.require_user)],
+    org_id: Annotated[str, Header(alias=config.ACI_ORG_ID_HEADER)],
+    db_session: Annotated[Session, Depends(deps.yield_db_session)],
     request: SeedingRequest,
 ) -> ToolSeedingResponse:
     """
@@ -198,7 +199,7 @@ async def seed_tool(
             skip_dry_run=request.skip_dry_run
         )
         
-        app_response = await upsert_app_via_api(context, app_request)
+        app_response = await upsert_app_via_api(org_id, db_session, app_request)
         results.append(f"App: {app_response.message}")
         
         if not app_response.success:
@@ -214,7 +215,7 @@ async def seed_tool(
                 skip_dry_run=request.skip_dry_run
             )
             
-            functions_response = await upsert_functions_via_api(context, functions_request)
+            functions_response = await upsert_functions_via_api(org_id, db_session, functions_request)
             results.append(f"Functions: {functions_response.message}")
             
             if not functions_response.success:
@@ -229,7 +230,7 @@ async def seed_tool(
             app_id=app_response.app_id,
             function_names=functions_response.function_names if request.functions_path else None
         )
-        
+
     except Exception as e:
         logger.error(f"Error seeding tool: {str(e)}")
         return ToolSeedingResponse(
@@ -240,7 +241,9 @@ async def seed_tool(
 
 @router.get("/available-apps", response_model=List[Dict[str, Any]])
 async def get_available_apps(
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    # user: Annotated[User, Depends(auth.require_user)],
+    org_id: Annotated[str, Header(alias=config.ACI_ORG_ID_HEADER)],
+    db_session: Annotated[Session, Depends(deps.yield_db_session)],
 ) -> List[Dict[str, Any]]:
     """
     Get list of available apps that can be seeded.
@@ -250,20 +253,20 @@ async def get_available_apps(
         # Scan the apps directory for available apps
         apps_dir = Path("/workdir/apps")
         available_apps = []
-        
+
         if apps_dir.exists():
             for app_dir in apps_dir.iterdir():
                 if app_dir.is_dir():
                     app_json_path = app_dir / "app.json"
                     functions_json_path = app_dir / "functions.json"
                     secrets_json_path = app_dir / ".app.secrets.json"
-                    
+
                     if app_json_path.exists():
                         try:
                             # Read app.json to get app details
                             with open(app_json_path) as f:
                                 app_data = json.load(f)
-                            
+
                             available_apps.append({
                                 "name": app_data.get("name", app_dir.name),
                                 "display_name": app_data.get("display_name", app_data.get("name", app_dir.name)),
@@ -276,9 +279,9 @@ async def get_available_apps(
                         except Exception as e:
                             logger.warning(f"Could not read app.json for {app_dir.name}: {e}")
                             continue
-        
+
         return available_apps
-        
+
     except Exception as e:
         logger.error(f"Error getting available apps: {str(e)}")
         raise HTTPException(
@@ -289,7 +292,9 @@ async def get_available_apps(
 
 @router.get("/seeded-apps", response_model=List[AppDetails])
 async def get_seeded_apps(
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    # user: Annotated[User, Depends(auth.require_user)],
+    org_id: Annotated[str, Header(alias=config.ACI_ORG_ID_HEADER)],
+    db_session: Annotated[Session, Depends(deps.yield_db_session)],
 ) -> List[AppDetails]:
     """
     Get list of apps that have been seeded (exist in the database).
@@ -297,7 +302,7 @@ async def get_seeded_apps(
     try:
         # Get all apps from the database
         apps = crud.apps.get_apps(
-            context.db_session,
+            db_session,
             public_only=False,  # Include all apps for admin purposes
             active_only=False,  # Include inactive apps
             app_names=None,
@@ -339,7 +344,9 @@ async def get_seeded_apps(
 
 @router.get("/seeding-status", response_model=Dict[str, Any])
 async def get_seeding_status(
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    # user: Annotated[User, Depends(auth.require_user)],
+    org_id: Annotated[str, Header(alias=config.ACI_ORG_ID_HEADER)],
+    db_session: Annotated[Session, Depends(deps.yield_db_session)],
 ) -> Dict[str, Any]:
     """
     Get the current seeding status.
@@ -366,7 +373,9 @@ async def get_seeding_status(
 
 @router.post("/run-seed-script", response_model=ToolSeedingResponse)
 async def run_seed_script(
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    # user: Annotated[User, Depends(auth.require_user)],
+    org_id: Annotated[str, Header(alias=config.ACI_ORG_ID_HEADER)],
+    db_session: Annotated[Session, Depends(deps.yield_db_session)],
     script_path: str = "./scripts/seed_db.sh",
     args: List[str] = None,
 ) -> ToolSeedingResponse:
