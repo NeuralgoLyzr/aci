@@ -31,6 +31,7 @@ from aci.server.routes import (
     linked_accounts,
     organizations,
     projects,
+    tool_seeding,
     webhooks,
 )
 from aci.server.sentry import setup_sentry
@@ -213,5 +214,12 @@ app.include_router(
     docs.router,
     prefix=config.ROUTER_PREFIX_DOCS,
     tags=[config.ROUTER_PREFIX_DOCS.split("/")[-1]],
+)
+
+app.include_router(
+    tool_seeding.router,
+    prefix="/v1/tool-seeding",
+    tags=["tool-seeding"],
+    dependencies=[Depends(deps.validate_api_key)],
 )
 
