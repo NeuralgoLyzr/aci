@@ -29,6 +29,7 @@ dependencies = [
     "google-api-python-client>=2.167.0",
     "aws-encryption-sdk[mpl]>=4.0.1",
     "boto3>=1.37.36",
+    "aioboto3>=13.3.0",
     "rich>=13.9.4",
     "propelauth-fastapi>=4.2.6",
     "svix>=1.65.0",

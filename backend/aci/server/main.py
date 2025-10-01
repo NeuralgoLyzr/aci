@@ -69,6 +69,14 @@ app = FastAPI(
     generate_unique_id_function=custom_generate_unique_id,
 )
 
+
+@app.on_event("startup")
+async def startup_event() -> None:
+    """Initialize database connection on server startup."""
+    await config.get_db_full_url()
+    logger.info("Database URL initialized")
+
+
 auth = get_propelauth()
 
 

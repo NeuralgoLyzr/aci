@@ -34,3 +34,4 @@ COPY ./start.sh /workdir/start.sh
 RUN chmod +x /workdir/start.sh
 
 CMD ["/workdir/start.sh"]
+
