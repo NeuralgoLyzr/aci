@@ -44,11 +44,20 @@ def run_migrations() -> None:
         # Set the script location to the correct path
         alembic_cfg.set_main_option("script_location", str(backend_dir / "aci" / "alembic"))
         
+        # Configure Alembic to use our logger
+        import logging
+        logging.getLogger('alembic').setLevel(logging.INFO)
+        
         # Run the upgrade command
         logger.info("Running alembic upgrade head...")
-        command.upgrade(alembic_cfg, "head")
+        logger.info("This may take a few moments if there are many migrations...")
         
-        logger.info("✅ Database migrations completed successfully")
+        try:
+            command.upgrade(alembic_cfg, "head")
+            logger.info("✅ Database migrations completed successfully")
+        except Exception as migration_error:
+            logger.error(f"❌ Migration failed during execution: {migration_error}")
+            raise
             
     except FileNotFoundError as e:
         logger.error(f"❌ Migration failed: {e}")
