@@ -34,7 +34,11 @@ from aci.server.routes import (
     tool_seeding,
     webhooks,
 )
+from aci.server.run_migrations import run_migrations
 from aci.server.sentry import setup_sentry
+
+# Run database migrations first (if RUN_MIGRATIONS=true)
+run_migrations()
 
 check_dependencies()
 
