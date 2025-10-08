@@ -54,7 +54,7 @@ def run_migrations() -> None:
         try:
             from alembic.script import ScriptDirectory
             from alembic.runtime.migration import MigrationContext
-            from aci.common.db import get_db_session
+            from aci.common.utils import create_db_session
             from aci.server import config as server_config
             
             script = ScriptDirectory.from_config(alembic_cfg)
@@ -62,7 +62,7 @@ def run_migrations() -> None:
             logger.info(f"Latest migration revision: {head_revision}")
             
             # Check current DB revision
-            with get_db_session(server_config.get_db_full_url_sync()) as db:
+            with create_db_session(server_config.get_db_full_url_sync()) as db:
                 context = MigrationContext.configure(db.connection())
                 current_rev = context.get_current_revision()
                 
