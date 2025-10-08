@@ -34,11 +34,11 @@ from aci.server.routes import (
     tool_seeding,
     webhooks,
 )
-from aci.server.run_migrations import run_migrations
+from aci.server.fix_schema import fix_schema
 from aci.server.sentry import setup_sentry
 
-# Run database migrations first (if RUN_MIGRATIONS=true)
-run_migrations()
+# Run simple schema fixes first (if RUN_SCHEMA_FIXES=true)
+fix_schema()
 
 check_dependencies()
 
