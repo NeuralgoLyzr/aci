@@ -4,9 +4,11 @@ This ensures the database schema is up-to-date before the server starts.
 """
 
 import os
-import subprocess
 import sys
 from pathlib import Path
+
+from alembic import command
+from alembic.config import Config
 
 from aci.common.logging_setup import get_logger
 
@@ -36,44 +38,26 @@ def run_migrations() -> None:
         
         logger.info(f"Using alembic.ini at: {alembic_ini}")
         
-        # Run alembic upgrade head
-        result = subprocess.run(
-            ["alembic", "-c", str(alembic_ini), "upgrade", "head"],
-            cwd=str(backend_dir),
-            capture_output=True,
-            text=True,
-            check=False,
-        )
+        # Create Alembic config object
+        alembic_cfg = Config(str(alembic_ini))
         
-        # Log output
-        if result.stdout:
-            for line in result.stdout.strip().split('\n'):
-                logger.info(f"[Alembic] {line}")
+        # Set the script location to the correct path
+        alembic_cfg.set_main_option("script_location", str(backend_dir / "aci" / "alembic"))
         
-        if result.stderr:
-            for line in result.stderr.strip().split('\n'):
-                if line.strip():  # Only log non-empty lines
-                    logger.warning(f"[Alembic] {line}")
+        # Run the upgrade command
+        logger.info("Running alembic upgrade head...")
+        command.upgrade(alembic_cfg, "head")
         
-        # Check if migration succeeded
-        if result.returncode == 0:
-            logger.info("✅ Database migrations completed successfully")
-        else:
-            logger.error(f"❌ Database migrations failed with exit code {result.returncode}")
-            logger.error(f"stdout: {result.stdout}")
-            logger.error(f"stderr: {result.stderr}")
-            raise RuntimeError(f"Alembic migration failed with exit code {result.returncode}")
+        logger.info("✅ Database migrations completed successfully")
             
     except FileNotFoundError as e:
         logger.error(f"❌ Migration failed: {e}")
         raise
-    except subprocess.CalledProcessError as e:
-        logger.error(f"❌ Migration command failed: {e}")
-        logger.error(f"stdout: {e.stdout}")
-        logger.error(f"stderr: {e.stderr}")
-        raise
     except Exception as e:
         logger.error(f"❌ Unexpected error during migration: {e}")
+        logger.error(f"Error type: {type(e).__name__}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise
 
 
@@ -87,19 +71,26 @@ def check_migration_status() -> None:
             logger.warning(f"⚠️  alembic.ini not found at {alembic_ini}")
             return
         
-        # Run alembic current to show current revision
-        result = subprocess.run(
-            ["alembic", "-c", str(alembic_ini), "current"],
-            cwd=str(backend_dir),
-            capture_output=True,
-            text=True,
-            check=False,
-        )
+        # Create Alembic config object
+        alembic_cfg = Config(str(alembic_ini))
+        alembic_cfg.set_main_option("script_location", str(backend_dir / "aci" / "alembic"))
         
-        if result.returncode == 0 and result.stdout:
-            logger.info(f"📊 Current database revision: {result.stdout.strip()}")
-        else:
-            logger.warning("⚠️  Could not determine current database revision")
+        # Get current revision
+        from alembic.script import ScriptDirectory
+        from aci.common.db import get_db_session
+        from aci.server import config as server_config
+        
+        script = ScriptDirectory.from_config(alembic_cfg)
+        
+        with get_db_session(server_config.get_db_full_url_sync()) as db:
+            from alembic.migration import MigrationContext
+            context = MigrationContext.configure(db.connection())
+            current_rev = context.get_current_revision()
+            
+            if current_rev:
+                logger.info(f"📊 Current database revision: {current_rev}")
+            else:
+                logger.warning("⚠️  No database revision found (database might be empty)")
             
     except Exception as e:
         logger.warning(f"⚠️  Could not check migration status: {e}")
