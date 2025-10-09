@@ -160,11 +160,12 @@ async def upsert_functions_via_api(
             )
         
         # Use the CLI helper function
+        logger.info(f"Calling upsert_functions_helper with functions_file={functions_file_path}, skip_dry_run={request.skip_dry_run}")
         function_names = upsert_functions.upsert_functions_helper(
-            functions_file=functions_file_path,
-            skip_dry_run=request.skip_dry_run
-        )
-        
+            functions_file_path,  # Use positional argument
+        request.skip_dry_run
+    )
+
         return ToolSeedingResponse(
         success=True,
             message=f"Successfully upserted {len(function_names)} functions from path '{request.functions_path}'",
