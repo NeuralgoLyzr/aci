@@ -19,13 +19,16 @@ from aci.cli.commands import upsert_app, upsert_functions
 from aci.common.db import crud
 from aci.common.db.sql_models import App, Function
 from aci.server import config, dependencies as deps
+from aci.server.acl import get_propelauth
 from aci.common.enums import Visibility
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.app import AppDetails
 from aci.common.schemas.function import FunctionDetails
+from propelauth_fastapi import User
 
 logger = get_logger(__name__)
 router = APIRouter()
+auth = get_propelauth()
 
 
 class AppUpsertRequest(BaseModel):
@@ -180,7 +183,7 @@ async def upsert_functions_via_api(
 
 @router.post("/seed-tool", response_model=ToolSeedingResponse)
 async def seed_tool(
-    # user: Annotated[User, Depends(auth.require_user)],
+    user: Annotated[User, Depends(auth.require_user)],
     org_id: Annotated[str, Header(alias=config.ACI_ORG_ID_HEADER)],
     db_session: Annotated[Session, Depends(deps.yield_db_session)],
     request: SeedingRequest,
