@@ -159,12 +159,16 @@ async def upsert_functions_via_api(
                 detail=f"Functions file not found at path: {functions_file_path}"
             )
         
+        # Initialize CLI config DB_FULL_URL if not set
+        if upsert_functions.config.DB_FULL_URL is None:
+            upsert_functions.config.DB_FULL_URL = upsert_functions.config.get_db_full_url_sync()
+        
         # Use the CLI helper function
         logger.info(f"Calling upsert_functions_helper with functions_file={functions_file_path}, skip_dry_run={request.skip_dry_run}")
         function_names = upsert_functions.upsert_functions_helper(
             functions_file_path,  # Use positional argument
-        request.skip_dry_run
-    )
+            request.skip_dry_run
+        )
 
         return ToolSeedingResponse(
         success=True,
