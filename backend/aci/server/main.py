@@ -132,6 +132,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "https://main.de73cci4api6i.amplifyapp.com",
+        "https://aci.studio.lyzr.ai",
     ],
     allow_credentials=True,
     allow_methods=["*"],
