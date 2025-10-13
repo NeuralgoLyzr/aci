@@ -17,6 +17,7 @@ def create_app(
     db_session: Session,
     app_upsert: AppUpsert,
     app_embedding: list[float],
+    api_key_id: UUID | None = None,
 ) -> App:
     logger.debug(f"Creating app: {app_upsert}")
 
@@ -24,6 +25,7 @@ def create_app(
     app = App(
         **app_data,
         embedding=app_embedding,
+        api_key_id=api_key_id,
     )
 
     db_session.add(app)
@@ -145,6 +147,32 @@ def search_apps(
         return [(app, score) for app, score in results]
     else:
         return [(app, None) for (app,) in results]
+
+
+def get_apps_by_api_key_id(
+    db_session: Session,
+    api_key_id: UUID,
+) -> list[App]:
+    """Get all apps created by a specific API key."""
+    statement = select(App).filter(App.api_key_id == api_key_id)
+    return list(db_session.execute(statement).scalars().all())
+
+
+def delete_app_by_id(
+    db_session: Session,
+    app_id: UUID,
+    api_key_id: UUID,
+) -> bool:
+    """Delete an app if it was created by the given API key."""
+    app = db_session.execute(
+        select(App).filter(App.id == app_id, App.api_key_id == api_key_id)
+    ).scalar_one_or_none()
+    
+    if app:
+        db_session.delete(app)
+        db_session.flush()
+        return True
+    return False
 
 
 def set_app_active_status(db_session: Session, app_name: str, active: bool) -> None:

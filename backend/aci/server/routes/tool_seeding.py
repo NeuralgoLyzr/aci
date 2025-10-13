@@ -19,13 +19,16 @@ from aci.cli.commands import upsert_app, upsert_functions
 from aci.common.db import crud
 from aci.common.db.sql_models import App, Function
 from aci.server import config, dependencies as deps
+from aci.server.acl import get_propelauth
 from aci.common.enums import Visibility
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.app import AppDetails
 from aci.common.schemas.function import FunctionDetails
+from propelauth_fastapi import User
 
 logger = get_logger(__name__)
 router = APIRouter()
+auth = get_propelauth()
 
 
 class AppUpsertRequest(BaseModel):
@@ -58,9 +61,30 @@ class ToolSeedingResponse(BaseModel):
     function_names: Optional[List[str]] = None
 
 
+class AppJsonRequest(BaseModel):
+    """Request model for creating app from JSON content"""
+    app_json: Dict[str, Any]  # The app.json content as a dictionary
+    secrets: Optional[Dict[str, str]] = None  # Optional secrets
+    skip_dry_run: bool = True
+
+
+class FunctionsJsonRequest(BaseModel):
+    """Request model for creating functions from JSON content"""
+    functions_json: List[Dict[str, Any]]  # The functions.json content as a list
+    skip_dry_run: bool = True
+
+
+class ToolJsonRequest(BaseModel):
+    """Request model for creating a complete tool from JSON content"""
+    app_json: Dict[str, Any]  # The app.json content
+    functions_json: Optional[List[Dict[str, Any]]] = None  # Optional functions.json content
+    secrets: Optional[Dict[str, str]] = None  # Optional secrets
+    skip_dry_run: bool = True
+
+
 @router.post("/upsert-app", response_model=ToolSeedingResponse)
 async def upsert_app_via_api(
-    # user: Annotated[User, Depends(auth.require_user)],
+    user: Annotated[User, Depends(auth.require_user)],
     org_id: Annotated[str, Header(alias=config.ACI_ORG_ID_HEADER)],
     db_session: Annotated[Session, Depends(deps.yield_db_session)],
     request: AppUpsertRequest,
@@ -102,13 +126,14 @@ async def upsert_app_via_api(
                 json.dump(request.secrets, f)
                 secrets_file_path = Path(f.name)
         
-        # Use the CLI helper function
-        app_id = upsert_app.upsert_app_helper(
-            db_session=db_session,
-            app_file=app_file_path,
-            secrets_file=secrets_file_path,
-            skip_dry_run=request.skip_dry_run
-        )
+            # Use the CLI helper function
+            app_id = upsert_app.upsert_app_helper(
+                db_session=db_session,
+                app_file=app_file_path,
+                secrets_file=secrets_file_path,
+                skip_dry_run=request.skip_dry_run,
+                user_id=user.user_id
+            )
         
         # Clean up temporary secrets file if created
         if request.secrets and secrets_file_path and secrets_file_path.exists():
@@ -132,7 +157,7 @@ async def upsert_app_via_api(
 
 @router.post("/upsert-functions", response_model=ToolSeedingResponse)
 async def upsert_functions_via_api(
-    # user: Annotated[User, Depends(auth.require_user)],
+    user: Annotated[User, Depends(auth.require_user)],
     org_id: Annotated[str, Header(alias=config.ACI_ORG_ID_HEADER)],
     db_session: Annotated[Session, Depends(deps.yield_db_session)],
     request: FunctionsUpsertRequest,
@@ -156,12 +181,18 @@ async def upsert_functions_via_api(
                 detail=f"Functions file not found at path: {functions_file_path}"
             )
         
-        # Use the CLI helper function
-        function_names = upsert_functions.upsert_functions_helper(
-            functions_file=functions_file_path,
-            skip_dry_run=request.skip_dry_run
-        )
+        # Initialize CLI config DB_FULL_URL if not set
+        if upsert_functions.config.DB_FULL_URL is None:
+            upsert_functions.config.DB_FULL_URL = upsert_functions.config.get_db_full_url_sync()
         
+        # Use the CLI helper function
+        logger.info(f"Calling upsert_functions_helper with functions_file={functions_file_path}, skip_dry_run={request.skip_dry_run}")
+        function_names = upsert_functions.upsert_functions_helper(
+            functions_file_path,  # Use positional argument
+            request.skip_dry_run,
+            user.user_id
+        )
+
         return ToolSeedingResponse(
         success=True,
             message=f"Successfully upserted {len(function_names)} functions from path '{request.functions_path}'",
@@ -180,7 +211,7 @@ async def upsert_functions_via_api(
 
 @router.post("/seed-tool", response_model=ToolSeedingResponse)
 async def seed_tool(
-    # user: Annotated[User, Depends(auth.require_user)],
+    user: Annotated[User, Depends(auth.require_user)],
     org_id: Annotated[str, Header(alias=config.ACI_ORG_ID_HEADER)],
     db_session: Annotated[Session, Depends(deps.yield_db_session)],
     request: SeedingRequest,
@@ -430,4 +461,301 @@ async def run_seed_script(
         return ToolSeedingResponse(
             success=False,
             message=f"Failed to run seeding script '{script_path}': {str(e)}"
+        )
+
+
+# NEW JSON-BASED ENDPOINTS
+
+@router.post("/upsert-app-json", response_model=ToolSeedingResponse)
+async def upsert_app_from_json(
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    request: AppJsonRequest,
+) -> ToolSeedingResponse:
+    """
+    Create/update an app from JSON content pasted by the user.
+    This allows users to paste app.json content directly instead of requiring file paths.
+    """
+    try:
+        # Create temporary file with the app JSON content
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump(request.app_json, f, indent=2)
+            app_file_path = Path(f.name)
+        
+        # Create temporary secrets file if provided
+        secrets_file_path = None
+        if request.secrets:
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+                json.dump(request.secrets, f, indent=2)
+                secrets_file_path = Path(f.name)
+        
+        try:
+            # Use the existing CLI helper function
+            app_id = upsert_app.upsert_app_helper(
+                db_session=context.db_session,
+                app_file=app_file_path,
+                secrets_file=secrets_file_path,
+                skip_dry_run=request.skip_dry_run,
+                api_key_id=context.api_key_id
+            )
+            
+            return ToolSeedingResponse(
+                success=True,
+                message=f"Successfully upserted app '{request.app_json.get('name', 'Unknown')}' from JSON content",
+                app_id=app_id
+            )
+            
+        finally:
+            # Clean up temporary files
+            if app_file_path.exists():
+                app_file_path.unlink()
+            if secrets_file_path and secrets_file_path.exists():
+                secrets_file_path.unlink()
+
+    except Exception as e:
+        logger.error(f"Error upserting app from JSON content: {str(e)}")
+        return ToolSeedingResponse(
+            success=False,
+            message=f"Failed to upsert app from JSON content: {str(e)}"
+        )
+
+
+@router.post("/upsert-functions-json", response_model=ToolSeedingResponse)
+async def upsert_functions_from_json(
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    request: FunctionsJsonRequest,
+) -> ToolSeedingResponse:
+    """
+    Create/update functions from JSON content pasted by the user.
+    This allows users to paste functions.json content directly instead of requiring file paths.
+    """
+    try:
+        # Create temporary file with the functions JSON content
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump(request.functions_json, f, indent=2)
+            functions_file_path = Path(f.name)
+        
+        try:
+            # Initialize CLI config DB_FULL_URL if not set
+            if upsert_functions.config.DB_FULL_URL is None:
+                upsert_functions.config.DB_FULL_URL = upsert_functions.config.get_db_full_url_sync()
+            
+            # Use the existing CLI helper function
+            function_names = upsert_functions.upsert_functions_helper(
+                functions_file_path,
+                request.skip_dry_run,
+                context.api_key_id
+            )
+            
+            return ToolSeedingResponse(
+                success=True,
+                message=f"Successfully upserted {len(function_names)} functions from JSON content",
+                function_names=function_names
+            )
+            
+        finally:
+            # Clean up temporary file
+            if functions_file_path.exists():
+                functions_file_path.unlink()
+
+    except Exception as e:
+        logger.error(f"Error upserting functions from JSON content: {str(e)}")
+        return ToolSeedingResponse(
+            success=False,
+            message=f"Failed to upsert functions from JSON content: {str(e)}"
+        )
+
+
+@router.post("/seed-tool-json", response_model=ToolSeedingResponse)
+async def seed_tool_from_json(
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    request: ToolJsonRequest,
+) -> ToolSeedingResponse:
+    """
+    Create/update a complete tool (app + functions) from JSON content pasted by the user.
+    This is the main endpoint for users to paste their custom tool configurations.
+    """
+    try:
+        results = []
+        
+        # 1. Create app from JSON content
+        app_request = AppJsonRequest(
+            app_json=request.app_json,
+            secrets=request.secrets,
+            skip_dry_run=request.skip_dry_run
+        )
+        
+        app_response = await upsert_app_from_json(context, app_request)
+        results.append(f"App: {app_response.message}")
+        
+        if not app_response.success:
+            return ToolSeedingResponse(
+                success=False,
+                message=f"Failed to seed tool - App creation failed: {app_response.message}"
+            )
+        
+        # 2. Create functions from JSON content if provided
+        functions_response = None
+        if request.functions_json:
+            functions_request = FunctionsJsonRequest(
+                functions_json=request.functions_json,
+                skip_dry_run=request.skip_dry_run
+            )
+            
+            functions_response = await upsert_functions_from_json(context, functions_request)
+            results.append(f"Functions: {functions_response.message}")
+            
+            if not functions_response.success:
+                return ToolSeedingResponse(
+                    success=False,
+                    message=f"Partially failed to seed tool - Functions creation failed: {functions_response.message}"
+                )
+        
+        return ToolSeedingResponse(
+            success=True,
+            message=f"Successfully seeded tool from JSON content. {' | '.join(results)}",
+            app_id=app_response.app_id,
+            function_names=functions_response.function_names if functions_response else None
+        )
+
+    except Exception as e:
+        logger.error(f"Error seeding tool from JSON content: {str(e)}")
+        return ToolSeedingResponse(
+            success=False,
+            message=f"Failed to seed tool from JSON content: {str(e)}"
+        )
+
+
+# CUSTOM TOOLS MANAGEMENT ENDPOINTS
+
+@router.get("/my-custom-apps", response_model=list[dict])
+async def list_my_custom_apps(
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+) -> list[dict]:
+    """
+    List all custom apps created by the current API key holder.
+    Returns only apps that were created using the JSON seeding APIs.
+    """
+    try:
+        apps = crud.apps.get_apps_by_api_key_id(context.db_session, context.api_key_id)
+        
+        return [
+            {
+                "id": str(app.id),
+                "name": app.name,
+                "display_name": app.display_name,
+                "provider": app.provider,
+                "version": app.version,
+                "description": app.description,
+                "categories": app.categories,
+                "active": app.active,
+                "created_at": app.created_at.isoformat(),
+                "updated_at": app.updated_at.isoformat(),
+            }
+            for app in apps
+        ]
+    except Exception as e:
+        logger.error(f"Error listing custom apps: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to list custom apps: {str(e)}"
+        )
+
+
+@router.get("/my-custom-functions", response_model=list[dict])
+async def list_my_custom_functions(
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+) -> list[dict]:
+    """
+    List all custom functions created by the current API key holder.
+    Returns only functions that were created using the JSON seeding APIs.
+    """
+    try:
+        functions = crud.functions.get_functions_by_api_key_id(context.db_session, context.api_key_id)
+        
+        return [
+            {
+                "id": str(function.id),
+                "name": function.name,
+                "description": function.description,
+                "tags": function.tags,
+                "active": function.active,
+                "protocol": function.protocol.value,
+                "app_name": function.app_name,
+                "created_at": function.created_at.isoformat(),
+                "updated_at": function.updated_at.isoformat(),
+            }
+            for function in functions
+        ]
+    except Exception as e:
+        logger.error(f"Error listing custom functions: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to list custom functions: {str(e)}"
+        )
+
+
+@router.delete("/my-custom-apps/{app_id}")
+async def delete_my_custom_app(
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    app_id: UUID,
+) -> dict:
+    """
+    Delete a custom app if it was created by the current API key holder.
+    This will also delete all functions associated with the app.
+    """
+    try:
+        deleted = crud.apps.delete_app_by_id(context.db_session, app_id, context.api_key_id)
+        
+        if deleted:
+            context.db_session.commit()
+            return {
+                "success": True,
+                "message": f"Successfully deleted app with ID: {app_id}"
+            }
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="App not found or you don't have permission to delete it"
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting custom app {app_id}: {str(e)}")
+        context.db_session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete app: {str(e)}"
+        )
+
+
+@router.delete("/my-custom-functions/{function_id}")
+async def delete_my_custom_function(
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    function_id: UUID,
+) -> dict:
+    """
+    Delete a custom function if it was created by the current API key holder.
+    """
+    try:
+        deleted = crud.functions.delete_function_by_id(context.db_session, function_id, context.api_key_id)
+        
+        if deleted:
+            context.db_session.commit()
+            return {
+                "success": True,
+                "message": f"Successfully deleted function with ID: {function_id}"
+            }
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Function not found or you don't have permission to delete it"
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting custom function {function_id}: {str(e)}")
+        context.db_session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete function: {str(e)}"
         )

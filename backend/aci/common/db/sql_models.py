@@ -226,6 +226,11 @@ class Function(Base):
     app_id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("apps.id"), nullable=False
     )
+    # API Key ID of the creator (for user-created custom functions via API)
+    # NULL for system/built-in functions that are available to everyone
+    api_key_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("api_keys.id"), nullable=True
+    )
     # Note: the function name is unique across the platform and should have app information, e.g., "GITHUB_CLONE_REPO"
     # ideally this should just be <app name>_<function name> (uppercase)
     name: Mapped[str] = mapped_column(String(MAX_STRING_LENGTH), nullable=False, unique=True)
@@ -268,6 +273,11 @@ class App(Base):
 
     id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True), primary_key=True, default_factory=uuid4, init=False
+    )
+    # API Key ID of the creator (for user-created custom apps via API)
+    # NULL for system/built-in apps that are available to everyone
+    api_key_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("api_keys.id"), nullable=True
     )
     # Need name to be unique to support globally unique function name.
     name: Mapped[str] = mapped_column(String(APP_NAME_MAX_LENGTH), nullable=False, unique=True)

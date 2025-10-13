@@ -45,7 +45,7 @@ def upsert_functions(functions_file: Path, skip_dry_run: bool) -> list[str]:
     return upsert_functions_helper(functions_file, skip_dry_run)
 
 
-def upsert_functions_helper(functions_file: Path, skip_dry_run: bool) -> list[str]:
+def upsert_functions_helper(functions_file: Path, skip_dry_run: bool, api_key_id: UUID | None = None) -> list[str]:
     with utils.create_db_session(config.DB_FULL_URL) as db_session:
         with open(functions_file) as f:
             functions_data = json.load(f)
@@ -72,7 +72,7 @@ def upsert_functions_helper(functions_file: Path, skip_dry_run: bool) -> list[st
                 existing_functions.append(function_upsert)
 
         console.rule("Checking functions to create...")
-        functions_created = create_functions_helper(db_session, new_functions)
+        functions_created = create_functions_helper(db_session, new_functions, api_key_id)
         console.rule("Checking functions to update...")
         functions_updated = update_functions_helper(db_session, existing_functions)
         # for functions that are in existing_functions but not in functions_updated
@@ -101,7 +101,7 @@ def upsert_functions_helper(functions_file: Path, skip_dry_run: bool) -> list[st
 
 
 def create_functions_helper(
-    db_session: Session, functions_upsert: list[FunctionUpsert]
+    db_session: Session, functions_upsert: list[FunctionUpsert], api_key_id: UUID | None = None
 ) -> list[str]:
     """
     Batch creates functions in the database.
@@ -115,7 +115,7 @@ def create_functions_helper(
         embedding_dimension=config.OPENAI_EMBEDDING_DIMENSION,
     )
     created_functions = crud.functions.create_functions(
-        db_session, functions_upsert, functions_embeddings
+        db_session, functions_upsert, functions_embeddings, api_key_id
     )
 
     return [func.name for func in created_functions]

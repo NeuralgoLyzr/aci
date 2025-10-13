@@ -17,6 +17,7 @@ def create_functions(
     db_session: Session,
     functions_upsert: list[FunctionUpsert],
     functions_embeddings: list[list[float]],
+    api_key_id: UUID | None = None,
 ) -> list[Function]:
     """
     Create functions.
@@ -36,6 +37,7 @@ def create_functions(
             app_id=app.id,
             **function_data,
             embedding=functions_embeddings[i],
+            api_key_id=api_key_id,
         )
         db_session.add(function)
         functions.append(function)
@@ -211,3 +213,29 @@ def set_function_visibility(
 ) -> None:
     statement = update(Function).filter_by(name=function_name).values(visibility=visibility)
     db_session.execute(statement)
+
+
+def get_functions_by_api_key_id(
+    db_session: Session,
+    api_key_id: UUID,
+) -> list[Function]:
+    """Get all functions created by a specific API key."""
+    statement = select(Function).filter(Function.api_key_id == api_key_id)
+    return list(db_session.execute(statement).scalars().all())
+
+
+def delete_function_by_id(
+    db_session: Session,
+    function_id: UUID,
+    api_key_id: UUID,
+) -> bool:
+    """Delete a function if it was created by the given API key."""
+    function = db_session.execute(
+        select(Function).filter(Function.id == function_id, Function.api_key_id == api_key_id)
+    ).scalar_one_or_none()
+    
+    if function:
+        db_session.delete(function)
+        db_session.flush()
+        return True
+    return False
