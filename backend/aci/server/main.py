@@ -16,6 +16,7 @@ from aci.server import config
 from aci.server import dependencies as deps
 from aci.server.acl import get_propelauth
 from aci.server.dependency_check import check_dependencies
+from aci.server.fix_schema import fix_schema
 from aci.server.log_schema_filter import LogSchemaFilter
 from aci.server.middleware.interceptor import InterceptorMiddleware, RequestContextFilter
 from aci.server.middleware.ratelimit import RateLimitMiddleware
@@ -37,6 +38,9 @@ from aci.server.routes import (
 from aci.server.sentry import setup_sentry
 
 check_dependencies()
+
+# Run schema fixes
+fix_schema()
 
 setup_sentry()
 

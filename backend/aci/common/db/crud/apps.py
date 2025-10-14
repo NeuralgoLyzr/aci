@@ -2,6 +2,8 @@
 CRUD operations for apps. (not including app_configurations)
 """
 
+from uuid import UUID
+
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
