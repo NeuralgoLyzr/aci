@@ -156,8 +156,14 @@ def get_apps_by_api_key_id(
     api_key_id: UUID,
 ) -> list[App]:
     """Get all apps created by a specific API key."""
-    statement = select(App).filter(App.api_key_id == api_key_id)
-    return list(db_session.execute(statement).scalars().all())
+    try:
+        statement = select(App).filter(App.api_key_id == api_key_id)
+        return list(db_session.execute(statement).scalars().all())
+    except Exception as e:
+        if "column apps.api_key_id does not exist" in str(e):
+            logger.warning("api_key_id column does not exist yet in apps table. Returning empty list.")
+            return []
+        raise
 
 
 def delete_app_by_id(
@@ -166,15 +172,21 @@ def delete_app_by_id(
     api_key_id: UUID,
 ) -> bool:
     """Delete an app if it was created by the given API key."""
-    app = db_session.execute(
-        select(App).filter(App.id == app_id, App.api_key_id == api_key_id)
-    ).scalar_one_or_none()
-    
-    if app:
-        db_session.delete(app)
-        db_session.flush()
-        return True
-    return False
+    try:
+        app = db_session.execute(
+            select(App).filter(App.id == app_id, App.api_key_id == api_key_id)
+        ).scalar_one_or_none()
+        
+        if app:
+            db_session.delete(app)
+            db_session.flush()
+            return True
+        return False
+    except Exception as e:
+        if "column apps.api_key_id does not exist" in str(e):
+            logger.warning("api_key_id column does not exist yet in apps table. Cannot delete app.")
+            return False
+        raise
 
 
 def set_app_active_status(db_session: Session, app_name: str, active: bool) -> None:

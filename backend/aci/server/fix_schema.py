@@ -16,12 +16,14 @@ logger = get_logger(__name__)
 def fix_schema() -> None:
     """Fix any schema issues at startup."""
     
-    # Check if schema fixes should run
+    # Check if schema fixes should run - default to true
     should_run = os.getenv("RUN_SCHEMA_FIXES", "true").lower() == "true"
     
     if not should_run:
-        logger.info("Skipping schema fixes (RUN_SCHEMA_FIXES not set to 'true')")
+        logger.info("Skipping schema fixes (RUN_SCHEMA_FIXES explicitly set to false)")
         return
+    
+    logger.info("Running schema fixes (RUN_SCHEMA_FIXES is true or not set)")
     
     logger.info("🔧 Running schema fixes...")
     
