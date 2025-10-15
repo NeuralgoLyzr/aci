@@ -86,6 +86,7 @@ def search_functions(
     intent_embedding: list[float] | None,
     limit: int,
     offset: int,
+    exclude_api_key_owned: bool = True,
 ) -> list[Function]:
     """Get a list of functions with optional filtering by app names and sorting by vector similarity to intent."""
     statement = select(Function).join(App, Function.app_id == App.id)
@@ -108,6 +109,16 @@ def search_functions(
     # filter out functions that are not in the specified apps
     if app_names is not None:
         statement = statement.filter(App.name.in_(app_names))
+        
+    # Exclude functions created by API keys (custom tools) unless explicitly requested
+    if exclude_api_key_owned:
+        try:
+            statement = statement.filter(Function.api_key_id.is_(None))
+        except Exception as e:
+            if "column functions.api_key_id does not exist" in str(e):
+                logger.warning("api_key_id column does not exist yet in functions table. Skipping filter.")
+            else:
+                raise
 
     if intent_embedding is not None:
         similarity_score = Function.embedding.cosine_distance(intent_embedding)

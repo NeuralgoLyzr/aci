@@ -59,6 +59,7 @@ class ToolSeedingResponse(BaseModel):
     message: str
     app_id: Optional[UUID] = None
     function_names: Optional[List[str]] = None
+    functions: Optional[List[Dict[str, Any]]] = None
 
 
 class AppJsonRequest(BaseModel):
@@ -546,10 +547,21 @@ async def upsert_functions_from_json(
                 context.api_key_id
             )
             
+            # Get the function IDs for the upserted functions
+            functions = []
+            for name in function_names:
+                function = crud.functions.get_function(context.db_session, name, False, False)
+                if function:
+                    functions.append({
+                        "id": str(function.id),
+                        "name": function.name
+                    })
+            
             return ToolSeedingResponse(
                 success=True,
                 message=f"Successfully upserted {len(function_names)} functions from JSON content",
-                function_names=function_names
+                function_names=function_names,
+                functions=functions
             )
             
         finally:
@@ -694,23 +706,39 @@ async def list_my_custom_functions(
         )
 
 
-@router.delete("/my-custom-apps/{app_id}")
+@router.delete("/my-custom-apps/{app_name}")
 async def delete_my_custom_app(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
-    app_id: UUID,
+    app_name: str,
 ) -> dict:
     """
     Delete a custom app if it was created by the current API key holder.
     This will also delete all functions associated with the app.
     """
     try:
-        deleted = crud.apps.delete_app_by_id(context.db_session, app_id, context.api_key_id)
+        # Get the app by name first to check if it exists and belongs to this API key
+        app = crud.apps.get_app(context.db_session, app_name, False, False)
+        
+        if not app:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"App '{app_name}' not found"
+            )
+            
+        if app.api_key_id != context.api_key_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"You don't have permission to delete app '{app_name}'"
+            )
+            
+        # Delete the app
+        deleted = crud.apps.delete_app_by_id(context.db_session, app.id, context.api_key_id)
         
         if deleted:
             context.db_session.commit()
             return {
                 "success": True,
-                "message": f"Successfully deleted app with ID: {app_id}"
+                "message": f"Successfully deleted app '{app_name}'"
             }
         else:
             raise HTTPException(
@@ -728,22 +756,38 @@ async def delete_my_custom_app(
         )
 
 
-@router.delete("/my-custom-functions/{function_id}")
+@router.delete("/my-custom-functions/{function_name}")
 async def delete_my_custom_function(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
-    function_id: UUID,
+    function_name: str,
 ) -> dict:
     """
     Delete a custom function if it was created by the current API key holder.
     """
     try:
-        deleted = crud.functions.delete_function_by_id(context.db_session, function_id, context.api_key_id)
+        # Get the function by name first to check if it exists and belongs to this API key
+        function = crud.functions.get_function(context.db_session, function_name, False, False)
+        
+        if not function:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Function '{function_name}' not found"
+            )
+            
+        if function.api_key_id != context.api_key_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"You don't have permission to delete function '{function_name}'"
+            )
+            
+        # Delete the function
+        deleted = crud.functions.delete_function_by_id(context.db_session, function.id, context.api_key_id)
         
         if deleted:
             context.db_session.commit()
             return {
                 "success": True,
-                "message": f"Successfully deleted function with ID: {function_id}"
+                "message": f"Successfully deleted function '{function_name}'"
             }
         else:
             raise HTTPException(
