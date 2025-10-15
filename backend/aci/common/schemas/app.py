@@ -129,7 +129,6 @@ class AppsList(BaseModel):
         default=100, ge=1, le=1000, description="Maximum number of Apps per response."
     )
     offset: int = Field(default=0, ge=0, description="Pagination offset.")
-    include_custom_tools: bool = Field(default=False, description="If true, include custom tools.")
 
 
 class AppBasic(BaseModel):
