@@ -4,7 +4,7 @@ CRUD operations for apps. (not including app_configurations)
 
 from uuid import UUID
 
-from sqlalchemy import select, update
+from sqlalchemy import select, update, or_
 from sqlalchemy.orm import Session
 
 from aci.common.db.sql_models import App
@@ -100,7 +100,7 @@ def get_apps(
     
     if api_key_id is not None:
         try:
-            statement = statement.filter(App.api_key_id == api_key_id or App.api_key_id.is_(None))
+            statement = statement.filter(or_(App.api_key_id == api_key_id, App.api_key_id.is_(None)))
         except Exception as e:
             if "column apps.api_key_id does not exist" in str(e):
                 logger.warning("api_key_id column does not exist yet in apps table. Skipping filter.")
