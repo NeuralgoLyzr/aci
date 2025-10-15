@@ -29,7 +29,6 @@ openai_client = OpenAI(api_key=config.OPENAI_API_KEY)
 async def list_apps(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
     query_params: Annotated[AppsList, Query()],
-    include_custom_tools: bool = False,
 ) -> list[AppDetails]:
     """
     Get a list of Apps and their details. Sorted by App name.
@@ -41,7 +40,7 @@ async def list_apps(
         query_params.app_names,
         query_params.limit,
         query_params.offset,
-        exclude_api_key_owned=not include_custom_tools,  # Only include custom tools if explicitly requested
+        exclude_api_key_owned=not query_params.include_custom_tools,  # Only include custom tools if explicitly requested
     )
 
     # TODO: Now if include_functions=true, it returns all functions of the app whether or not it is enabled by the agent.
