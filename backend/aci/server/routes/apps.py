@@ -40,7 +40,7 @@ async def list_apps(
         query_params.app_names,
         query_params.limit,
         query_params.offset,
-        exclude_api_key_owned=not query_params.include_custom_tools,  # Only include custom tools if explicitly requested
+        api_key_id=context.api_key_id,
     )
 
     # TODO: Now if include_functions=true, it returns all functions of the app whether or not it is enabled by the agent.

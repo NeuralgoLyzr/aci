@@ -88,7 +88,7 @@ def get_apps(
     app_names: list[str] | None,
     limit: int | None,
     offset: int | None,
-    exclude_api_key_owned: bool = True,
+    api_key_id: UUID | None = None,
 ) -> list[App]:
     statement = select(App)
     if public_only:
@@ -98,10 +98,9 @@ def get_apps(
     if app_names is not None:
         statement = statement.filter(App.name.in_(app_names))
     
-    # Exclude apps created by API keys (custom tools) unless explicitly requested
-    if exclude_api_key_owned:
+    if api_key_id is not None:
         try:
-            statement = statement.filter(App.api_key_id.is_(None))
+            statement = statement.filter(App.api_key_id == api_key_id or App.api_key_id.is_(None))
         except Exception as e:
             if "column apps.api_key_id does not exist" in str(e):
                 logger.warning("api_key_id column does not exist yet in apps table. Skipping filter.")
