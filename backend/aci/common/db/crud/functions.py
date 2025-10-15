@@ -109,7 +109,7 @@ def search_functions(
     # filter out functions that are not in the specified apps
     if app_names is not None:
         statement = statement.filter(App.name.in_(app_names))
-        
+
     # Exclude functions created by API keys (custom tools) unless explicitly requested
     if exclude_api_key_owned:
         try:
@@ -251,7 +251,7 @@ def delete_function_by_id(
         function = db_session.execute(
             select(Function).filter(Function.id == function_id, Function.api_key_id == api_key_id)
         ).scalar_one_or_none()
-        
+
         if function:
             db_session.delete(function)
             db_session.flush()
@@ -261,4 +261,56 @@ def delete_function_by_id(
         if "column functions.api_key_id does not exist" in str(e):
             logger.warning("api_key_id column does not exist yet in functions table. Cannot delete function.")
             return False
+        raise
+
+
+def delete_functions_by_app_name(
+    db_session: Session,
+    app_name: str,
+    api_key_id: UUID | None = None,
+) -> int:
+    """Delete all functions for a given app name. If api_key_id is provided, only delete functions created by that API key.
+    Note: This function is typically used for custom apps only, not system apps."""
+    try:
+        # Get the app first to get its ID
+        app = crud.apps.get_app(db_session, app_name, False, False)
+        if not app:
+            logger.warning(f"App '{app_name}' not found")
+            return 0
+
+        # Build the query to get functions for this app
+        statement = select(Function).filter(Function.app_id == app.id)
+
+        # If api_key_id is provided, only delete functions created by that API key
+        if api_key_id is not None:
+            statement = statement.filter(Function.api_key_id == api_key_id)
+
+        # Get all functions to delete
+        functions_to_delete = list(db_session.execute(statement).scalars().all())
+
+        # Delete each function
+        for function in functions_to_delete:
+            db_session.delete(function)
+
+        db_session.flush()
+
+        logger.info(f"Deleted {len(functions_to_delete)} functions for app '{app_name}'")
+        return len(functions_to_delete)
+
+    except Exception as e:
+        if "column functions.api_key_id does not exist" in str(e):
+            logger.warning("api_key_id column does not exist yet in functions table. Cannot filter by API key.")
+            # Fallback: delete all functions for the app without API key filtering
+            app = crud.apps.get_app(db_session, app_name, False, False)
+            if not app:
+                return 0
+
+            statement = select(Function).filter(Function.app_id == app.id)
+            functions_to_delete = list(db_session.execute(statement).scalars().all())
+
+            for function in functions_to_delete:
+                db_session.delete(function)
+
+            db_session.flush()
+            return len(functions_to_delete)
         raise
