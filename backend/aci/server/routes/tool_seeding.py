@@ -361,6 +361,7 @@ async def get_seeded_apps(
                 functions=[FunctionDetails.model_validate(func) for func in app.functions],
                 created_at=app.created_at,
                 updated_at=app.updated_at,
+                custom_app=app.api_key_id is not None,
             )
             app_details.append(app_detail)
 

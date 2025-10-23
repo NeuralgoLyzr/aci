@@ -64,6 +64,7 @@ async def list_apps(
             functions=[FunctionDetails.model_validate(function) for function in app.functions],
             created_at=app.created_at,
             updated_at=app.updated_at,
+            custom_app=app.api_key_id is not None,
         )
         response.append(app_details)
 
@@ -186,6 +187,7 @@ async def get_app_details(
         functions=[FunctionDetails.model_validate(function) for function in functions],
         created_at=app.created_at,
         updated_at=app.updated_at,
+        custom_app=app.api_key_id is not None,
     )
 
     return app_details

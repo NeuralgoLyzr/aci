@@ -162,3 +162,5 @@ class AppDetails(BaseModel):
 
     created_at: datetime
     updated_at: datetime
+
+    custom_app: bool
