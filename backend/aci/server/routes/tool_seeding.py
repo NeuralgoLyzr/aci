@@ -85,7 +85,6 @@ class ToolJsonRequest(BaseModel):
 
 @router.post("/upsert-app", response_model=ToolSeedingResponse)
 async def upsert_app_via_api(
-    user: Annotated[User, Depends(auth.require_user)],
     org_id: Annotated[str, Header(alias=config.ACI_ORG_ID_HEADER)],
     db_session: Annotated[Session, Depends(deps.yield_db_session)],
     request: AppUpsertRequest,
@@ -133,7 +132,6 @@ async def upsert_app_via_api(
                 app_file=app_file_path,
                 secrets_file=secrets_file_path,
                 skip_dry_run=request.skip_dry_run,
-                user_id=user.user_id
             )
 
         # Clean up temporary secrets file if created
@@ -158,7 +156,6 @@ async def upsert_app_via_api(
 
 @router.post("/upsert-functions", response_model=ToolSeedingResponse)
 async def upsert_functions_via_api(
-    user: Annotated[User, Depends(auth.require_user)],
     org_id: Annotated[str, Header(alias=config.ACI_ORG_ID_HEADER)],
     db_session: Annotated[Session, Depends(deps.yield_db_session)],
     request: FunctionsUpsertRequest,
@@ -191,7 +188,6 @@ async def upsert_functions_via_api(
         function_names = upsert_functions.upsert_functions_helper(
             functions_file_path,  # Use positional argument
             request.skip_dry_run,
-            user.user_id
         )
 
         return ToolSeedingResponse(
