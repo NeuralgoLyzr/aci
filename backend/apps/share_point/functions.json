@@ -404,5 +404,472 @@
             "visible": ["path", "body"],
             "additionalProperties": false
         }
-    }
+    },
+    {
+        "name": "SHAREPOINT__LIST_FILES",
+        "description": "Lists files and folders in a SharePoint site or specific folder path.",
+        "tags": [
+          "sharepoint",
+          "files",
+          "list",
+          "documents"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+          "method": "GET",
+          "path": "/sites/{site_id}/drive/root/children",
+          "server_url": "https://graph.microsoft.com/v1.0"
+        },
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "object",
+              "description": "Path parameters for the SharePoint site.",
+              "properties": {
+                "site_id": {
+                  "type": "string",
+                  "description": "The SharePoint site ID or site URL (e.g., 'contoso.sharepoint.com,{site-guid},{web-guid}' or site URL).",
+                  "examples": [
+                    "contoso.sharepoint.com,12345678-1234-1234-1234-123456789012,87654321-4321-4321-4321-210987654321"
+                  ]
+                }
+              },
+              "required": [
+                "site_id"
+              ],
+              "visible": [
+                "site_id"
+              ],
+              "additionalProperties": false
+            },
+            "query": {
+              "type": "object",
+              "description": "Optional query parameters for filtering and pagination.",
+              "properties": {
+                "$top": {
+                  "type": "integer",
+                  "description": "Number of items to return (max 1000).",
+                  "examples": [100]
+                },
+                "$skip": {
+                  "type": "integer",
+                  "description": "Number of items to skip for pagination.",
+                  "examples": [0]
+                },
+                "$filter": {
+                  "type": "string",
+                  "description": "Filter expression for items.",
+                  "examples": ["name eq 'document.pdf'"]
+                }
+              },
+              "visible": [
+                "$top",
+                "$skip",
+                "$filter"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "visible": [
+            "path",
+            "query"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "SHAREPOINT__UPLOAD_FILE",
+        "description": "Uploads a file to SharePoint site at the specified path.",
+        "tags": [
+          "sharepoint",
+          "files",
+          "upload",
+          "create"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+          "method": "PUT",
+          "path": "/sites/{site_id}/drive/root:/{file_path}:/content",
+          "server_url": "https://graph.microsoft.com/v1.0"
+        },
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "object",
+              "description": "Path parameters for file upload.",
+              "properties": {
+                "site_id": {
+                  "type": "string",
+                  "description": "The SharePoint site ID or site URL.",
+                  "examples": [
+                    "contoso.sharepoint.com,12345678-1234-1234-1234-123456789012,87654321-4321-4321-4321-210987654321"
+                  ]
+                },
+                "file_path": {
+                  "type": "string",
+                  "description": "The path where the file should be uploaded (including filename).",
+                  "examples": [
+                    "Documents/report.pdf",
+                    "Images/photo.jpg",
+                    "newfolder/document.docx"
+                  ]
+                }
+              },
+              "required": [
+                "site_id",
+                "file_path"
+              ],
+              "visible": [
+                "site_id",
+                "file_path"
+              ],
+              "additionalProperties": false
+            },
+            "body": {
+              "type": "string",
+              "format": "binary",
+              "description": "The file content to upload."
+            }
+          },
+          "required": [
+            "path",
+            "body"
+          ],
+          "visible": [
+            "path",
+            "body"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "SHAREPOINT__DOWNLOAD_FILE",
+        "description": "Downloads a file from SharePoint by file path.",
+        "tags": [
+          "sharepoint",
+          "files",
+          "download",
+          "read"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+          "method": "GET",
+          "path": "/sites/{site_id}/drive/root:/{file_path}:/content",
+          "server_url": "https://graph.microsoft.com/v1.0"
+        },
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "object",
+              "description": "Path parameters for file download.",
+              "properties": {
+                "site_id": {
+                  "type": "string",
+                  "description": "The SharePoint site ID or site URL.",
+                  "examples": [
+                    "contoso.sharepoint.com,12345678-1234-1234-1234-123456789012,87654321-4321-4321-4321-210987654321"
+                  ]
+                },
+                "file_path": {
+                  "type": "string",
+                  "description": "The path to the file to download.",
+                  "examples": [
+                    "Documents/report.pdf",
+                    "Images/photo.jpg",
+                    "folder/document.docx"
+                  ]
+                }
+              },
+              "required": [
+                "site_id",
+                "file_path"
+              ],
+              "visible": [
+                "site_id",
+                "file_path"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "visible": [
+            "path"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "SHAREPOINT__GET_FILE_METADATA",
+        "description": "Gets metadata information for a file in SharePoint (size, modified date, etc.).",
+        "tags": [
+          "sharepoint",
+          "files",
+          "metadata",
+          "info"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+          "method": "GET",
+          "path": "/sites/{site_id}/drive/root:/{file_path}",
+          "server_url": "https://graph.microsoft.com/v1.0"
+        },
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "object",
+              "description": "Path parameters for getting file metadata.",
+              "properties": {
+                "site_id": {
+                  "type": "string",
+                  "description": "The SharePoint site ID or site URL.",
+                  "examples": [
+                    "contoso.sharepoint.com,12345678-1234-1234-1234-123456789012,87654321-4321-4321-4321-210987654321"
+                  ]
+                },
+                "file_path": {
+                  "type": "string",
+                  "description": "The path to the file.",
+                  "examples": [
+                    "Documents/report.pdf",
+                    "Images/photo.jpg",
+                    "folder/document.docx"
+                  ]
+                }
+              },
+              "required": [
+                "site_id",
+                "file_path"
+              ],
+              "visible": [
+                "site_id",
+                "file_path"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "visible": [
+            "path"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "SHAREPOINT__DELETE_FILE",
+        "description": "Deletes a file from SharePoint by file path.",
+        "tags": [
+          "sharepoint",
+          "files",
+          "delete",
+          "remove"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+          "method": "DELETE",
+          "path": "/sites/{site_id}/drive/root:/{file_path}",
+          "server_url": "https://graph.microsoft.com/v1.0"
+        },
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "object",
+              "description": "Path parameters for file deletion.",
+              "properties": {
+                "site_id": {
+                  "type": "string",
+                  "description": "The SharePoint site ID or site URL.",
+                  "examples": [
+                    "contoso.sharepoint.com,12345678-1234-1234-1234-123456789012,87654321-4321-4321-4321-210987654321"
+                  ]
+                },
+                "file_path": {
+                  "type": "string",
+                  "description": "The path to the file to delete.",
+                  "examples": [
+                    "Documents/report.pdf",
+                    "Images/photo.jpg",
+                    "folder/document.docx"
+                  ]
+                }
+              },
+              "required": [
+                "site_id",
+                "file_path"
+              ],
+              "visible": [
+                "site_id",
+                "file_path"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "visible": [
+            "path"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "SHAREPOINT__CREATE_FOLDER",
+        "description": "Creates a new folder in SharePoint at the specified path.",
+        "tags": [
+          "sharepoint",
+          "folders",
+          "create",
+          "directory"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+          "method": "POST",
+          "path": "/sites/{site_id}/drive/root/children",
+          "server_url": "https://graph.microsoft.com/v1.0"
+        },
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "object",
+              "description": "Path parameters for folder creation.",
+              "properties": {
+                "site_id": {
+                  "type": "string",
+                  "description": "The SharePoint site ID or site URL.",
+                  "examples": [
+                    "contoso.sharepoint.com,12345678-1234-1234-1234-123456789012,87654321-4321-4321-4321-210987654321"
+                  ]
+                }
+              },
+              "required": [
+                "site_id"
+              ],
+              "visible": [
+                "site_id"
+              ],
+              "additionalProperties": false
+            },
+            "body": {
+              "type": "object",
+              "description": "The folder details to create.",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "The name of the folder to create.",
+                  "examples": [
+                    "New Folder",
+                    "Project Documents",
+                    "2024 Reports"
+                  ]
+                },
+                "folder": {
+                  "type": "object",
+                  "properties": {},
+                  "description": "Indicates this is a folder (empty object)."
+                },
+                "@microsoft.graph.conflictBehavior": {
+                  "type": "string",
+                  "description": "How to handle naming conflicts.",
+                  "enum": ["rename", "fail", "replace"],
+                  "examples": ["rename"]
+                }
+              },
+              "required": [
+                "name",
+                "folder"
+              ],
+              "visible": [
+                "name",
+                "@microsoft.graph.conflictBehavior"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "path",
+            "body"
+          ],
+          "visible": [
+            "path",
+            "body"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "SHAREPOINT__GET_SITE_INFO",
+        "description": "Gets SharePoint site information and resolves site URL to site ID.",
+        "tags": [
+          "sharepoint",
+          "site",
+          "info",
+          "metadata"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+          "method": "GET",
+          "path": "/sites/{site_url}",
+          "server_url": "https://graph.microsoft.com/v1.0"
+        },
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "object",
+              "description": "Path parameters for getting site information.",
+              "properties": {
+                "site_url": {
+                  "type": "string",
+                  "description": "The SharePoint site URL (e.g., 'contoso.sharepoint.com:/sites/teamsite' or site ID).",
+                  "examples": [
+                    "contoso.sharepoint.com:/sites/teamsite",
+                    "contoso.sharepoint.com:/sites/projectsite"
+                  ]
+                }
+              },
+              "required": [
+                "site_url"
+              ],
+              "visible": [
+                "site_url"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "visible": [
+            "path"
+          ],
+          "additionalProperties": false
+        }
+      }
 ]
