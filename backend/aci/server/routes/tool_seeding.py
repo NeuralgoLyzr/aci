@@ -212,7 +212,6 @@ async def upsert_functions_via_api(
 
 @router.post("/seed-tool", response_model=ToolSeedingResponse)
 async def seed_tool(
-    user: Annotated[User, Depends(auth.require_user)],
     org_id: Annotated[str, Header(alias=config.ACI_ORG_ID_HEADER)],
     db_session: Annotated[Session, Depends(deps.yield_db_session)],
     request: SeedingRequest,
