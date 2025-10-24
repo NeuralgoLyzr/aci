@@ -70,7 +70,7 @@ def upsert_app_helper(
     existing_app = crud.apps.get_app(
         db_session, app_upsert.name, public_only=False, active_only=False
     )
-    if existing_app is None:
+    if existing_app is None or existing_app.api_key_id != api_key_id:
         return create_app_helper(db_session, app_upsert, skip_dry_run, api_key_id)
     else:
         return update_app_helper(

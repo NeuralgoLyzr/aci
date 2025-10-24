@@ -67,7 +67,7 @@ def upsert_functions_helper(functions_file: Path, skip_dry_run: bool, api_key_id
                 db_session, function_upsert.name, public_only=False, active_only=False
             )
 
-            if existing_function is None:
+            if existing_function is None or existing_function.api_key_id != api_key_id:
                 new_functions.append(function_upsert)
             else:
                 existing_functions.append(function_upsert)
