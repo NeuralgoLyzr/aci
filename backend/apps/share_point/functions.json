@@ -406,7 +406,7 @@
         }
     },
     {
-        "name": "SHAREPOINT__LIST_FILES",
+        "name": "SHARE_POINT__LIST_FILES",
         "description": "Lists files and folders in a SharePoint site or specific folder path.",
         "tags": [
           "sharepoint",
@@ -485,7 +485,7 @@
         }
       },
       {
-        "name": "SHAREPOINT__UPLOAD_FILE",
+        "name": "SHARE_POINT__UPLOAD_FILE",
         "description": "Uploads a file to SharePoint site at the specified path.",
         "tags": [
           "sharepoint",
@@ -553,7 +553,7 @@
         }
       },
       {
-        "name": "SHAREPOINT__DOWNLOAD_FILE",
+        "name": "SHARE_POINT__DOWNLOAD_FILE",
         "description": "Downloads a file from SharePoint by file path.",
         "tags": [
           "sharepoint",
@@ -614,7 +614,7 @@
         }
       },
       {
-        "name": "SHAREPOINT__GET_FILE_METADATA",
+        "name": "SHARE_POINT__GET_FILE_METADATA",
         "description": "Gets metadata information for a file in SharePoint (size, modified date, etc.).",
         "tags": [
           "sharepoint",
