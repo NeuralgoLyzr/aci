@@ -554,7 +554,7 @@ async def upsert_functions_from_json(
             # Get the function IDs for the upserted functions
             functions = []
             for name in function_names:
-                function = crud.functions.get_function(context.db_session, name, False, False)
+                function = crud.functions.get_function_by_name_and_api_key_id(context.db_session, name, context.api_key_id)
                 if function:
                     functions.append({
                         "id": str(function.id),
