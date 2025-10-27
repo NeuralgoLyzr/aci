@@ -2,6 +2,7 @@
 CRUD operations for apps. (not including app_configurations)
 """
 
+import os
 from uuid import UUID
 
 from sqlalchemy import select, update, or_
@@ -97,10 +98,12 @@ def get_apps(
         statement = statement.filter(App.active)
     if app_names is not None:
         statement = statement.filter(App.name.in_(app_names))
-    
+
+    LYZR_API_KEY_ID_DB = UUID(os.getenv("LYZR_API_KEY_ID_DB"))
+
     if api_key_id is not None:
         try:
-            statement = statement.filter(or_(App.api_key_id == api_key_id, App.api_key_id.is_(None)))
+            statement = statement.filter(or_(App.api_key_id == api_key_id, App.api_key_id == LYZR_API_KEY_ID_DB))
         except Exception as e:
             if "column apps.api_key_id does not exist" in str(e):
                 logger.warning("api_key_id column does not exist yet in apps table. Skipping filter.")
@@ -186,7 +189,7 @@ def delete_app_by_id(
         app = db_session.execute(
             select(App).filter(App.id == app_id, App.api_key_id == api_key_id)
         ).scalar_one_or_none()
-        
+
         if app:
             db_session.delete(app)
             db_session.flush()

@@ -108,6 +108,8 @@ async def upsert_app_via_api(
                 detail=f"App file not found at path: {app_file_path}"
             )
 
+        LYZR_API_KEY_ID_DB = UUID(os.getenv("LYZR_API_KEY_ID_DB"))
+
         # Handle secrets - either from file or from request
         secrets_file_path = None
         if request.secrets_path:
@@ -132,6 +134,7 @@ async def upsert_app_via_api(
                 app_file=app_file_path,
                 secrets_file=secrets_file_path,
                 skip_dry_run=request.skip_dry_run,
+                api_key_id=LYZR_API_KEY_ID_DB
             )
 
         # Clean up temporary secrets file if created
@@ -179,6 +182,8 @@ async def upsert_functions_via_api(
                 detail=f"Functions file not found at path: {functions_file_path}"
             )
 
+        LYZR_API_KEY_ID_DB = UUID(os.getenv("LYZR_API_KEY_ID_DB"))
+
         # Initialize CLI config DB_FULL_URL if not set
         if upsert_functions.config.DB_FULL_URL is None:
             upsert_functions.config.DB_FULL_URL = upsert_functions.config.get_db_full_url_sync()
@@ -188,6 +193,7 @@ async def upsert_functions_via_api(
         function_names = upsert_functions.upsert_functions_helper(
             functions_file_path,  # Use positional argument
             request.skip_dry_run,
+            api_key_id=LYZR_API_KEY_ID_DB
         )
 
         return ToolSeedingResponse(
