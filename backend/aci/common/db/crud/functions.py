@@ -222,7 +222,7 @@ def get_function_by_name_and_api_key_id(
     """Get a function created by a specific API key."""
     try:
         statement = select(Function).filter(Function.name == function_name, Function.api_key_id == api_key_id)
-        return db_session.execute(statement).scalar_one_or_none()
+        return db_session.execute(statement).scalars().first()
     except Exception as e:
         if "column functions.api_key_id does not exist" in str(e):
             logger.warning("api_key_id column does not exist yet in functions table. Returning None.")
