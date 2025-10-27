@@ -63,8 +63,8 @@ def upsert_functions_helper(functions_file: Path, skip_dry_run: bool, api_key_id
         existing_functions: list[FunctionUpsert] = []
 
         for function_upsert in functions_upsert:
-            existing_function = crud.functions.get_function(
-                db_session, function_upsert.name, public_only=False, active_only=False
+            existing_function = crud.functions.get_function_by_name_and_api_key_id(
+                db_session, function_upsert.name, api_key_id
             )
 
             if existing_function is None or existing_function.api_key_id != api_key_id:
@@ -75,7 +75,7 @@ def upsert_functions_helper(functions_file: Path, skip_dry_run: bool, api_key_id
         console.rule("Checking functions to create...")
         functions_created = create_functions_helper(db_session, new_functions, api_key_id)
         console.rule("Checking functions to update...")
-        functions_updated = update_functions_helper(db_session, existing_functions)
+        functions_updated = update_functions_helper(db_session, existing_functions, api_key_id)
         # for functions that are in existing_functions but not in functions_updated
         functions_unchanged = [
             func.name for func in existing_functions if func.name not in functions_updated
@@ -123,7 +123,7 @@ def create_functions_helper(
 
 
 def update_functions_helper(
-    db_session: Session, functions_upsert: list[FunctionUpsert]
+    db_session: Session, functions_upsert: list[FunctionUpsert], api_key_id: UUID
 ) -> list[str]:
     """
     Batch updates functions in the database.
@@ -136,8 +136,8 @@ def update_functions_helper(
     functions_without_new_embeddings: list[FunctionUpsert] = []
 
     for function_upsert in functions_upsert:
-        existing_function = crud.functions.get_function(
-            db_session, function_upsert.name, public_only=False, active_only=False
+        existing_function = crud.functions.get_function_by_name_and_api_key_id(
+            db_session, function_upsert.name, api_key_id
         )
         if existing_function is None:
             raise click.ClickException(f"Function '{function_upsert.name}' not found.")
@@ -178,6 +178,7 @@ def update_functions_helper(
         db_session,
         functions_with_new_embeddings + functions_without_new_embeddings,
         functions_embeddings + [None] * len(functions_without_new_embeddings),
+        api_key_id,
     )
 
     return [func.name for func in functions_updated]

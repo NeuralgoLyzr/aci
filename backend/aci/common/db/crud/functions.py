@@ -51,6 +51,7 @@ def update_functions(
     db_session: Session,
     functions_upsert: list[FunctionUpsert],
     functions_embeddings: list[list[float] | None],
+    api_key_id: UUID,
 ) -> list[Function]:
     """
     Update functions.
@@ -60,7 +61,7 @@ def update_functions(
     logger.debug(f"Updating functions, functions_upsert={functions_upsert}")
     functions = []
     for i, function_upsert in enumerate(functions_upsert):
-        function = crud.functions.get_function(db_session, function_upsert.name, False, False)
+        function = crud.functions.get_function_by_name_and_api_key_id(db_session, function_upsert.name, api_key_id)
         if not function:
             logger.error(f"Function={function_upsert.name} does not exist")
             raise ValueError(f"Function={function_upsert.name} does not exist")
