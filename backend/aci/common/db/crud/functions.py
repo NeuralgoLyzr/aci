@@ -28,10 +28,11 @@ def create_functions(
     functions = []
     for i, function_upsert in enumerate(functions_upsert):
         app_name = utils.parse_app_name_from_function_name(function_upsert.name)
-        app = crud.apps.get_app(db_session, app_name, False, False)
+        app = crud.apps.get_app_by_name_and_api_key_id(db_session, app_name, api_key_id)
         if not app:
             logger.error(f"App={app_name} does not exist for function={function_upsert.name}")
             raise ValueError(f"App={app_name} does not exist for function={function_upsert.name}")
+
         function_data = function_upsert.model_dump(mode="json", exclude_none=True)
         function = Function(
             app_id=app.id,
@@ -317,7 +318,7 @@ def delete_functions_by_app_name(
         if "column functions.api_key_id does not exist" in str(e):
             logger.warning("api_key_id column does not exist yet in functions table. Cannot filter by API key.")
             # Fallback: delete all functions for the app without API key filtering
-            app = crud.apps.get_app(db_session, app_name, False, False)
+            app = crud.apps.get_app_by_name_and_api_key_id(db_session, app_name, api_key_id)
             if not app:
                 return 0
 

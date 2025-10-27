@@ -57,7 +57,7 @@ def upsert_functions_helper(functions_file: Path, skip_dry_run: bool, api_key_id
         ]
         app_name = _validate_all_functions_belong_to_the_app(functions_upsert)
         console.rule(f"App={app_name}")
-        _validate_app_exists(db_session, app_name)
+        _validate_app_exists(db_session, app_name, api_key_id)
 
         new_functions: list[FunctionUpsert] = []
         existing_functions: list[FunctionUpsert] = []
@@ -184,8 +184,8 @@ def update_functions_helper(
     return [func.name for func in functions_updated]
 
 
-def _validate_app_exists(db_session: Session, app_name: str) -> None:
-    app = crud.apps.get_app(db_session, app_name, False, False)
+def _validate_app_exists(db_session: Session, app_name: str, api_key_id: UUID | None = None) -> None:
+    app = crud.apps.get_app_by_name_and_api_key_id(db_session, app_name, api_key_id)
     if not app:
         raise click.ClickException(f"App={app_name} does not exist")
 
