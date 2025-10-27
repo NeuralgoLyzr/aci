@@ -1,5 +1,6 @@
 from typing import Annotated
-
+import os
+from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 from openai import OpenAI
 
@@ -23,6 +24,7 @@ logger = get_logger(__name__)
 router = APIRouter()
 # TODO: will this be a bottleneck and problem if high concurrent requests from users?
 openai_client = OpenAI(api_key=config.OPENAI_API_KEY)
+LYZR_API_KEY_ID_DB = UUID(os.getenv("LYZR_API_KEY_ID_DB"))
 
 
 @router.get("", response_model_exclude_none=True)
@@ -64,7 +66,7 @@ async def list_apps(
             functions=[FunctionDetails.model_validate(function) for function in app.functions],
             created_at=app.created_at,
             updated_at=app.updated_at,
-            custom_app=app.api_key_id is not None,
+            custom_app=app.api_key_id != LYZR_API_KEY_ID_DB,
         )
         response.append(app_details)
 
@@ -187,7 +189,7 @@ async def get_app_details(
         functions=[FunctionDetails.model_validate(function) for function in functions],
         created_at=app.created_at,
         updated_at=app.updated_at,
-        custom_app=app.api_key_id is not None,
+        custom_app=app.api_key_id != LYZR_API_KEY_ID_DB,
     )
 
     return app_details
