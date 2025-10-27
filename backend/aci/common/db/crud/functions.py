@@ -213,6 +213,21 @@ def get_functions_by_names(
 
     return list(db_session.execute(statement).scalars().all())
 
+def get_function_by_name_and_api_key_id(
+    db_session: Session,
+    function_name: str,
+    api_key_id: UUID,
+) -> Function | None:
+    """Get a function created by a specific API key."""
+    try:
+        statement = select(Function).filter(Function.name == function_name, Function.api_key_id == api_key_id)
+        return db_session.execute(statement).scalar_one_or_none()
+    except Exception as e:
+        if "column functions.api_key_id does not exist" in str(e):
+            logger.warning("api_key_id column does not exist yet in functions table. Returning None.")
+            return None
+        raise
+
 
 def set_function_active_status(db_session: Session, function_name: str, active: bool) -> None:
     statement = update(Function).filter_by(name=function_name).values(active=active)
@@ -267,13 +282,13 @@ def delete_function_by_id(
 def delete_functions_by_app_name(
     db_session: Session,
     app_name: str,
-    api_key_id: UUID | None = None,
+    api_key_id: UUID,
 ) -> int:
     """Delete all functions for a given app name. If api_key_id is provided, only delete functions created by that API key.
     Note: This function is typically used for custom apps only, not system apps."""
     try:
         # Get the app first to get its ID
-        app = crud.apps.get_app(db_session, app_name, False, False)
+        app = crud.apps.get_app_by_name_and_api_key_id(db_session, app_name, api_key_id)
         if not app:
             logger.warning(f"App '{app_name}' not found")
             return 0

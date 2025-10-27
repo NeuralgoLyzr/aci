@@ -333,6 +333,7 @@ async def get_seeded_apps(
     Get list of apps that have been seeded (exist in the database).
     """
     try:
+        LYZR_API_KEY_ID_DB = UUID(os.getenv("LYZR_API_KEY_ID_DB"))
         # Get all apps from the database
         apps = crud.apps.get_apps(
             db_session,
@@ -340,7 +341,8 @@ async def get_seeded_apps(
             active_only=False,  # Include inactive apps
             app_names=None,
             limit=None,
-            offset=0
+            offset=0,
+            api_key_id=LYZR_API_KEY_ID_DB
         )
 
         # Convert to AppDetails format
@@ -362,7 +364,7 @@ async def get_seeded_apps(
                 functions=[FunctionDetails.model_validate(func) for func in app.functions],
                 created_at=app.created_at,
                 updated_at=app.updated_at,
-                custom_app=app.api_key_id is not None,
+                custom_app=app.api_key_id != LYZR_API_KEY_ID_DB,
             )
             app_details.append(app_detail)
 
@@ -719,18 +721,12 @@ async def delete_my_custom_app(
     """
     try:
         # Get the app by name first to check if it exists and belongs to this API key
-        app = crud.apps.get_app(context.db_session, app_name, False, False)
+        app = crud.apps.get_app_by_name_and_api_key_id(context.db_session,app_name, context.api_key_id)
 
         if not app:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"App '{app_name}' not found"
-            )
-
-        if app.api_key_id != context.api_key_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"You don't have permission to delete app '{app_name}'"
             )
 
         # Delete the app
@@ -740,17 +736,10 @@ async def delete_my_custom_app(
             context.db_session.commit()
             return {
                 "success": True,
-                "message": f"Successfully deleted app '{app_name}'"
+                "message": f"Successfully deleted app '{app.name}'"
             }
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="App not found or you don't have permission to delete it"
-            )
-    except HTTPException:
-        raise
     except Exception as e:
-        logger.error(f"Error deleting custom app {app_name}: {str(e)}")
+        logger.error(f"Error deleting custom app {app.name}: {str(e)}")
         context.db_session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -768,18 +757,12 @@ async def delete_my_custom_function(
     """
     try:
         # Get the function by name first to check if it exists and belongs to this API key
-        function = crud.functions.get_function(context.db_session, function_name, False, False)
+        function = crud.functions.get_function_by_name_and_api_key_id(context.db_session, function_name, context.api_key_id)
 
         if not function:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Function '{function_name}' not found"
-            )
-
-        if function.api_key_id != context.api_key_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"You don't have permission to delete function '{function_name}'"
             )
 
         # Delete the function
@@ -791,13 +774,6 @@ async def delete_my_custom_function(
                 "success": True,
                 "message": f"Successfully deleted function '{function_name}'"
             }
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Function not found or you don't have permission to delete it"
-            )
-    except HTTPException:
-        raise
     except Exception as e:
         logger.error(f"Error deleting custom function {function_name}: {str(e)}")
         context.db_session.rollback()
@@ -819,7 +795,7 @@ async def delete_all_functions_for_app(
     """
     try:
         # Check if the app exists
-        app = crud.apps.get_app(context.db_session, app_name, False, False)
+        app = crud.apps.get_app_by_name_and_api_key_id(context.db_session, app_name, context.api_key_id)
         if not app:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -827,17 +803,10 @@ async def delete_all_functions_for_app(
             )
 
         # Only allow deletion of custom apps (apps created by API keys)
-        if app.api_key_id is None:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"App '{app_name}' is a system app and cannot be deleted via this API"
-            )
-
-        # Only allow deletion if the app was created by the current API key holder
         if app.api_key_id != context.api_key_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"You don't have permission to delete functions for app '{app_name}'"
+                detail=f"App '{app_name}' is a system app and cannot be deleted via this API"
             )
 
         # Delete all functions for the app that were created by this API key
@@ -855,8 +824,6 @@ async def delete_all_functions_for_app(
             "deleted_count": deleted_count
         }
 
-    except HTTPException:
-        raise
     except Exception as e:
         logger.error(f"Error deleting functions for app '{app_name}': {str(e)}")
         context.db_session.rollback()

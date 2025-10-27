@@ -178,6 +178,21 @@ def get_apps_by_api_key_id(
             return []
         raise
 
+def get_app_by_name_and_api_key_id(
+    db_session: Session,
+    app_name: str,
+    api_key_id: UUID,
+) -> App | None:
+    """Get an app created by a specific API key."""
+    try:
+        statement = select(App).filter(App.name == app_name, App.api_key_id == api_key_id)
+        return db_session.execute(statement).scalar_one_or_none()
+    except Exception as e:
+        if "column apps.api_key_id does not exist" in str(e):
+            logger.warning("api_key_id column does not exist yet in apps table. Returning None.")
+            return None
+        raise
+
 
 def delete_app_by_id(
     db_session: Session,
