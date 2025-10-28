@@ -1,6 +1,7 @@
 from uuid import UUID
+import os
 
-from sqlalchemy import select, update
+from sqlalchemy import select, update, or_
 from sqlalchemy.orm import Session
 
 from aci.common import utils
@@ -9,6 +10,8 @@ from aci.common.db.sql_models import App, Function
 from aci.common.enums import Visibility
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.function import FunctionUpsert
+
+LYZR_API_KEY_ID_DB = UUID(os.getenv("LYZR_API_KEY_ID_DB"))
 
 logger = get_logger(__name__)
 
@@ -167,7 +170,7 @@ def get_functions_by_app_id(db_session: Session, app_id: UUID) -> list[Function]
 
 
 def get_function(
-    db_session: Session, function_name: str, public_only: bool, active_only: bool
+    db_session: Session, function_name: str, public_only: bool, active_only: bool, api_key_id: UUID | None = None
 ) -> Function | None:
     statement = select(Function).filter(Function.name == function_name)
 
@@ -186,7 +189,22 @@ def get_function(
             Function.visibility == Visibility.PUBLIC
         )
 
-    return db_session.execute(statement).scalar_one_or_none()
+    # Fetch all matches first, then prefer user's api_key_id, else fall back to LYZR_API_KEY_ID_DB
+    functions = list(db_session.execute(statement).scalars().all())
+
+    if not functions:
+        return None
+
+    if api_key_id is not None:
+        for function in functions:
+            if getattr(function, "api_key_id", None) == api_key_id:
+                return function
+
+    for function in functions:
+        if getattr(function, "api_key_id", None) == LYZR_API_KEY_ID_DB:
+            return function
+
+    return functions[0]
 
 
 def get_functions_by_names(

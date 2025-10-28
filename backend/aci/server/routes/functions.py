@@ -285,6 +285,7 @@ async def execute(
         function_input=body.function_input,
         linked_account_owner_id=body.linked_account_owner_id,
         openai_client=openai_client,
+        api_key_id=context.api_key_id,
     )
 
     end_time = datetime.now(UTC)
@@ -377,6 +378,7 @@ async def execute_function(
     function_input: dict,
     linked_account_owner_id: str,
     openai_client: OpenAI,
+    api_key_id,
 ) -> FunctionExecutionResult:
     """
     Execute a function with the given parameters.
@@ -408,6 +410,7 @@ async def execute_function(
         function_name,
         project.visibility_access == Visibility.PUBLIC,
         True,
+        api_key_id
     )
     if not function:
         logger.error(
