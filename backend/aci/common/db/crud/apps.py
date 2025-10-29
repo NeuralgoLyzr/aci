@@ -71,14 +71,16 @@ def update_app_default_security_credentials(
     app.default_security_credentials_by_scheme[security_scheme] = security_credentials
 
 
-def get_app(db_session: Session, app_name: str, public_only: bool, active_only: bool) -> App | None:
+def get_app(db_session: Session, app_name: str, public_only: bool, active_only: bool, api_key_id: UUID | None = None) -> App | None:
     statement = select(App).filter_by(name=app_name)
 
     if active_only:
         statement = statement.filter(App.active)
     if public_only:
         statement = statement.filter(App.visibility == Visibility.PUBLIC)
-    app: App | None = db_session.execute(statement).scalar_one_or_none()
+    if api_key_id is not None:
+        statement = statement.filter(App.api_key_id == api_key_id)
+    app: App | None = db_session.execute(statement).scalars().first()
     return app
 
 
