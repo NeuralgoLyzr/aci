@@ -1,7 +1,8 @@
+import os
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import distinct, exists, func, select
+from sqlalchemy import distinct, exists, func, select, or_
 from sqlalchemy.orm import Session
 
 from aci.common import validators
@@ -88,12 +89,21 @@ def create_linked_account(
     | NoAuthSchemeCredentials
     | None = None,
     enabled: bool = True,
+    api_key_id: UUID | None = None,
 ) -> LinkedAccount:
     """Create a linked account
     when security_credentials is None, the linked account will be using App's default security credentials if exists
     # TODO: there is some ambiguity with "no auth" and "use app's default credentials", needs a refactor.
     """
-    app_id = db_session.execute(select(App.id).filter_by(name=app_name)).scalar_one()
+    statement = select(App.id).filter_by(name=app_name)
+
+    if api_key_id is not None:
+        LYZR_API_KEY_ID_DB = UUID(os.getenv("LYZR_API_KEY_ID_DB"))
+        statement = statement.filter(or_(App.api_key_id == api_key_id, App.api_key_id == LYZR_API_KEY_ID_DB))
+        # Prioritize exact api_key_id match first, then fallback to LYZR_API_KEY_ID_DB
+        statement = statement.order_by((App.api_key_id == api_key_id).desc())
+
+    app_id = db_session.execute(statement).scalars().first()
     linked_account = LinkedAccount(
         project_id=project_id,
         app_id=app_id,
