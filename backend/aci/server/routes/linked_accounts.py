@@ -170,7 +170,7 @@ async def link_account_with_no_auth(
     )
     # TODO: duplicate code with other linked account creation routes, refactor later
     app_configuration = crud.app_configurations.get_app_configuration(
-        context.db_session, context.project.id, body.app_name
+        context.db_session, context.project.id, body.app_name, context.api_key_id
     )
     if not app_configuration:
         logger.error(
