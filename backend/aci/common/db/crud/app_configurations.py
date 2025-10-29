@@ -31,7 +31,7 @@ def create_app_configuration(
         # Prioritize exact api_key_id match first, then fallback to LYZR_API_KEY_ID_DB
         statement = statement.order_by((App.api_key_id == api_key_id).desc())
 
-    app_id = db_session.execute(statement).scalar_one()
+    app_id = db_session.execute(statement).scalars().first()
     app_configuration = AppConfiguration(
         project_id=project_id,
         app_id=app_id,
