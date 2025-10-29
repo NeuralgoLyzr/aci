@@ -1,6 +1,7 @@
+import os
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.orm import Session
 
 from aci.common.db.sql_models import App, AppConfiguration
@@ -17,13 +18,20 @@ def create_app_configuration(
     db_session: Session,
     project_id: UUID,
     app_configuration_create: AppConfigurationCreate,
+    api_key_id: UUID | None = None,
 ) -> AppConfiguration:
     """
     Create a new app configuration record
     """
-    app_id = db_session.execute(
-        select(App.id).filter_by(name=app_configuration_create.app_name)
-    ).scalar_one()
+    statement = select(App.id).filter_by(name=app_configuration_create.app_name)
+
+    if api_key_id is not None:
+        LYZR_API_KEY_ID_DB = UUID(os.getenv("LYZR_API_KEY_ID_DB"))
+        statement = statement.filter(or_(App.api_key_id == api_key_id, App.api_key_id == LYZR_API_KEY_ID_DB))
+        # Prioritize exact api_key_id match first, then fallback to LYZR_API_KEY_ID_DB
+        statement = statement.order_by((App.api_key_id == api_key_id).desc())
+
+    app_id = db_session.execute(statement).scalar_one()
     app_configuration = AppConfiguration(
         project_id=project_id,
         app_id=app_id,

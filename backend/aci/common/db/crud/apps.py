@@ -73,13 +73,16 @@ def update_app_default_security_credentials(
 
 def get_app(db_session: Session, app_name: str, public_only: bool, active_only: bool, api_key_id: UUID | None = None) -> App | None:
     statement = select(App).filter_by(name=app_name)
+    LYZR_API_KEY_ID_DB = UUID(os.getenv("LYZR_API_KEY_ID_DB"))
 
     if active_only:
         statement = statement.filter(App.active)
     if public_only:
         statement = statement.filter(App.visibility == Visibility.PUBLIC)
     if api_key_id is not None:
-        statement = statement.filter(App.api_key_id == api_key_id)
+        statement = statement.filter(or_(App.api_key_id == api_key_id, App.api_key_id == LYZR_API_KEY_ID_DB))
+        # Prioritize exact api_key_id match first, then fallback to LYZR_API_KEY_ID_DB
+        statement = statement.order_by((App.api_key_id == api_key_id).desc())
     app: App | None = db_session.execute(statement).scalars().first()
     return app
 

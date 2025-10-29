@@ -65,6 +65,7 @@ async def create_app_configuration(
         context.db_session,
         context.project.id,
         body,
+        context.api_key_id,
     )
     context.db_session.commit()
 
