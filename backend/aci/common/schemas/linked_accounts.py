@@ -52,6 +52,7 @@ class LinkedAccountPublic(BaseModel):
     id: UUID
     project_id: UUID
     app_name: str
+    app_id: UUID
     linked_account_owner_id: str
     security_scheme: SecurityScheme
     # NOTE: unnecessary to expose the security credentials
