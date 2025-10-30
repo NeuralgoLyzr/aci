@@ -237,6 +237,5 @@ app.include_router(
     tool_seeding.router,
     prefix="/v1/tool-seeding",
     tags=["tool-seeding"],
-    dependencies=[Depends(auth.require_user)],  # Enable PropelAuth authentication
+    # dependencies=[Depends(auth.require_user)],  # Enable PropelAuth authentication
 )
-

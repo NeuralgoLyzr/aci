@@ -72,7 +72,7 @@ export default function ToolSeedingPage() {
 
   const loadData = useCallback(async () => {
     if (!activeOrg) return;
-    
+
     setIsLoading(true);
     try {
       const [apps, seeded, status] = await Promise.all([
@@ -93,7 +93,7 @@ export default function ToolSeedingPage() {
 
   const checkSeedingStatus = useCallback(async () => {
     if (!activeOrg) return;
-    
+
     try {
       const status = await getSeedingStatus(accessToken, activeOrg.orgId);
       setSeedingStatus(status);
