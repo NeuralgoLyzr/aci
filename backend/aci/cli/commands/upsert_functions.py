@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from uuid import UUID
 
 import click
 from deepdiff import DeepDiff
@@ -45,7 +46,7 @@ def upsert_functions(functions_file: Path, skip_dry_run: bool) -> list[str]:
     return upsert_functions_helper(functions_file, skip_dry_run)
 
 
-def upsert_functions_helper(functions_file: Path, skip_dry_run: bool) -> list[str]:
+def upsert_functions_helper(functions_file: Path, skip_dry_run: bool, api_key_id: UUID | None = None) -> list[str]:
     with utils.create_db_session(config.DB_FULL_URL) as db_session:
         with open(functions_file) as f:
             functions_data = json.load(f)
@@ -56,25 +57,25 @@ def upsert_functions_helper(functions_file: Path, skip_dry_run: bool) -> list[st
         ]
         app_name = _validate_all_functions_belong_to_the_app(functions_upsert)
         console.rule(f"App={app_name}")
-        _validate_app_exists(db_session, app_name)
+        _validate_app_exists(db_session, app_name, api_key_id)
 
         new_functions: list[FunctionUpsert] = []
         existing_functions: list[FunctionUpsert] = []
 
         for function_upsert in functions_upsert:
-            existing_function = crud.functions.get_function(
-                db_session, function_upsert.name, public_only=False, active_only=False
+            existing_function = crud.functions.get_function_by_name_and_api_key_id(
+                db_session, function_upsert.name, api_key_id
             )
 
-            if existing_function is None:
+            if existing_function is None or existing_function.api_key_id != api_key_id:
                 new_functions.append(function_upsert)
             else:
                 existing_functions.append(function_upsert)
 
         console.rule("Checking functions to create...")
-        functions_created = create_functions_helper(db_session, new_functions)
+        functions_created = create_functions_helper(db_session, new_functions, api_key_id)
         console.rule("Checking functions to update...")
-        functions_updated = update_functions_helper(db_session, existing_functions)
+        functions_updated = update_functions_helper(db_session, existing_functions, api_key_id)
         # for functions that are in existing_functions but not in functions_updated
         functions_unchanged = [
             func.name for func in existing_functions if func.name not in functions_updated
@@ -101,7 +102,7 @@ def upsert_functions_helper(functions_file: Path, skip_dry_run: bool) -> list[st
 
 
 def create_functions_helper(
-    db_session: Session, functions_upsert: list[FunctionUpsert]
+    db_session: Session, functions_upsert: list[FunctionUpsert], api_key_id: UUID | None = None
 ) -> list[str]:
     """
     Batch creates functions in the database.
@@ -115,14 +116,14 @@ def create_functions_helper(
         embedding_dimension=config.OPENAI_EMBEDDING_DIMENSION,
     )
     created_functions = crud.functions.create_functions(
-        db_session, functions_upsert, functions_embeddings
+        db_session, functions_upsert, functions_embeddings, api_key_id
     )
 
     return [func.name for func in created_functions]
 
 
 def update_functions_helper(
-    db_session: Session, functions_upsert: list[FunctionUpsert]
+    db_session: Session, functions_upsert: list[FunctionUpsert], api_key_id: UUID
 ) -> list[str]:
     """
     Batch updates functions in the database.
@@ -135,8 +136,8 @@ def update_functions_helper(
     functions_without_new_embeddings: list[FunctionUpsert] = []
 
     for function_upsert in functions_upsert:
-        existing_function = crud.functions.get_function(
-            db_session, function_upsert.name, public_only=False, active_only=False
+        existing_function = crud.functions.get_function_by_name_and_api_key_id(
+            db_session, function_upsert.name, api_key_id
         )
         if existing_function is None:
             raise click.ClickException(f"Function '{function_upsert.name}' not found.")
@@ -177,13 +178,14 @@ def update_functions_helper(
         db_session,
         functions_with_new_embeddings + functions_without_new_embeddings,
         functions_embeddings + [None] * len(functions_without_new_embeddings),
+        api_key_id,
     )
 
     return [func.name for func in functions_updated]
 
 
-def _validate_app_exists(db_session: Session, app_name: str) -> None:
-    app = crud.apps.get_app(db_session, app_name, False, False)
+def _validate_app_exists(db_session: Session, app_name: str, api_key_id: UUID | None = None) -> None:
+    app = crud.apps.get_app_by_name_and_api_key_id(db_session, app_name, api_key_id)
     if not app:
         raise click.ClickException(f"App={app_name} does not exist")
 

@@ -52,7 +52,7 @@ def upsert_app(app_file: Path, secrets_file: Path | None, skip_dry_run: bool) ->
 
 
 def upsert_app_helper(
-    db_session: Session, app_file: Path, secrets_file: Path | None, skip_dry_run: bool
+    db_session: Session, app_file: Path, secrets_file: Path | None, skip_dry_run: bool, api_key_id: UUID | None = None
 ) -> UUID:
     # Load secrets if provided
     secrets = {}
@@ -70,8 +70,8 @@ def upsert_app_helper(
     existing_app = crud.apps.get_app(
         db_session, app_upsert.name, public_only=False, active_only=False
     )
-    if existing_app is None:
-        return create_app_helper(db_session, app_upsert, skip_dry_run)
+    if existing_app is None or existing_app.api_key_id != api_key_id:
+        return create_app_helper(db_session, app_upsert, skip_dry_run, api_key_id)
     else:
         return update_app_helper(
             db_session,
@@ -81,7 +81,7 @@ def upsert_app_helper(
         )
 
 
-def create_app_helper(db_session: Session, app_upsert: AppUpsert, skip_dry_run: bool) -> UUID:
+def create_app_helper(db_session: Session, app_upsert: AppUpsert, skip_dry_run: bool, api_key_id: UUID | None = None) -> UUID:
     # Generate app embedding using the fields defined in AppEmbeddingFields
     app_embedding = embeddings.generate_app_embedding(
         AppEmbeddingFields.model_validate(app_upsert.model_dump()),
@@ -91,7 +91,7 @@ def create_app_helper(db_session: Session, app_upsert: AppUpsert, skip_dry_run: 
     )
 
     # Create the app entry in the database
-    app = crud.apps.create_app(db_session, app_upsert, app_embedding)
+    app = crud.apps.create_app(db_session, app_upsert, app_embedding, api_key_id)
 
     if not skip_dry_run:
         console.rule(f"Provide [bold green]--skip-dry-run[/bold green] to create App={app.name}")

@@ -127,7 +127,8 @@ export default function RootLayout({
                 <div className="text-center space-y-4">
                   <h1 className="text-2xl font-bold">ACI Frontend</h1>
                   <p className="text-muted-foreground">
-                    Authentication not configured. Please set NEXT_PUBLIC_AUTH_URL environment variable.
+                    Authentication not configured. Please set
+                    NEXT_PUBLIC_AUTH_URL environment variable.
                   </p>
                   <p className="text-sm text-muted-foreground">
                     For local development, start the mock PropelAuth server:

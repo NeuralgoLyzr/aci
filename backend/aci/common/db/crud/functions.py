@@ -1,6 +1,7 @@
 from uuid import UUID
+import os
 
-from sqlalchemy import select, update
+from sqlalchemy import select, update, or_
 from sqlalchemy.orm import Session
 
 from aci.common import utils
@@ -10,6 +11,8 @@ from aci.common.enums import Visibility
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.function import FunctionUpsert
 
+LYZR_API_KEY_ID_DB = UUID(os.getenv("LYZR_API_KEY_ID_DB"))
+
 logger = get_logger(__name__)
 
 
@@ -17,6 +20,7 @@ def create_functions(
     db_session: Session,
     functions_upsert: list[FunctionUpsert],
     functions_embeddings: list[list[float]],
+    api_key_id: UUID | None = None,
 ) -> list[Function]:
     """
     Create functions.
@@ -27,15 +31,17 @@ def create_functions(
     functions = []
     for i, function_upsert in enumerate(functions_upsert):
         app_name = utils.parse_app_name_from_function_name(function_upsert.name)
-        app = crud.apps.get_app(db_session, app_name, False, False)
+        app = crud.apps.get_app_by_name_and_api_key_id(db_session, app_name, api_key_id)
         if not app:
             logger.error(f"App={app_name} does not exist for function={function_upsert.name}")
             raise ValueError(f"App={app_name} does not exist for function={function_upsert.name}")
+
         function_data = function_upsert.model_dump(mode="json", exclude_none=True)
         function = Function(
             app_id=app.id,
             **function_data,
             embedding=functions_embeddings[i],
+            api_key_id=api_key_id,
         )
         db_session.add(function)
         functions.append(function)
@@ -49,6 +55,7 @@ def update_functions(
     db_session: Session,
     functions_upsert: list[FunctionUpsert],
     functions_embeddings: list[list[float] | None],
+    api_key_id: UUID,
 ) -> list[Function]:
     """
     Update functions.
@@ -58,7 +65,7 @@ def update_functions(
     logger.debug(f"Updating functions, functions_upsert={functions_upsert}")
     functions = []
     for i, function_upsert in enumerate(functions_upsert):
-        function = crud.functions.get_function(db_session, function_upsert.name, False, False)
+        function = crud.functions.get_function_by_name_and_api_key_id(db_session, function_upsert.name, api_key_id)
         if not function:
             logger.error(f"Function={function_upsert.name} does not exist")
             raise ValueError(f"Function={function_upsert.name} does not exist")
@@ -84,6 +91,7 @@ def search_functions(
     intent_embedding: list[float] | None,
     limit: int,
     offset: int,
+    exclude_api_key_owned: bool = True,
 ) -> list[Function]:
     """Get a list of functions with optional filtering by app names and sorting by vector similarity to intent."""
     statement = select(Function).join(App, Function.app_id == App.id)
@@ -106,6 +114,16 @@ def search_functions(
     # filter out functions that are not in the specified apps
     if app_names is not None:
         statement = statement.filter(App.name.in_(app_names))
+
+    # Exclude functions created by API keys (custom tools) unless explicitly requested
+    if exclude_api_key_owned:
+        try:
+            statement = statement.filter(Function.api_key_id.is_(None))
+        except Exception as e:
+            if "column functions.api_key_id does not exist" in str(e):
+                logger.warning("api_key_id column does not exist yet in functions table. Skipping filter.")
+            else:
+                raise
 
     if intent_embedding is not None:
         similarity_score = Function.embedding.cosine_distance(intent_embedding)
@@ -152,7 +170,7 @@ def get_functions_by_app_id(db_session: Session, app_id: UUID) -> list[Function]
 
 
 def get_function(
-    db_session: Session, function_name: str, public_only: bool, active_only: bool
+    db_session: Session, function_name: str, public_only: bool, active_only: bool, api_key_id: UUID | None = None
 ) -> Function | None:
     statement = select(Function).filter(Function.name == function_name)
 
@@ -171,7 +189,22 @@ def get_function(
             Function.visibility == Visibility.PUBLIC
         )
 
-    return db_session.execute(statement).scalar_one_or_none()
+    # Fetch all matches first, then prefer user's api_key_id, else fall back to LYZR_API_KEY_ID_DB
+    functions = list(db_session.execute(statement).scalars().all())
+
+    if not functions:
+        return None
+
+    if api_key_id is not None:
+        for function in functions:
+            if getattr(function, "api_key_id", None) == api_key_id:
+                return function
+
+    for function in functions:
+        if getattr(function, "api_key_id", None) == LYZR_API_KEY_ID_DB:
+            return function
+
+    return functions[0]
 
 
 def get_functions_by_names(
@@ -200,6 +233,21 @@ def get_functions_by_names(
 
     return list(db_session.execute(statement).scalars().all())
 
+def get_function_by_name_and_api_key_id(
+    db_session: Session,
+    function_name: str,
+    api_key_id: UUID,
+) -> Function | None:
+    """Get a function created by a specific API key."""
+    try:
+        statement = select(Function).filter(Function.name == function_name, Function.api_key_id == api_key_id)
+        return db_session.execute(statement).scalars().first()
+    except Exception as e:
+        if "column functions.api_key_id does not exist" in str(e):
+            logger.warning("api_key_id column does not exist yet in functions table. Returning None.")
+            return None
+        raise
+
 
 def set_function_active_status(db_session: Session, function_name: str, active: bool) -> None:
     statement = update(Function).filter_by(name=function_name).values(active=active)
@@ -211,3 +259,93 @@ def set_function_visibility(
 ) -> None:
     statement = update(Function).filter_by(name=function_name).values(visibility=visibility)
     db_session.execute(statement)
+
+
+def get_functions_by_api_key_id(
+    db_session: Session,
+    api_key_id: UUID,
+) -> list[Function]:
+    """Get all functions created by a specific API key."""
+    try:
+        statement = select(Function).filter(Function.api_key_id == api_key_id)
+        return list(db_session.execute(statement).scalars().all())
+    except Exception as e:
+        if "column functions.api_key_id does not exist" in str(e):
+            logger.warning("api_key_id column does not exist yet in functions table. Returning empty list.")
+            return []
+        raise
+
+
+def delete_function_by_id(
+    db_session: Session,
+    function_id: UUID,
+    api_key_id: UUID,
+) -> bool:
+    """Delete a function if it was created by the given API key."""
+    try:
+        function = db_session.execute(
+            select(Function).filter(Function.id == function_id, Function.api_key_id == api_key_id)
+        ).scalar_one_or_none()
+
+        if function:
+            db_session.delete(function)
+            db_session.flush()
+            return True
+        return False
+    except Exception as e:
+        if "column functions.api_key_id does not exist" in str(e):
+            logger.warning("api_key_id column does not exist yet in functions table. Cannot delete function.")
+            return False
+        raise
+
+
+def delete_functions_by_app_name(
+    db_session: Session,
+    app_name: str,
+    api_key_id: UUID,
+) -> int:
+    """Delete all functions for a given app name. If api_key_id is provided, only delete functions created by that API key.
+    Note: This function is typically used for custom apps only, not system apps."""
+    try:
+        # Get the app first to get its ID
+        app = crud.apps.get_app_by_name_and_api_key_id(db_session, app_name, api_key_id)
+        if not app:
+            logger.warning(f"App '{app_name}' not found")
+            return 0
+
+        # Build the query to get functions for this app
+        statement = select(Function).filter(Function.app_id == app.id)
+
+        # If api_key_id is provided, only delete functions created by that API key
+        if api_key_id is not None:
+            statement = statement.filter(Function.api_key_id == api_key_id)
+
+        # Get all functions to delete
+        functions_to_delete = list(db_session.execute(statement).scalars().all())
+
+        # Delete each function
+        for function in functions_to_delete:
+            db_session.delete(function)
+
+        db_session.flush()
+
+        logger.info(f"Deleted {len(functions_to_delete)} functions for app '{app_name}'")
+        return len(functions_to_delete)
+
+    except Exception as e:
+        if "column functions.api_key_id does not exist" in str(e):
+            logger.warning("api_key_id column does not exist yet in functions table. Cannot filter by API key.")
+            # Fallback: delete all functions for the app without API key filtering
+            app = crud.apps.get_app_by_name_and_api_key_id(db_session, app_name, api_key_id)
+            if not app:
+                return 0
+
+            statement = select(Function).filter(Function.app_id == app.id)
+            functions_to_delete = list(db_session.execute(statement).scalars().all())
+
+            for function in functions_to_delete:
+                db_session.delete(function)
+
+            db_session.flush()
+            return len(functions_to_delete)
+        raise

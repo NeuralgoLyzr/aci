@@ -1,6 +1,7 @@
+import os
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.orm import Session
 
 from aci.common.db.sql_models import App, AppConfiguration
@@ -17,13 +18,20 @@ def create_app_configuration(
     db_session: Session,
     project_id: UUID,
     app_configuration_create: AppConfigurationCreate,
+    api_key_id: UUID | None = None,
 ) -> AppConfiguration:
     """
     Create a new app configuration record
     """
-    app_id = db_session.execute(
-        select(App.id).filter_by(name=app_configuration_create.app_name)
-    ).scalar_one()
+    statement = select(App.id).filter_by(name=app_configuration_create.app_name)
+
+    if api_key_id is not None:
+        LYZR_API_KEY_ID_DB = UUID(os.getenv("LYZR_API_KEY_ID_DB"))
+        statement = statement.filter(or_(App.api_key_id == api_key_id, App.api_key_id == LYZR_API_KEY_ID_DB))
+        # Prioritize exact api_key_id match first, then fallback to LYZR_API_KEY_ID_DB
+        statement = statement.order_by((App.api_key_id == api_key_id).desc())
+
+    app_id = db_session.execute(statement).scalars().first()
     app_configuration = AppConfiguration(
         project_id=project_id,
         app_id=app_id,
@@ -99,14 +107,22 @@ def get_app_configurations(
 
 
 def get_app_configuration(
-    db_session: Session, project_id: UUID, app_name: str
+    db_session: Session, project_id: UUID, app_name: str, api_key_id: UUID | None = None
 ) -> AppConfiguration | None:
     """Get an app configuration by project id and app name"""
-    app_configuration: AppConfiguration | None = db_session.execute(
+    statement = (
         select(AppConfiguration)
         .join(App, AppConfiguration.app_id == App.id)
         .filter(AppConfiguration.project_id == project_id, App.name == app_name)
-    ).scalar_one_or_none()
+    )
+
+    if api_key_id is not None:
+        LYZR_API_KEY_ID_DB = UUID(os.getenv("LYZR_API_KEY_ID_DB"))
+        statement = statement.filter(or_(App.api_key_id == api_key_id, App.api_key_id == LYZR_API_KEY_ID_DB))
+        # Prioritize exact api_key_id match first, then fallback to LYZR_API_KEY_ID_DB
+        statement = statement.order_by((App.api_key_id == api_key_id).desc())
+
+    app_configuration: AppConfiguration | None = db_session.execute(statement).scalars().first()
     return app_configuration
 
 

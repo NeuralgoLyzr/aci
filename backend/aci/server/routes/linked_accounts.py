@@ -150,6 +150,7 @@ async def link_account_with_aci_default_credentials(
             body.linked_account_owner_id,
             app_configuration.security_scheme,
             enabled=True,
+            api_key_id=context.api_key_id,
         )
     context.db_session.commit()
 
@@ -170,7 +171,7 @@ async def link_account_with_no_auth(
     )
     # TODO: duplicate code with other linked account creation routes, refactor later
     app_configuration = crud.app_configurations.get_app_configuration(
-        context.db_session, context.project.id, body.app_name
+        context.db_session, context.project.id, body.app_name, context.api_key_id
     )
     if not app_configuration:
         logger.error(
@@ -221,6 +222,7 @@ async def link_account_with_no_auth(
             SecurityScheme.NO_AUTH,
             NoAuthSchemeCredentials(),
             enabled=True,
+            api_key_id=context.api_key_id,
         )
 
     context.db_session.commit()
@@ -302,6 +304,7 @@ async def link_account_with_api_key(
             SecurityScheme.API_KEY,
             security_credentials,
             enabled=True,
+            api_key_id=context.api_key_id,
         )
 
     context.db_session.commit()
@@ -555,6 +558,7 @@ async def linked_accounts_oauth2_callback(
             security_scheme=SecurityScheme.OAUTH2,
             security_credentials=security_credentials,
             enabled=True,
+            api_key_id=None,  # OAuth2 callback doesn't have access to request context
         )
     db_session.commit()
 

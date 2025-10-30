@@ -16,34 +16,59 @@ logger = get_logger(__name__)
 def fix_schema() -> None:
     """Fix any schema issues at startup."""
     
-    # Check if schema fixes should run
+    # Check if schema fixes should run - default to true
     should_run = os.getenv("RUN_SCHEMA_FIXES", "true").lower() == "true"
     
     if not should_run:
-        logger.info("Skipping schema fixes (RUN_SCHEMA_FIXES not set to 'true')")
+        logger.info("Skipping schema fixes (RUN_SCHEMA_FIXES explicitly set to false)")
         return
+    
+    logger.info("Running schema fixes (RUN_SCHEMA_FIXES is true or not set)")
     
     logger.info("🔧 Running schema fixes...")
     
     try:
         with create_db_session(server_config.get_db_full_url_sync()) as db:
             
-            # Fix 1: Change org_id from UUID to VARCHAR in subscriptions table
-            logger.info("Fixing subscriptions.org_id type...")
+            # Fix 1: Add api_key_id columns for API key ownership
+            logger.info("Adding api_key_id columns for API key ownership...")
             try:
+                # Add api_key_id to apps table
                 db.execute("""
-                    ALTER TABLE subscriptions 
-                    ALTER COLUMN org_id TYPE VARCHAR(255)
+                    DO $$ 
+                    BEGIN
+                        IF NOT EXISTS (
+                            SELECT 1 FROM information_schema.columns 
+                            WHERE table_name = 'apps' 
+                            AND column_name = 'api_key_id'
+                        ) THEN
+                            ALTER TABLE apps ADD COLUMN api_key_id UUID NULL;
+                            ALTER TABLE apps ADD CONSTRAINT fk_apps_api_key_id 
+                                FOREIGN KEY (api_key_id) REFERENCES api_keys(id);
+                        END IF;
+                    END $$
                 """)
+                
+                # Add api_key_id to functions table
+                db.execute("""
+                    DO $$ 
+                    BEGIN
+                        IF NOT EXISTS (
+                            SELECT 1 FROM information_schema.columns 
+                            WHERE table_name = 'functions' 
+                            AND column_name = 'api_key_id'
+                        ) THEN
+                            ALTER TABLE functions ADD COLUMN api_key_id UUID NULL;
+                            ALTER TABLE functions ADD CONSTRAINT fk_functions_api_key_id 
+                                FOREIGN KEY (api_key_id) REFERENCES api_keys(id);
+                        END IF;
+                    END $$
+                """)
+                
                 db.commit()
-                logger.info("✅ Fixed subscriptions.org_id type")
+                logger.info("✅ Added api_key_id columns for API key ownership")
             except Exception as e:
-                if "does not exist" in str(e).lower():
-                    logger.info("⚠️  subscriptions table doesn't exist yet - will be created later")
-                elif "cannot be cast automatically" in str(e).lower():
-                    logger.info("⚠️  org_id already correct type or has data - skipping")
-                else:
-                    logger.warning(f"Could not fix subscriptions.org_id: {e}")
+                logger.warning(f"Could not add api_key_id columns: {e}")
                 db.rollback()
             
             # Fix 2: Ensure all required tables exist with correct schema
@@ -61,7 +86,7 @@ def fix_schema() -> None:
                         status VARCHAR(50) NOT NULL,
                         interval VARCHAR(20) NOT NULL,
                         current_period_end TIMESTAMP NOT NULL,
-                        cancel_at_period_end BOOLEAN NOT NULL DEFAULT FALSE,
+                        cancel_at_period_end BOOLEAN NOT NULL,
                         created_at TIMESTAMP DEFAULT NOW(),
                         updated_at TIMESTAMP DEFAULT NOW()
                     )
@@ -75,8 +100,8 @@ def fix_schema() -> None:
                         stripe_product_id VARCHAR(255) NOT NULL UNIQUE,
                         stripe_monthly_price_id VARCHAR(255) NOT NULL UNIQUE,
                         stripe_yearly_price_id VARCHAR(255) NOT NULL UNIQUE,
-                        features JSONB NOT NULL DEFAULT '{}',
-                        is_public BOOLEAN NOT NULL DEFAULT TRUE,
+                        features JSONB NOT NULL,
+                        is_public BOOLEAN NOT NULL DEFAULT false,
                         created_at TIMESTAMP DEFAULT NOW(),
                         updated_at TIMESTAMP DEFAULT NOW()
                     )
@@ -101,8 +126,10 @@ def fix_schema() -> None:
                 db.execute("""
                     INSERT INTO plans (name, stripe_product_id, stripe_monthly_price_id, stripe_yearly_price_id, features, is_public)
                     VALUES 
-                        ('starter', 'prod_starter', 'price_starter_monthly', 'price_starter_yearly', '{"projects": 5, "agents": 10}', true),
-                        ('team', 'prod_team', 'price_team_monthly', 'price_team_yearly', '{"projects": 50, "agents": 100}', true)
+                        ('starter', 'prod_starter', 'price_starter_monthly', 'price_starter_yearly', 
+                         '{"projects": 5, "agents": 10, "linked_accounts": 50, "api_calls_monthly": 10000}', true),
+                        ('team', 'prod_team', 'price_team_monthly', 'price_team_yearly', 
+                         '{"projects": 50, "agents": 100, "linked_accounts": 500, "api_calls_monthly": 100000}', true)
                     ON CONFLICT (name) DO NOTHING
                 """)
                 

@@ -2,7 +2,10 @@
 CRUD operations for apps. (not including app_configurations)
 """
 
-from sqlalchemy import select, update
+import os
+from uuid import UUID
+
+from sqlalchemy import select, update, or_
 from sqlalchemy.orm import Session
 
 from aci.common.db.sql_models import App
@@ -17,6 +20,7 @@ def create_app(
     db_session: Session,
     app_upsert: AppUpsert,
     app_embedding: list[float],
+    api_key_id: UUID | None = None,
 ) -> App:
     logger.debug(f"Creating app: {app_upsert}")
 
@@ -24,6 +28,7 @@ def create_app(
     app = App(
         **app_data,
         embedding=app_embedding,
+        api_key_id=api_key_id,
     )
 
     db_session.add(app)
@@ -66,14 +71,19 @@ def update_app_default_security_credentials(
     app.default_security_credentials_by_scheme[security_scheme] = security_credentials
 
 
-def get_app(db_session: Session, app_name: str, public_only: bool, active_only: bool) -> App | None:
+def get_app(db_session: Session, app_name: str, public_only: bool, active_only: bool, api_key_id: UUID | None = None) -> App | None:
     statement = select(App).filter_by(name=app_name)
+    LYZR_API_KEY_ID_DB = UUID(os.getenv("LYZR_API_KEY_ID_DB"))
 
     if active_only:
         statement = statement.filter(App.active)
     if public_only:
         statement = statement.filter(App.visibility == Visibility.PUBLIC)
-    app: App | None = db_session.execute(statement).scalar_one_or_none()
+    if api_key_id is not None:
+        statement = statement.filter(or_(App.api_key_id == api_key_id, App.api_key_id == LYZR_API_KEY_ID_DB))
+        # Prioritize exact api_key_id match first, then fallback to LYZR_API_KEY_ID_DB
+        statement = statement.order_by((App.api_key_id == api_key_id).desc())
+    app: App | None = db_session.execute(statement).scalars().first()
     return app
 
 
@@ -84,6 +94,7 @@ def get_apps(
     app_names: list[str] | None,
     limit: int | None,
     offset: int | None,
+    api_key_id: UUID | None = None,
 ) -> list[App]:
     statement = select(App)
     if public_only:
@@ -92,6 +103,17 @@ def get_apps(
         statement = statement.filter(App.active)
     if app_names is not None:
         statement = statement.filter(App.name.in_(app_names))
+
+    LYZR_API_KEY_ID_DB = UUID(os.getenv("LYZR_API_KEY_ID_DB"))
+
+    if api_key_id is not None:
+        try:
+            statement = statement.filter(or_(App.api_key_id == api_key_id, App.api_key_id == LYZR_API_KEY_ID_DB))
+        except Exception as e:
+            if "column apps.api_key_id does not exist" in str(e):
+                logger.warning("api_key_id column does not exist yet in apps table. Skipping filter.")
+            else:
+                raise
     if offset is not None:
         statement = statement.offset(offset)
     if limit is not None:
@@ -145,6 +167,59 @@ def search_apps(
         return [(app, score) for app, score in results]
     else:
         return [(app, None) for (app,) in results]
+
+
+def get_apps_by_api_key_id(
+    db_session: Session,
+    api_key_id: UUID,
+) -> list[App]:
+    """Get all apps created by a specific API key."""
+    try:
+        statement = select(App).filter(App.api_key_id == api_key_id)
+        return list(db_session.execute(statement).scalars().all())
+    except Exception as e:
+        if "column apps.api_key_id does not exist" in str(e):
+            logger.warning("api_key_id column does not exist yet in apps table. Returning empty list.")
+            return []
+        raise
+
+def get_app_by_name_and_api_key_id(
+    db_session: Session,
+    app_name: str,
+    api_key_id: UUID,
+) -> App | None:
+    """Get an app created by a specific API key."""
+    try:
+        statement = select(App).filter(App.name == app_name, App.api_key_id == api_key_id)
+        return db_session.execute(statement).scalar_one_or_none()
+    except Exception as e:
+        if "column apps.api_key_id does not exist" in str(e):
+            logger.warning("api_key_id column does not exist yet in apps table. Returning None.")
+            return None
+        raise
+
+
+def delete_app_by_id(
+    db_session: Session,
+    app_id: UUID,
+    api_key_id: UUID,
+) -> bool:
+    """Delete an app if it was created by the given API key."""
+    try:
+        app = db_session.execute(
+            select(App).filter(App.id == app_id, App.api_key_id == api_key_id)
+        ).scalar_one_or_none()
+
+        if app:
+            db_session.delete(app)
+            db_session.flush()
+            return True
+        return False
+    except Exception as e:
+        if "column apps.api_key_id does not exist" in str(e):
+            logger.warning("api_key_id column does not exist yet in apps table. Cannot delete app.")
+            return False
+        raise
 
 
 def set_app_active_status(db_session: Session, app_name: str, active: bool) -> None:

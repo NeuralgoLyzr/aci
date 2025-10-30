@@ -39,6 +39,7 @@ async def create_app_configuration(
         body.app_name,
         context.project.visibility_access == Visibility.PUBLIC,
         True,
+        context.api_key_id,
     )
     if not app:
         logger.error(f"App not found, app_name={body.app_name}")
@@ -64,6 +65,7 @@ async def create_app_configuration(
         context.db_session,
         context.project.id,
         body,
+        context.api_key_id,
     )
     context.db_session.commit()
 

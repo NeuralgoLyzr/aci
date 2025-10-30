@@ -404,5 +404,274 @@
             "visible": ["path", "body"],
             "additionalProperties": false
         }
-    }
+    },
+    {
+        "name": "SHARE_POINT__LIST_FILES",
+        "description": "Lists files and folders in a SharePoint site or specific folder path.",
+        "tags": [
+          "sharepoint",
+          "files",
+          "list",
+          "documents"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+          "method": "GET",
+          "path": "/sites/{site_id}/drive/root/children",
+          "server_url": "https://graph.microsoft.com/v1.0"
+        },
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "object",
+              "description": "Path parameters for the SharePoint site.",
+              "properties": {
+                "site_id": {
+                  "type": "string",
+                  "description": "The SharePoint site ID or site URL (e.g., 'contoso.sharepoint.com,{site-guid},{web-guid}' or site URL).",
+                  "examples": [
+                    "contoso.sharepoint.com,12345678-1234-1234-1234-123456789012,87654321-4321-4321-4321-210987654321"
+                  ]
+                }
+              },
+              "required": [
+                "site_id"
+              ],
+              "visible": [
+                "site_id"
+              ],
+              "additionalProperties": false
+            },
+            "query": {
+              "type": "object",
+              "description": "Optional query parameters for filtering and pagination.",
+              "properties": {
+                "$top": {
+                  "type": "integer",
+                  "description": "Number of items to return (max 1000).",
+                  "examples": [100]
+                },
+                "$skip": {
+                  "type": "integer",
+                  "description": "Number of items to skip for pagination.",
+                  "examples": [0]
+                },
+                "$filter": {
+                  "type": "string",
+                  "description": "Filter expression for items.",
+                  "examples": ["name eq 'document.pdf'"]
+                }
+              },
+              "required": [],
+              "visible": [
+                "$top",
+                "$skip",
+                "$filter"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "visible": [
+            "path",
+            "query"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "SHARE_POINT__UPLOAD_FILE",
+        "description": "Uploads a file to SharePoint site at the specified path.",
+        "tags": [
+          "sharepoint",
+          "files",
+          "upload",
+          "create"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+          "method": "PUT",
+          "path": "/sites/{site_id}/drive/root:/{file_path}:/content",
+          "server_url": "https://graph.microsoft.com/v1.0"
+        },
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "object",
+              "description": "Path parameters for file upload.",
+              "properties": {
+                "site_id": {
+                  "type": "string",
+                  "description": "The SharePoint site ID or site URL.",
+                  "examples": [
+                    "contoso.sharepoint.com,12345678-1234-1234-1234-123456789012,87654321-4321-4321-4321-210987654321"
+                  ]
+                },
+                "file_path": {
+                  "type": "string",
+                  "description": "The path where the file should be uploaded (including filename).",
+                  "examples": [
+                    "Documents/report.pdf",
+                    "Images/photo.jpg",
+                    "newfolder/document.docx"
+                  ]
+                }
+              },
+              "required": [
+                "site_id",
+                "file_path"
+              ],
+              "visible": [
+                "site_id",
+                "file_path"
+              ],
+              "additionalProperties": false
+            },
+            "body": {
+              "type": "string",
+              "format": "binary",
+              "description": "The file content to upload."
+            }
+          },
+          "required": [
+            "path",
+            "body"
+          ],
+          "visible": [
+            "path",
+            "body"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "SHARE_POINT__DOWNLOAD_FILE",
+        "description": "Downloads a file from SharePoint by file path.",
+        "tags": [
+          "sharepoint",
+          "files",
+          "download",
+          "read"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+          "method": "GET",
+          "path": "/sites/{site_id}/drive/root:/{file_path}:/content",
+          "server_url": "https://graph.microsoft.com/v1.0"
+        },
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "object",
+              "description": "Path parameters for file download.",
+              "properties": {
+                "site_id": {
+                  "type": "string",
+                  "description": "The SharePoint site ID or site URL.",
+                  "examples": [
+                    "contoso.sharepoint.com,12345678-1234-1234-1234-123456789012,87654321-4321-4321-4321-210987654321"
+                  ]
+                },
+                "file_path": {
+                  "type": "string",
+                  "description": "The path to the file to download.",
+                  "examples": [
+                    "Documents/report.pdf",
+                    "Images/photo.jpg",
+                    "folder/document.docx"
+                  ]
+                }
+              },
+              "required": [
+                "site_id",
+                "file_path"
+              ],
+              "visible": [
+                "site_id",
+                "file_path"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "visible": [
+            "path"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "SHARE_POINT__GET_FILE_METADATA",
+        "description": "Gets metadata information for a file in SharePoint (size, modified date, etc.).",
+        "tags": [
+          "sharepoint",
+          "files",
+          "metadata",
+          "info"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+          "method": "GET",
+          "path": "/sites/{site_id}/drive/root:/{file_path}",
+          "server_url": "https://graph.microsoft.com/v1.0"
+        },
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "object",
+              "description": "Path parameters for getting file metadata.",
+              "properties": {
+                "site_id": {
+                  "type": "string",
+                  "description": "The SharePoint site ID or site URL.",
+                  "examples": [
+                    "contoso.sharepoint.com,12345678-1234-1234-1234-123456789012,87654321-4321-4321-4321-210987654321"
+                  ]
+                },
+                "file_path": {
+                  "type": "string",
+                  "description": "The path to the file.",
+                  "examples": [
+                    "Documents/report.pdf",
+                    "Images/photo.jpg",
+                    "folder/document.docx"
+                  ]
+                }
+              },
+              "required": [
+                "site_id",
+                "file_path"
+              ],
+              "visible": [
+                "site_id",
+                "file_path"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "visible": [
+            "path"
+          ],
+          "additionalProperties": false
+        }
+      }
 ]
