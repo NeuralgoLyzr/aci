@@ -63,6 +63,8 @@ class LinkedAccountOAuth2CreateState(BaseModel):
     client_id: str
     code_verifier: str
     after_oauth2_link_redirect_url: str | None = None
+    # Optional app_id for by-app-id flow
+    app_id: UUID | None = None
 
 
 class LinkedAccountPublic(BaseModel):

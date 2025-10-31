@@ -346,10 +346,10 @@ async def link_account_with_no_auth_by_app_id(
             f"the security_scheme configured for app_id={body.app_id} is "
             f"{app_configuration.security_scheme}, not no_auth"
         )
-    linked_account = crud.linked_accounts.get_linked_account(
+    linked_account = crud.linked_accounts.get_linked_account_by_app_id(
         context.db_session,
         context.project.id,
-        app_configuration.app.name,
+        body.app_id,
         body.linked_account_owner_id,
     )
     if linked_account:
@@ -371,15 +371,14 @@ async def link_account_with_no_auth_by_app_id(
             f"linked_account_owner_id={body.linked_account_owner_id}, "
             f"app_id={body.app_id}"
         )
-        linked_account = crud.linked_accounts.create_linked_account(
+        linked_account = crud.linked_accounts.create_linked_account_by_app_id(
             context.db_session,
             context.project.id,
-            app_configuration.app.name,
+            body.app_id,
             body.linked_account_owner_id,
             SecurityScheme.NO_AUTH,
             NoAuthSchemeCredentials(),
             enabled=True,
-            api_key_id=context.api_key_id,
         )
 
     context.db_session.commit()
@@ -419,10 +418,10 @@ async def link_account_with_api_key_by_app_id(
             f"the security_scheme configured for app_id={body.app_id} is "
             f"{app_configuration.security_scheme}, not api_key"
         )
-    linked_account = crud.linked_accounts.get_linked_account(
+    linked_account = crud.linked_accounts.get_linked_account_by_app_id(
         context.db_session,
         context.project.id,
-        app_configuration.app.name,
+        body.app_id,
         body.linked_account_owner_id,
     )
     security_credentials = APIKeySchemeCredentials(
@@ -447,15 +446,14 @@ async def link_account_with_api_key_by_app_id(
             f"linked_account_owner_id={body.linked_account_owner_id}, "
             f"app_id={body.app_id}"
         )
-        linked_account = crud.linked_accounts.create_linked_account(
+        linked_account = crud.linked_accounts.create_linked_account_by_app_id(
             context.db_session,
             context.project.id,
-            app_configuration.app.name,
+            body.app_id,
             body.linked_account_owner_id,
             SecurityScheme.API_KEY,
             security_credentials,
             enabled=True,
-            api_key_id=context.api_key_id,
         )
 
     context.db_session.commit()
@@ -524,6 +522,7 @@ async def link_oauth2_account_by_app_id(
         client_id=oauth2_scheme.client_id,
         code_verifier=OAuth2Manager.generate_code_verifier(),
         after_oauth2_link_redirect_url=query_params.after_oauth2_link_redirect_url,
+        app_id=query_params.app_id,  # Include app_id for by-app-id flow
     )
 
     oauth2_state_jwt = jwt.encode(
@@ -756,12 +755,25 @@ async def linked_accounts_oauth2_callback(
     # TODO: consider separating the logic for updating and creating a linked account or give warning to clients
     # if the linked account already exists to avoid accidental overwriting the account
     # TODO: try/except, retry?
-    linked_account = crud.linked_accounts.get_linked_account(
-        db_session,
-        state.project_id,
-        state.app_name,
-        state.linked_account_owner_id,
-    )
+
+    # Check if state contains app_id (from by-app-id flow) or app_name (from by-app-name flow)
+    if state.app_id:
+        # Use app_id-based CRUD functions
+        linked_account = crud.linked_accounts.get_linked_account_by_app_id(
+            db_session,
+            state.project_id,
+            state.app_id,
+            state.linked_account_owner_id,
+        )
+    else:
+        # Use app_name-based CRUD functions
+        linked_account = crud.linked_accounts.get_linked_account(
+            db_session,
+            state.project_id,
+            state.app_name,
+            state.linked_account_owner_id,
+        )
+
     if linked_account:
         logger.info(
             f"Updating oauth2 credentials for linked account, linked_account_id={linked_account.id}"
@@ -783,21 +795,39 @@ async def linked_accounts_oauth2_callback(
             db_session, org_id, state.linked_account_owner_id
         )
 
-        logger.info(
-            f"Creating oauth2 linked account, "
-            f"app_name={state.app_name}, "
-            f"linked_account_owner_id={state.linked_account_owner_id}"
-        )
-        linked_account = crud.linked_accounts.create_linked_account(
-            db_session,
-            project_id=state.project_id,
-            app_name=state.app_name,
-            linked_account_owner_id=state.linked_account_owner_id,
-            security_scheme=SecurityScheme.OAUTH2,
-            security_credentials=security_credentials,
-            enabled=True,
-            api_key_id=None,  # OAuth2 callback doesn't have access to request context
-        )
+        if state.app_id:
+            # Use app_id-based create function
+            logger.info(
+                f"Creating oauth2 linked account by app_id, "
+                f"app_id={state.app_id}, "
+                f"linked_account_owner_id={state.linked_account_owner_id}"
+            )
+            linked_account = crud.linked_accounts.create_linked_account_by_app_id(
+                db_session,
+                project_id=state.project_id,
+                app_id=state.app_id,
+                linked_account_owner_id=state.linked_account_owner_id,
+                security_scheme=SecurityScheme.OAUTH2,
+                security_credentials=security_credentials,
+                enabled=True,
+            )
+        else:
+            # Use app_name-based create function
+            logger.info(
+                f"Creating oauth2 linked account, "
+                f"app_name={state.app_name}, "
+                f"linked_account_owner_id={state.linked_account_owner_id}"
+            )
+            linked_account = crud.linked_accounts.create_linked_account(
+                db_session,
+                project_id=state.project_id,
+                app_name=state.app_name,
+                linked_account_owner_id=state.linked_account_owner_id,
+                security_scheme=SecurityScheme.OAUTH2,
+                security_credentials=security_credentials,
+                enabled=True,
+                api_key_id=None,  # OAuth2 callback doesn't have access to request context
+            )
     db_session.commit()
 
     if state.after_oauth2_link_redirect_url:
