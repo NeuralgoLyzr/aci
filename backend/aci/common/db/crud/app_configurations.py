@@ -65,7 +65,10 @@ def create_app_configuration_by_app_id(
         security_scheme=app_configuration_create.security_scheme,
         security_scheme_overrides=app_configuration_create.security_scheme_overrides.model_dump(
             exclude_none=True
-        ),
+        ),  # type: ignore
+        enabled=True,
+        all_functions_enabled=app_configuration_create.all_functions_enabled,
+        enabled_functions=app_configuration_create.enabled_functions,
     )
     db_session.add(app_configuration)
     db_session.flush()
@@ -175,5 +178,14 @@ def app_configuration_exists(db_session: Session, project_id: UUID, app_name: st
             AppConfiguration.project_id == project_id,
             App.name == app_name,
         )
+    )
+    return db_session.execute(stmt).scalar_one_or_none() is not None
+
+
+def app_configuration_exists_by_app_id(db_session: Session, project_id: UUID, app_id: UUID) -> bool:
+    """Check if an app configuration exists by project_id and app_id"""
+    stmt = select(AppConfiguration).filter(
+        AppConfiguration.project_id == project_id,
+        AppConfiguration.app_id == app_id,
     )
     return db_session.execute(stmt).scalar_one_or_none() is not None

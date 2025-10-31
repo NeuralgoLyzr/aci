@@ -65,6 +65,42 @@ class AppConfigurationCreate(BaseModel):
         return self
 
 
+class AppConfigurationCreateByAppId(BaseModel):
+    """Create a new app configuration by app_id
+    "all_functions_enabled=True" → ignore enabled_functions.
+    "all_functions_enabled=False" AND non-empty enabled_functions → selectively enable that list.
+    "all_functions_enabled=False" AND empty enabled_functions → all functions disabled.
+    """
+
+    app_id: UUID
+    security_scheme: SecurityScheme
+    # NOTE: default_factory needs to be SecuritySchemeOverrides instead of dict
+    security_scheme_overrides: SecuritySchemeOverrides = Field(
+        default_factory=SecuritySchemeOverrides
+    )
+    all_functions_enabled: bool = Field(default=True)
+    enabled_functions: list[str] = Field(default_factory=list)
+
+    # validate:
+    # when all_functions_enabled is True, enabled_functions provided by user should be empty
+    @model_validator(mode="after")
+    def check_all_functions_enabled(self) -> "AppConfigurationCreateByAppId":
+        if self.all_functions_enabled and self.enabled_functions:
+            raise ValueError(
+                "all_functions_enabled and enabled_functions cannot be both True and non-empty"
+            )
+        return self
+
+    @model_validator(mode="after")
+    def check_security_scheme_matches_override(self) -> "AppConfigurationCreateByAppId":
+        if self.security_scheme_overrides.oauth2:
+            if self.security_scheme != SecurityScheme.OAUTH2:
+                raise ValueError(
+                    f"unsupported security_scheme_overrides provided for the security scheme {self.security_scheme}"
+                )
+        return self
+
+
 class AppConfigurationUpdate(BaseModel):
     # TODO: we currently don't support updating security_scheme and security_scheme_overrides (e.g., client_id, client_secret, redirect_url).
     # it might be useful to support updating custom redirect_url.

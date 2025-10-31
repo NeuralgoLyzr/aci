@@ -14,6 +14,7 @@ from aci.common.exceptions import (
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.app_configurations import (
     AppConfigurationCreate,
+    AppConfigurationCreateByAppId,
     AppConfigurationPublic,
     AppConfigurationsList,
     AppConfigurationUpdate,
@@ -72,15 +73,55 @@ async def create_app_configuration(
 
     return app_configuration
 
-# create app configuration by app id
-@router.post("/app/{app_id}", response_model=AppConfigurationPublic, response_model_exclude_none=True)
+
+@router.post("/by-app-id", response_model=AppConfigurationPublic, response_model_exclude_none=True)
 async def create_app_configuration_by_app_id(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
-    app_id: str,
-    body: AppConfigurationCreate,
+    body: AppConfigurationCreateByAppId,
 ) -> AppConfiguration:
-    """Create an app configuration for a project by app id"""
-    app_configuration = crud.app_configurations.create_app_configuration_by_app_id(context.db_session, context.project.id, UUID(app_id), body)
+    """Create an app configuration for a project using app_id"""
+
+    # Get the app by ID to verify it exists
+    app = crud.apps.get_app_by_id(context.db_session, body.app_id)
+    if not app:
+        logger.error(f"App not found, app_id={body.app_id}")
+        raise AppNotFound(f"app with id={body.app_id} not found")
+
+    # Check if app configuration already exists
+    if crud.app_configurations.app_configuration_exists_by_app_id(
+        context.db_session, context.project.id, body.app_id
+    ):
+        logger.error(f"App configuration already exists, app_id={body.app_id}")
+        raise AppConfigurationAlreadyExists(
+            f"app with id={body.app_id} already configured for project={context.project.id}"
+        )
+
+    # Validate that the app supports the specified security scheme
+    if app.security_schemes.get(body.security_scheme) is None:
+        logger.error(
+            f"App does not support specified security scheme, app_id={body.app_id}, "
+            f"security_scheme={body.security_scheme}"
+        )
+        raise AppSecuritySchemeNotSupported(
+            f"app with id={body.app_id} does not support security_scheme={body.security_scheme}"
+        )
+
+    # Create a temporary AppConfigurationCreate object for the CRUD function
+    # The CRUD function expects AppConfigurationCreate, but we only use the fields that don't include app_name
+    temp_create_schema = AppConfigurationCreate(
+        app_name=app.name,  # This won't be used in the by_app_id CRUD function
+        security_scheme=body.security_scheme,
+        security_scheme_overrides=body.security_scheme_overrides,
+        all_functions_enabled=body.all_functions_enabled,
+        enabled_functions=body.enabled_functions,
+    )
+
+    app_configuration = crud.app_configurations.create_app_configuration_by_app_id(
+        context.db_session,
+        context.project.id,
+        body.app_id,
+        temp_create_schema,
+    )
     context.db_session.commit()
 
     return app_configuration

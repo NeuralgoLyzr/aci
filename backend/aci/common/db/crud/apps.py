@@ -87,6 +87,13 @@ def get_app(db_session: Session, app_name: str, public_only: bool, active_only: 
     return app
 
 
+def get_app_by_id(db_session: Session, app_id: UUID) -> App | None:
+    """Get an app by its ID"""
+    statement = select(App).filter_by(id=app_id)
+    app: App | None = db_session.execute(statement).scalars().first()
+    return app
+
+
 def get_apps(
     db_session: Session,
     public_only: bool,
