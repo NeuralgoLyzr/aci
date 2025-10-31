@@ -223,6 +223,19 @@ def delete_linked_accounts(db_session: Session, project_id: UUID, app_name: str)
     return len(linked_accounts_to_delete)
 
 
+def delete_linked_accounts_by_app_id(db_session: Session, project_id: UUID, app_id: UUID) -> int:
+    """Delete all linked accounts for an app by app_id"""
+    statement = select(LinkedAccount).filter(
+        LinkedAccount.project_id == project_id,
+        LinkedAccount.app_id == app_id
+    )
+    linked_accounts_to_delete = db_session.execute(statement).scalars().all()
+    for linked_account in linked_accounts_to_delete:
+        db_session.delete(linked_account)
+    db_session.flush()
+    return len(linked_accounts_to_delete)
+
+
 def get_total_number_of_unique_linked_account_owner_ids(db_session: Session, org_id: str) -> int:
     """
     TODO: Add a lock to prevent the race condition.

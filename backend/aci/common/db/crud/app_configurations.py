@@ -111,6 +111,17 @@ def delete_app_configuration(db_session: Session, project_id: UUID, app_name: st
     db_session.flush()
 
 
+def delete_app_configuration_by_app_id(db_session: Session, project_id: UUID, app_id: UUID) -> None:
+    """Delete an app configuration by app_id"""
+    statement = select(AppConfiguration).filter(
+        AppConfiguration.project_id == project_id,
+        AppConfiguration.app_id == app_id
+    )
+    app_to_delete = db_session.execute(statement).scalar_one()
+    db_session.delete(app_to_delete)
+    db_session.flush()
+
+
 def get_app_configurations(
     db_session: Session,
     project_id: UUID,

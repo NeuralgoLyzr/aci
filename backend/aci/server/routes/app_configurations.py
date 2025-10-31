@@ -126,6 +126,49 @@ async def create_app_configuration_by_app_id(
 
     return app_configuration
 
+
+@router.delete("/by-app-id/{app_id}")
+async def delete_app_configuration_by_app_id(
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    app_id: UUID,
+) -> None:
+    """
+    Delete an app configuration by app_id
+    Warning: This will delete the app configuration from the project,
+    associated linked accounts, and remove the app from agents' allowed_apps.
+    """
+
+    app_configuration = crud.app_configurations.get_app_configuration_by_app_id(
+        context.db_session, context.project.id, app_id
+    )
+    if not app_configuration:
+        logger.error(f"App configuration not found, app_id={app_id}")
+        raise AppConfigurationNotFound(
+            f"Configuration for app_id={app_id} not found, please configure the app first"
+        )
+
+    # TODO: double check atomic operations like below in other api endpoints
+    # 1. Delete all linked accounts for this app configuration
+    number_of_linked_accounts_deleted = crud.linked_accounts.delete_linked_accounts_by_app_id(
+        context.db_session, context.project.id, app_id
+    )
+    logger.warning(
+        f"Deleted linked accounts, number_of_linked_accounts_deleted={number_of_linked_accounts_deleted}, "
+        f"app_id={app_id}"
+    )
+    # 2. Delete the app configuration record
+    crud.app_configurations.delete_app_configuration_by_app_id(
+        context.db_session, context.project.id, app_id
+    )
+
+    # 3. Delete this App from all agents' allowed_apps if exists
+    crud.projects.delete_app_from_agents_allowed_apps_by_app_id(
+        context.db_session, context.project.id, app_id
+    )
+
+    context.db_session.commit()
+
+
 @router.get("", response_model=list[AppConfigurationPublic], response_model_exclude_none=True)
 async def list_app_configurations(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
