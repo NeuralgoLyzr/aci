@@ -22,9 +22,12 @@ from aci.common.exceptions import (
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.linked_accounts import (
     LinkedAccountAPIKeyCreate,
+    LinkedAccountAPIKeyCreateByAppId,
     LinkedAccountDefaultCreate,
     LinkedAccountNoAuthCreate,
+    LinkedAccountNoAuthCreateByAppId,
     LinkedAccountOAuth2Create,
+    LinkedAccountOAuth2CreateByAppId,
     LinkedAccountOAuth2CreateState,
     LinkedAccountPublic,
     LinkedAccountsList,
@@ -310,6 +313,241 @@ async def link_account_with_api_key(
     context.db_session.commit()
 
     return linked_account
+
+
+@router.post("/by-app-id/no-auth", response_model=LinkedAccountPublic)
+async def link_account_with_no_auth_by_app_id(
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    body: LinkedAccountNoAuthCreateByAppId,
+) -> LinkedAccount:
+    """
+    Create a linked account under an App that requires no authentication, using app_id.
+    """
+    logger.info(
+        f"Linking no_auth account by app_id, app_id={body.app_id}, "
+        f"linked_account_owner_id={body.linked_account_owner_id}"
+    )
+    app_configuration = crud.app_configurations.get_app_configuration_by_app_id(
+        context.db_session, context.project.id, body.app_id
+    )
+    if not app_configuration:
+        logger.error(
+            f"Failed to link no_auth account, app configuration not found, app_id={body.app_id}"
+        )
+        raise AppConfigurationNotFound(
+            f"configuration for app_id={body.app_id} not found, please configure the app first"
+        )
+    if app_configuration.security_scheme != SecurityScheme.NO_AUTH:
+        logger.error(
+            f"Failed to link no_auth account, app configuration security scheme is not no_auth, "
+            f"app_id={body.app_id} security_scheme={app_configuration.security_scheme}"
+        )
+        raise NoImplementationFound(
+            f"the security_scheme configured for app_id={body.app_id} is "
+            f"{app_configuration.security_scheme}, not no_auth"
+        )
+    linked_account = crud.linked_accounts.get_linked_account(
+        context.db_session,
+        context.project.id,
+        app_configuration.app.name,
+        body.linked_account_owner_id,
+    )
+    if linked_account:
+        logger.error(
+            f"Failed to link no_auth account, linked account already exists, "
+            f"linked_account_owner_id={body.linked_account_owner_id} app_id={body.app_id}"
+        )
+        raise LinkedAccountAlreadyExists(
+            f"linked account with linked_account_owner_id={body.linked_account_owner_id} already exists for app_id={body.app_id}"
+        )
+    else:
+        # Enforce linked accounts quota before creating new account
+        quota_manager.enforce_linked_accounts_creation_quota(
+            context.db_session, context.project.org_id, body.linked_account_owner_id
+        )
+
+        logger.info(
+            f"Creating no_auth linked account, "
+            f"linked_account_owner_id={body.linked_account_owner_id}, "
+            f"app_id={body.app_id}"
+        )
+        linked_account = crud.linked_accounts.create_linked_account(
+            context.db_session,
+            context.project.id,
+            app_configuration.app.name,
+            body.linked_account_owner_id,
+            SecurityScheme.NO_AUTH,
+            NoAuthSchemeCredentials(),
+            enabled=True,
+            api_key_id=context.api_key_id,
+        )
+
+    context.db_session.commit()
+
+    return linked_account
+
+
+@router.post("/by-app-id/api-key", response_model=LinkedAccountPublic)
+async def link_account_with_api_key_by_app_id(
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    body: LinkedAccountAPIKeyCreateByAppId,
+) -> LinkedAccount:
+    """
+    Create a linked account under an API key based App, using app_id.
+    """
+    logger.info(
+        f"Linking api_key account by app_id, app_id={body.app_id}, "
+        f"linked_account_owner_id={body.linked_account_owner_id}"
+    )
+    app_configuration = crud.app_configurations.get_app_configuration_by_app_id(
+        context.db_session, context.project.id, body.app_id
+    )
+    if not app_configuration:
+        logger.error(
+            f"Failed to link api_key account, app configuration not found, app_id={body.app_id}"
+        )
+        raise AppConfigurationNotFound(
+            f"configuration for app_id={body.app_id} not found, please configure the app first"
+        )
+    if app_configuration.security_scheme != SecurityScheme.API_KEY:
+        logger.error(
+            f"Failed to link api_key account, app configuration security scheme is, "
+            f"{app_configuration.security_scheme} instead of api_key "
+            f"app_id={body.app_id} security_scheme={app_configuration.security_scheme}"
+        )
+        raise NoImplementationFound(
+            f"the security_scheme configured for app_id={body.app_id} is "
+            f"{app_configuration.security_scheme}, not api_key"
+        )
+    linked_account = crud.linked_accounts.get_linked_account(
+        context.db_session,
+        context.project.id,
+        app_configuration.app.name,
+        body.linked_account_owner_id,
+    )
+    security_credentials = APIKeySchemeCredentials(
+        secret_key=body.api_key,
+    )
+    if linked_account:
+        logger.error(
+            f"Failed to link api_key account, linked account already exists, "
+            f"linked_account_owner_id={body.linked_account_owner_id} app_id={body.app_id}"
+        )
+        raise LinkedAccountAlreadyExists(
+            f"linked account with linked_account_owner_id={body.linked_account_owner_id} already exists for app_id={body.app_id}"
+        )
+    else:
+        # Enforce linked accounts quota before creating new account
+        quota_manager.enforce_linked_accounts_creation_quota(
+            context.db_session, context.project.org_id, body.linked_account_owner_id
+        )
+
+        logger.info(
+            f"Creating api_key linked account, "
+            f"linked_account_owner_id={body.linked_account_owner_id}, "
+            f"app_id={body.app_id}"
+        )
+        linked_account = crud.linked_accounts.create_linked_account(
+            context.db_session,
+            context.project.id,
+            app_configuration.app.name,
+            body.linked_account_owner_id,
+            SecurityScheme.API_KEY,
+            security_credentials,
+            enabled=True,
+            api_key_id=context.api_key_id,
+        )
+
+    context.db_session.commit()
+
+    return linked_account
+
+
+@router.get("/by-app-id/oauth2")
+async def link_oauth2_account_by_app_id(
+    request: Request,
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    query_params: Annotated[LinkedAccountOAuth2CreateByAppId, Query()],
+) -> dict:
+    """
+    Start an OAuth2 account linking process using app_id.
+    It will return a redirect url (as a string, instead of RedirectResponse) to the OAuth2 provider's authorization endpoint.
+    """
+    app_configuration = crud.app_configurations.get_app_configuration_by_app_id(
+        context.db_session, context.project.id, query_params.app_id
+    )
+    if not app_configuration:
+        logger.error(
+            f"Failed to link OAuth2 account, app configuration not found, "
+            f"app_id={query_params.app_id}"
+        )
+        raise AppConfigurationNotFound(
+            f"configuration for app_id={query_params.app_id} not found, please configure the app first"
+        )
+    if app_configuration.security_scheme != SecurityScheme.OAUTH2:
+        logger.error(
+            f"Failed to link OAuth2 account, app configuration security scheme is not OAuth2, "
+            f"app_id={query_params.app_id} security_scheme={app_configuration.security_scheme}"
+        )
+        raise NoImplementationFound(
+            f"The security_scheme configured for app_id={query_params.app_id} is "
+            f"{app_configuration.security_scheme}, not OAuth2"
+        )
+
+    # Enforce linked accounts quota before creating new account
+    quota_manager.enforce_linked_accounts_creation_quota(
+        context.db_session, context.project.org_id, query_params.linked_account_owner_id
+    )
+
+    oauth2_scheme = scm.get_app_configuration_oauth2_scheme(
+        app_configuration.app, app_configuration
+    )
+
+    oauth2_manager = OAuth2Manager(
+        app_name=app_configuration.app.name,
+        client_id=oauth2_scheme.client_id,
+        client_secret=oauth2_scheme.client_secret,
+        scope=oauth2_scheme.scope,
+        authorize_url=oauth2_scheme.authorize_url,
+        access_token_url=oauth2_scheme.access_token_url,
+        refresh_token_url=oauth2_scheme.refresh_token_url,
+        token_endpoint_auth_method=oauth2_scheme.token_endpoint_auth_method,
+    )
+
+    # create and encode the state payload.
+    # NOTE: the state payload is jwt encoded (signed), but it's not encrypted, anyone can decode it
+    # TODO: add expiration check to the state payload for extra security
+    oauth2_state = LinkedAccountOAuth2CreateState(
+        app_name=app_configuration.app.name,
+        project_id=context.project.id,
+        linked_account_owner_id=query_params.linked_account_owner_id,
+        client_id=oauth2_scheme.client_id,
+        code_verifier=OAuth2Manager.generate_code_verifier(),
+        after_oauth2_link_redirect_url=query_params.after_oauth2_link_redirect_url,
+    )
+
+    oauth2_state_jwt = jwt.encode(
+        {"alg": config.JWT_ALGORITHM},
+        oauth2_state.model_dump(mode="json", exclude_none=True),
+        config.SIGNING_KEY,
+    ).decode()  # decode() is needed to convert the bytes to a string (not decoding the jwt payload) for this jwt library.
+
+    path = request.url_for(LINKED_ACCOUNTS_OAUTH2_CALLBACK_ROUTE_NAME).path
+    redirect_uri = oauth2_scheme.redirect_url or f"{config.REDIRECT_URI_BASE}{path}"
+    authorization_url = await oauth2_manager.create_authorization_url(
+        redirect_uri=redirect_uri,
+        state=oauth2_state_jwt,
+        code_verifier=oauth2_state.code_verifier,
+    )
+
+    # rewrite the authorization url for some apps that need special handling
+    # TODO: this is hacky and need to refactor this in the future
+    authorization_url = OAuth2Manager.rewrite_oauth2_authorization_url(
+        app_configuration.app.name, authorization_url
+    )
+
+    logger.info(f"Linking oauth2 account by app_id with authorization_url={authorization_url}")
+    return {"url": authorization_url}
 
 
 @router.get("/oauth2")

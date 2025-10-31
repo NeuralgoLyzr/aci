@@ -49,6 +49,30 @@ def create_app_configuration(
 
     return app_configuration
 
+def create_app_configuration_by_app_id(
+    db_session: Session,
+    project_id: UUID,
+    app_id: UUID,
+    app_configuration_create: AppConfigurationCreate,
+) -> AppConfiguration:
+    """
+    Create a new app configuration record by app id
+    """
+
+    app_configuration = AppConfiguration(
+        project_id=project_id,
+        app_id=app_id,
+        security_scheme=app_configuration_create.security_scheme,
+        security_scheme_overrides=app_configuration_create.security_scheme_overrides.model_dump(
+            exclude_none=True
+        ),
+    )
+    db_session.add(app_configuration)
+    db_session.flush()
+    db_session.refresh(app_configuration)
+
+    return app_configuration
+
 
 def update_app_configuration(
     db_session: Session,
@@ -129,6 +153,18 @@ def get_app_configuration(
 def get_app_configurations_by_app_id(db_session: Session, app_id: UUID) -> list[AppConfiguration]:
     statement = select(AppConfiguration).filter(AppConfiguration.app_id == app_id)
     return list(db_session.execute(statement).scalars().all())
+
+
+def get_app_configuration_by_app_id(
+    db_session: Session, project_id: UUID, app_id: UUID
+) -> AppConfiguration | None:
+    """Get an app configuration by project id and app id"""
+    statement = select(AppConfiguration).filter(
+        AppConfiguration.project_id == project_id,
+        AppConfiguration.app_id == app_id,
+    )
+    app_configuration: AppConfiguration | None = db_session.execute(statement).scalars().first()
+    return app_configuration
 
 
 def app_configuration_exists(db_session: Session, project_id: UUID, app_name: str) -> bool:

@@ -20,6 +20,7 @@ from aci.common.schemas.app_configurations import (
 )
 from aci.server import config
 from aci.server import dependencies as deps
+from uuid import UUID
 
 router = APIRouter()
 logger = get_logger(__name__)
@@ -71,6 +72,18 @@ async def create_app_configuration(
 
     return app_configuration
 
+# create app configuration by app id
+@router.post("/app/{app_id}", response_model=AppConfigurationPublic, response_model_exclude_none=True)
+async def create_app_configuration_by_app_id(
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    app_id: str,
+    body: AppConfigurationCreate,
+) -> AppConfiguration:
+    """Create an app configuration for a project by app id"""
+    app_configuration = crud.app_configurations.create_app_configuration_by_app_id(context.db_session, context.project.id, UUID(app_id), body)
+    context.db_session.commit()
+
+    return app_configuration
 
 @router.get("", response_model=list[AppConfigurationPublic], response_model_exclude_none=True)
 async def list_app_configurations(
