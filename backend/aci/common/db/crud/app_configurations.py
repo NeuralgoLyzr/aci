@@ -49,6 +49,33 @@ def create_app_configuration(
 
     return app_configuration
 
+def create_app_configuration_by_app_id(
+    db_session: Session,
+    project_id: UUID,
+    app_id: UUID,
+    app_configuration_create: AppConfigurationCreate,
+) -> AppConfiguration:
+    """
+    Create a new app configuration record by app id
+    """
+
+    app_configuration = AppConfiguration(
+        project_id=project_id,
+        app_id=app_id,
+        security_scheme=app_configuration_create.security_scheme,
+        security_scheme_overrides=app_configuration_create.security_scheme_overrides.model_dump(
+            exclude_none=True
+        ),  # type: ignore
+        enabled=True,
+        all_functions_enabled=app_configuration_create.all_functions_enabled,
+        enabled_functions=app_configuration_create.enabled_functions,
+    )
+    db_session.add(app_configuration)
+    db_session.flush()
+    db_session.refresh(app_configuration)
+
+    return app_configuration
+
 
 def update_app_configuration(
     db_session: Session,
@@ -78,6 +105,17 @@ def delete_app_configuration(db_session: Session, project_id: UUID, app_name: st
         select(AppConfiguration)
         .join(App, AppConfiguration.app_id == App.id)
         .filter(AppConfiguration.project_id == project_id, App.name == app_name)
+    )
+    app_to_delete = db_session.execute(statement).scalar_one()
+    db_session.delete(app_to_delete)
+    db_session.flush()
+
+
+def delete_app_configuration_by_app_id(db_session: Session, project_id: UUID, app_id: UUID) -> None:
+    """Delete an app configuration by app_id"""
+    statement = select(AppConfiguration).filter(
+        AppConfiguration.project_id == project_id,
+        AppConfiguration.app_id == app_id
     )
     app_to_delete = db_session.execute(statement).scalar_one()
     db_session.delete(app_to_delete)
@@ -131,6 +169,18 @@ def get_app_configurations_by_app_id(db_session: Session, app_id: UUID) -> list[
     return list(db_session.execute(statement).scalars().all())
 
 
+def get_app_configuration_by_app_id(
+    db_session: Session, project_id: UUID, app_id: UUID
+) -> AppConfiguration | None:
+    """Get an app configuration by project id and app id"""
+    statement = select(AppConfiguration).filter(
+        AppConfiguration.project_id == project_id,
+        AppConfiguration.app_id == app_id,
+    )
+    app_configuration: AppConfiguration | None = db_session.execute(statement).scalars().first()
+    return app_configuration
+
+
 def app_configuration_exists(db_session: Session, project_id: UUID, app_name: str) -> bool:
     stmt = (
         select(AppConfiguration)
@@ -139,5 +189,14 @@ def app_configuration_exists(db_session: Session, project_id: UUID, app_name: st
             AppConfiguration.project_id == project_id,
             App.name == app_name,
         )
+    )
+    return db_session.execute(stmt).scalar_one_or_none() is not None
+
+
+def app_configuration_exists_by_app_id(db_session: Session, project_id: UUID, app_id: UUID) -> bool:
+    """Check if an app configuration exists by project_id and app_id"""
+    stmt = select(AppConfiguration).filter(
+        AppConfiguration.project_id == project_id,
+        AppConfiguration.app_id == app_id,
     )
     return db_session.execute(stmt).scalar_one_or_none() is not None

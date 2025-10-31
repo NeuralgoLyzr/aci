@@ -266,6 +266,27 @@ def delete_app_from_agents_allowed_apps(
     db_session.execute(statement)
 
 
+def delete_app_from_agents_allowed_apps_by_app_id(
+    db_session: Session, project_id: UUID, app_id: UUID
+) -> None:
+    """Delete an app from agents' allowed_apps by app_id
+
+    Note: This requires looking up the app_name first since allowed_apps stores app names
+    """
+    # First get the app name
+    from aci.common.db.sql_models import App
+    statement = select(App.name).filter(App.id == app_id)
+    app_name = db_session.execute(statement).scalar_one_or_none()
+
+    if app_name:
+        statement = (
+            update(Agent)
+            .where(Agent.project_id == project_id)
+            .values(allowed_apps=func.array_remove(Agent.allowed_apps, app_name))
+        )
+        db_session.execute(statement)
+
+
 def get_agents_by_project(db_session: Session, project_id: UUID) -> list[Agent]:
     return list(db_session.execute(select(Agent).filter_by(project_id=project_id)).scalars().all())
 

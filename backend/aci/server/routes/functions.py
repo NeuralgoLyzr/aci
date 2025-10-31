@@ -62,6 +62,15 @@ async def list_functions(
         query_params.offset,
     )
 
+# list functions by app_id
+@router.get("/app/{app_id}", response_model=list[FunctionDetails])
+async def list_functions_by_app_id(
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    app_id: str,
+) -> list[Function]:
+    return crud.functions.get_functions_by_app_id(
+        context.db_session, app_id)
+
 
 @router.get("/search", response_model_exclude_none=True)
 async def search_functions(

@@ -16,11 +16,24 @@ class LinkedAccountCreateBase(BaseModel):
     linked_account_owner_id: str
 
 
+class LinkedAccountCreateByAppIdBase(BaseModel):
+    app_id: UUID
+    linked_account_owner_id: str
+
+
 class LinkedAccountOAuth2Create(LinkedAccountCreateBase):
     after_oauth2_link_redirect_url: str | None = None
 
 
+class LinkedAccountOAuth2CreateByAppId(LinkedAccountCreateByAppIdBase):
+    after_oauth2_link_redirect_url: str | None = None
+
+
 class LinkedAccountAPIKeyCreate(LinkedAccountCreateBase):
+    api_key: str
+
+
+class LinkedAccountAPIKeyCreateByAppId(LinkedAccountCreateByAppIdBase):
     api_key: str
 
 
@@ -29,6 +42,10 @@ class LinkedAccountDefaultCreate(LinkedAccountCreateBase):
 
 
 class LinkedAccountNoAuthCreate(LinkedAccountCreateBase):
+    pass
+
+
+class LinkedAccountNoAuthCreateByAppId(LinkedAccountCreateByAppIdBase):
     pass
 
 
@@ -46,6 +63,8 @@ class LinkedAccountOAuth2CreateState(BaseModel):
     client_id: str
     code_verifier: str
     after_oauth2_link_redirect_url: str | None = None
+    # Optional app_id for by-app-id flow
+    app_id: UUID | None = None
 
 
 class LinkedAccountPublic(BaseModel):

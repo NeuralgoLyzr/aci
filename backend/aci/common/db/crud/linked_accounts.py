@@ -54,6 +54,19 @@ def get_linked_account(
     return linked_account
 
 
+def get_linked_account_by_app_id(
+    db_session: Session, project_id: UUID, app_id: UUID, linked_account_owner_id: str
+) -> LinkedAccount | None:
+    """Get a linked account by app_id and linked_account_owner_id"""
+    statement = select(LinkedAccount).filter(
+        LinkedAccount.project_id == project_id,
+        LinkedAccount.app_id == app_id,
+        LinkedAccount.linked_account_owner_id == linked_account_owner_id,
+    )
+    linked_account: LinkedAccount | None = db_session.execute(statement).scalar_one_or_none()
+    return linked_account
+
+
 def get_linked_accounts_by_app_id(db_session: Session, app_id: UUID) -> list[LinkedAccount]:
     statement = select(LinkedAccount).filter_by(app_id=app_id)
     linked_accounts: list[LinkedAccount] = list(db_session.execute(statement).scalars().all())
@@ -120,6 +133,38 @@ def create_linked_account(
     return linked_account
 
 
+def create_linked_account_by_app_id(
+    db_session: Session,
+    project_id: UUID,
+    app_id: UUID,
+    linked_account_owner_id: str,
+    security_scheme: SecurityScheme,
+    security_credentials: OAuth2SchemeCredentials
+    | APIKeySchemeCredentials
+    | NoAuthSchemeCredentials
+    | None = None,
+    enabled: bool = True,
+) -> LinkedAccount:
+    """Create a linked account using app_id directly
+    when security_credentials is None, the linked account will be using App's default security credentials if exists
+    # TODO: there is some ambiguity with "no auth" and "use app's default credentials", needs a refactor.
+    """
+    linked_account = LinkedAccount(
+        project_id=project_id,
+        app_id=app_id,
+        linked_account_owner_id=linked_account_owner_id,
+        security_scheme=security_scheme,
+        security_credentials=(
+            security_credentials.model_dump(mode="json") if security_credentials else {}
+        ),
+        enabled=enabled,
+    )
+    db_session.add(linked_account)
+    db_session.flush()
+    db_session.refresh(linked_account)
+    return linked_account
+
+
 def update_linked_account_credentials(
     db_session: Session,
     linked_account: LinkedAccount,
@@ -170,6 +215,19 @@ def delete_linked_accounts(db_session: Session, project_id: UUID, app_name: str)
         select(LinkedAccount)
         .join(App, LinkedAccount.app_id == App.id)
         .filter(LinkedAccount.project_id == project_id, App.name == app_name)
+    )
+    linked_accounts_to_delete = db_session.execute(statement).scalars().all()
+    for linked_account in linked_accounts_to_delete:
+        db_session.delete(linked_account)
+    db_session.flush()
+    return len(linked_accounts_to_delete)
+
+
+def delete_linked_accounts_by_app_id(db_session: Session, project_id: UUID, app_id: UUID) -> int:
+    """Delete all linked accounts for an app by app_id"""
+    statement = select(LinkedAccount).filter(
+        LinkedAccount.project_id == project_id,
+        LinkedAccount.app_id == app_id
     )
     linked_accounts_to_delete = db_session.execute(statement).scalars().all()
     for linked_account in linked_accounts_to_delete:
