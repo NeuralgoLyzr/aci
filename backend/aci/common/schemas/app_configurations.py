@@ -10,6 +10,7 @@ from aci.common.schemas.security_scheme import SecuritySchemeOverrides
 class AppConfigurationPublic(BaseModel):
     id: UUID
     project_id: UUID
+    app_id: UUID
     app_name: str
     security_scheme: SecurityScheme
     security_scheme_overrides: SecuritySchemeOverrides
