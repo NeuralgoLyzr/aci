@@ -29,19 +29,19 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         # Determine the rate limit key based on authentication method
         rate_limit_key = self._get_rate_limit_key(request)
-        for rate_limit_name, rate_limit in self.rate_limits.items():
-            if not await self.limiter.hit(rate_limit, rate_limit_key):
-                # NOTE: raising a custom ACIException here doesn't work as expected
-                logger.warning(
-                    f"Rate limit exceeded, "
-                    f"rate_limit_name={rate_limit_name}, "
-                    f"rate_limit_key={rate_limit_key}"
-                )
-                return Response(
-                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                    content=json.dumps({"error": f"Rate limit exceeded: {rate_limit_name}"}),
-                    headers=await self._get_rate_limit_headers(rate_limit_key),
-                )
+        # for rate_limit_name, rate_limit in self.rate_limits.items():
+            # if not await self.limiter.hit(rate_limit, rate_limit_key):
+            #     # NOTE: raising a custom ACIException here doesn't work as expected
+            #     logger.warning(
+            #         f"Rate limit exceeded, "
+            #         f"rate_limit_name={rate_limit_name}, "
+            #         f"rate_limit_key={rate_limit_key}"
+            #     )
+            #     return Response(
+            #         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            #         content=json.dumps({"error": f"Rate limit exceeded: {rate_limit_name}"}),
+            #         headers=await self._get_rate_limit_headers(rate_limit_key),
+            #     )
 
         response = await call_next(request)
 
