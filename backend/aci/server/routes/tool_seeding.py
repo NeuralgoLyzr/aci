@@ -518,9 +518,9 @@ async def upsert_app_from_json(
 
     except Exception as e:
         logger.error(f"Error upserting app from JSON content: {str(e)}")
-        return ToolSeedingResponse(
-            success=False,
-            message=f"Failed to upsert app from JSON content: {str(e)}"
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to upsert app from JSON content: {str(e)}"
         )
 
 
@@ -575,9 +575,9 @@ async def upsert_functions_from_json(
 
     except Exception as e:
         logger.error(f"Error upserting functions from JSON content: {str(e)}")
-        return ToolSeedingResponse(
-            success=False,
-            message=f"Failed to upsert functions from JSON content: {str(e)}"
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to upsert functions from JSON content: {str(e)}"
         )
 
 
@@ -603,12 +603,6 @@ async def seed_tool_from_json(
         app_response = await upsert_app_from_json(context, app_request)
         results.append(f"App: {app_response.message}")
 
-        if not app_response.success:
-            return ToolSeedingResponse(
-                success=False,
-                message=f"Failed to seed tool - App creation failed: {app_response.message}"
-            )
-
         # 2. Create functions from JSON content if provided
         functions_response = None
         if request.functions_json:
@@ -620,12 +614,6 @@ async def seed_tool_from_json(
             functions_response = await upsert_functions_from_json(context, functions_request)
             results.append(f"Functions: {functions_response.message}")
 
-            if not functions_response.success:
-                return ToolSeedingResponse(
-                    success=False,
-                    message=f"Partially failed to seed tool - Functions creation failed: {functions_response.message}"
-                )
-
         return ToolSeedingResponse(
             success=True,
             message=f"Successfully seeded tool from JSON content. {' | '.join(results)}",
@@ -633,11 +621,13 @@ async def seed_tool_from_json(
             function_names=functions_response.function_names if functions_response else None
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error seeding tool from JSON content: {str(e)}")
-        return ToolSeedingResponse(
-            success=False,
-            message=f"Failed to seed tool from JSON content: {str(e)}"
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to seed tool from JSON content: {str(e)}"
         )
 
 
