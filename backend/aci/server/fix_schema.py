@@ -6,6 +6,7 @@ This handles any schema mismatches without complex migrations.
 import os
 from pathlib import Path
 
+from sqlalchemy import text
 from aci.common.logging_setup import get_logger
 from aci.common.utils import create_db_session
 from aci.server import config as server_config
@@ -34,7 +35,7 @@ def fix_schema() -> None:
             logger.info("Adding api_key_id columns for API key ownership...")
             try:
                 # Add api_key_id to apps table
-                db.execute("""
+                db.execute(text("""
                     DO $$ 
                     BEGIN
                         IF NOT EXISTS (
@@ -47,10 +48,10 @@ def fix_schema() -> None:
                                 FOREIGN KEY (api_key_id) REFERENCES api_keys(id);
                         END IF;
                     END $$
-                """)
+                """))
                 
                 # Add api_key_id to functions table
-                db.execute("""
+                db.execute(text("""
                     DO $$ 
                     BEGIN
                         IF NOT EXISTS (
@@ -63,7 +64,7 @@ def fix_schema() -> None:
                                 FOREIGN KEY (api_key_id) REFERENCES api_keys(id);
                         END IF;
                     END $$
-                """)
+                """))
                 
                 db.commit()
                 logger.info("✅ Added api_key_id columns for API key ownership")
@@ -76,7 +77,7 @@ def fix_schema() -> None:
             
             # Create subscriptions table if it doesn't exist
             try:
-                db.execute("""
+                db.execute(text("""
                     CREATE TABLE IF NOT EXISTS subscriptions (
                         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                         org_id VARCHAR(255) NOT NULL UNIQUE,
@@ -90,10 +91,10 @@ def fix_schema() -> None:
                         created_at TIMESTAMP DEFAULT NOW(),
                         updated_at TIMESTAMP DEFAULT NOW()
                     )
-                """)
+                """))
                 
                 # Create plans table if it doesn't exist
-                db.execute("""
+                db.execute(text("""
                     CREATE TABLE IF NOT EXISTS plans (
                         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                         name VARCHAR(255) NOT NULL UNIQUE,
@@ -105,10 +106,10 @@ def fix_schema() -> None:
                         created_at TIMESTAMP DEFAULT NOW(),
                         updated_at TIMESTAMP DEFAULT NOW()
                     )
-                """)
+                """))
                 
                 # Add foreign key if it doesn't exist
-                db.execute("""
+                db.execute(text("""
                     DO $$ 
                     BEGIN
                         IF NOT EXISTS (
@@ -120,10 +121,10 @@ def fix_schema() -> None:
                             FOREIGN KEY (plan_id) REFERENCES plans(id);
                         END IF;
                     END $$
-                """)
+                """))
                 
                 # Insert default plans if they don't exist
-                db.execute("""
+                db.execute(text("""
                     INSERT INTO plans (name, stripe_product_id, stripe_monthly_price_id, stripe_yearly_price_id, features, is_public)
                     VALUES 
                         ('starter', 'prod_starter', 'price_starter_monthly', 'price_starter_yearly', 
@@ -131,7 +132,7 @@ def fix_schema() -> None:
                         ('team', 'prod_team', 'price_team_monthly', 'price_team_yearly', 
                          '{"projects": 50, "agents": 100, "linked_accounts": 500, "api_calls_monthly": 100000}', true)
                     ON CONFLICT (name) DO NOTHING
-                """)
+                """))
                 
                 db.commit()
                 logger.info("✅ Ensured required tables exist")
