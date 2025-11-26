@@ -700,23 +700,23 @@ async def list_my_custom_functions(
         )
 
 
-@router.delete("/my-custom-apps/{app_name}")
-async def delete_my_custom_app(
+@router.delete("/my-custom-apps/{app_id}")
+async def delete_my_custom_app_by_id(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
-    app_name: str,
+    app_id: UUID,
 ) -> dict:
     """
-    Delete a custom app if it was created by the current API key holder.
+    Delete a custom app by ID if it was created by the current API key holder.
     This will also delete all functions associated with the app.
     """
     try:
-        # Get the app by name first to check if it exists and belongs to this API key
-        app = crud.apps.get_app_by_name_and_api_key_id(context.db_session,app_name, context.api_key_id)
+        # Get the app by ID first to check if it exists and belongs to this API key
+        app = crud.apps.get_app_by_id(context.db_session, app_id)
 
-        if not app:
+        if not app or app.api_key_id != context.api_key_id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"App '{app_name}' not found"
+                detail=f"App with ID '{app_id}' not found"
             )
 
         # Delete the app
@@ -728,8 +728,16 @@ async def delete_my_custom_app(
                 "success": True,
                 "message": f"Successfully deleted app '{app.name}'"
             }
+        else:
+            # Should not reach here if check above passed, but for safety
+             raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"App with ID '{app_id}' not found"
+            )
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error deleting custom app {app.name}: {str(e)}")
+        logger.error(f"Error deleting custom app {app_id}: {str(e)}")
         context.db_session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
