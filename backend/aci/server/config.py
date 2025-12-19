@@ -1,3 +1,5 @@
+import os
+
 from aci.common.utils import check_and_get_env_variable, construct_db_url, construct_db_url_sync
 
 ENVIRONMENT = check_and_get_env_variable("SERVER_ENVIRONMENT")
@@ -73,9 +75,10 @@ APPLICATION_LOAD_BALANCER_DNS = check_and_get_env_variable("SERVER_APPLICATION_L
 # APP
 APP_TITLE = "ACI"
 APP_VERSION = "0.0.1-beta.4"
-APP_DOCS_URL = "/v1/notforhuman-docs"
-APP_REDOC_URL = "/v1/notforhuman-redoc"
-APP_OPENAPI_URL = "/v1/notforhuman-openapi.json"
+_ENABLE_DOCS = os.getenv("ENABLE_DOCS", "false").lower() == "true"
+APP_DOCS_URL = "/v1/notforhuman-docs" if _ENABLE_DOCS else None
+APP_REDOC_URL = "/v1/notforhuman-redoc" if _ENABLE_DOCS else None
+APP_OPENAPI_URL = "/v1/notforhuman-openapi.json" if _ENABLE_DOCS else None
 
 # ROUTERS
 ROUTER_PREFIX_HEALTH = "/v1/health"
