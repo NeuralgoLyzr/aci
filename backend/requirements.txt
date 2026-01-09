@@ -1,0 +1,71 @@
+# This file is auto-generated from pyproject.toml
+# For development, use: uv sync
+# For production, use: pip install -r requirements.txt
+
+# Web Framework
+fastapi[standard]>=0.115.12
+uvicorn[standard]>=0.31.1
+
+# Data Validation
+pydantic>=2.11.3
+
+# Database
+sqlalchemy>=2.0.40
+pgvector>=0.4.1
+psycopg[binary]>=3.2.9
+alembic>=1.15.2
+
+# Authentication & Authorization
+authlib>=1.5.2
+propelauth-fastapi>=4.2.6
+
+# HTTP Client
+httpx>=0.27.2
+
+# Utilities
+itsdangerous>=2.2.0
+click>=8.1.8
+rich>=13.9.4
+jinja2>=3.1.6
+deepdiff>=8.5.0
+
+# Validation
+openapi-spec-validator>=0.7.1
+jsonschema>=4.23.0
+
+# Rate Limiting
+limits>=5.2.0
+
+# AWS (Infrastructure)
+aws-cdk-lib>=2.197.0
+constructs>=10.4.2
+
+# Azure Key Vault (Encryption)
+azure-keyvault-secrets>=4.4.0
+azure-identity>=1.14.0
+
+# Cryptography
+cryptography>=42.0.0
+
+# AI/LLM Integration
+openai>=1.80.0
+google-api-python-client>=2.167.0
+langchain-openai>=0.3.28
+
+# Voice/Audio
+elevenlabs>=2.8.1
+
+# Code Execution
+e2b-code-interpreter>=1.5.0
+browser-use>=0.5.0
+
+# Webhooks
+svix>=1.65.0
+
+# Payments
+stripe>=12.1.0
+
+# Logging & Monitoring
+python-json-logger>=3.3.0
+logfire[fastapi,sqlalchemy]>=3.16.0
+sentry-sdk[fastapi]>=2.26.1

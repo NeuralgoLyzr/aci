@@ -4,8 +4,8 @@ import re
 from functools import cache
 from uuid import UUID
 
-import aioboto3
-import boto3
+from azure.identity import DefaultAzureCredential
+from azure.keyvault.secrets import SecretClient
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -27,25 +27,59 @@ _db_url_cache: str | None = None
 
 
 def get_db_password_sync() -> str:
-    """Fetches the DB password from AWS Secrets Manager synchronously."""
-    secret_name = check_and_get_env_variable("DB_SECRET_NAME")
-    region_name = check_and_get_env_variable("AWS_REGION_NAME")
+    """
+    Fetches the DB password from Azure Key Vault synchronously.
+    For local development, falls back to environment variables.
+    """
+    # Try to get from environment variable first (for local development)
+    env_password = os.getenv("SERVER_DB_PASSWORD")
+    if env_password:
+        return env_password
 
-    client = boto3.client("secretsmanager", region_name=region_name)
-    response = client.get_secret_value(SecretId=secret_name)
-    secret_dict = json.loads(response["SecretString"])
-    return secret_dict["password"]
+    # For production, fetch from Azure Key Vault
+    try:
+        keyvault_url = check_and_get_env_variable("AZURE_KEYVAULT_URL_FOR_DB")
+        secret_name = check_and_get_env_variable("AZURE_DB_SECRET_NAME")
+
+        credential = DefaultAzureCredential()
+        client = SecretClient(vault_url=keyvault_url, credential=credential)
+        secret = client.get_secret(secret_name)
+        secret_dict = json.loads(secret.value)
+        return secret_dict["password"]
+    except ValueError as e:
+        raise RuntimeError(
+            "Database password not found. Either set SERVER_DB_PASSWORD "
+            "for local development, or configure AZURE_KEYVAULT_URL_FOR_DB and AZURE_DB_SECRET_NAME "
+            "for production."
+        ) from e
 
 
 async def get_db_password() -> str:
-    """Fetches the DB password from AWS Secrets Manager asynchronously."""
-    secret_name = check_and_get_env_variable("DB_SECRET_NAME")
-    region_name = check_and_get_env_variable("AWS_REGION_NAME")
+    """
+    Fetches the DB password from Azure Key Vault asynchronously.
+    For local development, falls back to environment variables.
+    """
+    # Try to get from environment variable first (for local development)
+    env_password = os.getenv("SERVER_DB_PASSWORD")
+    if env_password:
+        return env_password
 
-    async with aioboto3.Session(region_name=region_name).client("secretsmanager") as client:
-        response = await client.get_secret_value(SecretId=secret_name)
-        secret_dict = json.loads(response["SecretString"])
+    # For production, fetch from Azure Key Vault
+    try:
+        keyvault_url = check_and_get_env_variable("AZURE_KEYVAULT_URL_FOR_DB")
+        secret_name = check_and_get_env_variable("AZURE_DB_SECRET_NAME")
+
+        credential = DefaultAzureCredential()
+        client = SecretClient(vault_url=keyvault_url, credential=credential)
+        secret = client.get_secret(secret_name)
+        secret_dict = json.loads(secret.value)
         return secret_dict["password"]
+    except ValueError as e:
+        raise RuntimeError(
+            "Database password not found. Either set SERVER_DB_PASSWORD "
+            "for local development, or configure AZURE_KEYVAULT_URL_FOR_DB and AZURE_DB_SECRET_NAME "
+            "for production."
+        ) from e
 
 
 def construct_db_url_sync(

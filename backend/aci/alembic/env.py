@@ -2,8 +2,9 @@ import json
 import os
 from logging.config import fileConfig
 
-import boto3
 from alembic import context
+from azure.identity import DefaultAzureCredential
+from azure.keyvault.secrets import SecretClient
 from dotenv import load_dotenv
 from sqlalchemy import engine_from_config, pool
 
@@ -42,14 +43,32 @@ def _check_and_get_env_variable(name: str) -> str:
 
 
 def _get_db_password() -> str:
-    """Fetches the DB password from AWS Secrets Manager synchronously."""
-    secret_name = _check_and_get_env_variable("DB_SECRET_NAME")
-    region_name = _check_and_get_env_variable("AWS_REGION_NAME")
+    """
+    Fetches the DB password from Azure Key Vault.
+    For local development, falls back to environment variables.
+    """
+    # Try to get from environment variable first (for local development)
+    env_password = os.getenv("ALEMBIC_DB_PASSWORD") or os.getenv("SERVER_DB_PASSWORD")
+    if env_password:
+        return env_password
 
-    client = boto3.client("secretsmanager", region_name=region_name)
-    response = client.get_secret_value(SecretId=secret_name)
-    secret_dict = json.loads(response["SecretString"])
-    return secret_dict["password"]
+    # For production, fetch from Azure Key Vault
+    try:
+        keyvault_url = _check_and_get_env_variable("AZURE_KEYVAULT_URL_FOR_DB")
+        secret_name = _check_and_get_env_variable("AZURE_DB_SECRET_NAME")
+
+        credential = DefaultAzureCredential()
+        client = SecretClient(vault_url=keyvault_url, credential=credential)
+        secret = client.get_secret(secret_name)
+        secret_dict = json.loads(secret.value)
+        return secret_dict["password"]
+    except ValueError as e:
+        # If Azure Key Vault variables are not set, raise an error
+        raise RuntimeError(
+            "Database password not found. Either set ALEMBIC_DB_PASSWORD/SERVER_DB_PASSWORD "
+            "for local development, or configure AZURE_KEYVAULT_URL_FOR_DB and AZURE_DB_SECRET_NAME "
+            "for production."
+        ) from e
 
 
 def _get_db_url() -> str:
