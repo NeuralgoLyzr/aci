@@ -3,7 +3,7 @@ name = "aci"
 version = "0.0.1-beta.3"
 description = "agent computer interface by aipolabs"
 authors = [{ name = "Aipolabs", email = "support@aipolabs.xyz" }]
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.13"
 dependencies = [
     "fastapi[standard]>=0.115.12",
     "uvicorn[standard]>=0.31.1",
