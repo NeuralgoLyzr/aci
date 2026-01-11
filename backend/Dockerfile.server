@@ -3,7 +3,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /workdir
 
-COPY ./pyproject.toml ./uv.lock /workdir/
+COPY ./pyproject.toml /workdir/
 RUN uv sync --no-dev --no-install-project
 
 # Install PostgreSQL client for schema creation
