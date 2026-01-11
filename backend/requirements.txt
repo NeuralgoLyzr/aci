@@ -45,7 +45,7 @@ azure-keyvault-secrets>=4.4.0
 azure-identity>=1.14.0
 
 # Azure OpenAI (LLM - MIGRATED FROM STANDARD OPENAI)
-azure-openai>=1.0.0,<2.0.0
+azure-openai
 
 # Cryptography
 cryptography>=42.0.0

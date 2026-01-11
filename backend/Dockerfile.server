@@ -1,15 +1,13 @@
 FROM public.ecr.aws/docker/library/python:3.12
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /workdir
 
-COPY ./pyproject.toml /workdir/
-RUN uv sync --no-dev --no-install-project
+COPY ./requirements.txt /workdir/
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Install PostgreSQL client for schema creation
 RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
 
-ENV PATH="/workdir/.venv/bin:$PATH"
 ENV PYTHONPATH=/workdir
 
 # RUN playwright install chromium --with-deps --no-shell
