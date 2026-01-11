@@ -44,11 +44,13 @@ constructs>=10.4.2
 azure-keyvault-secrets>=4.4.0
 azure-identity>=1.14.0
 
+# Azure OpenAI (LLM - MIGRATED FROM STANDARD OPENAI)
+azure-openai>=1.0.0
+
 # Cryptography
 cryptography>=42.0.0
 
 # AI/LLM Integration
-openai>=1.80.0
 google-api-python-client>=2.167.0
 langchain-openai>=0.3.28
 

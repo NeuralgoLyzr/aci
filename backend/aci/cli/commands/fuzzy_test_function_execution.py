@@ -6,7 +6,7 @@ from uuid import UUID
 
 import click
 import httpx
-from openai import OpenAI
+from azure.ai.openai import AzureOpenAI
 from rich.console import Console
 
 from aci.cli import config
@@ -86,8 +86,12 @@ def fuzzy_test_function_execution_helper(
     console.rule("[bold green]Function definition Fetched[/bold green]")
     console.print(function_definition)
 
-    # Use OpenAI function calling to generate a random input
-    openai_client = OpenAI(api_key=config.OPENAI_API_KEY)
+    # Use AzureOpenAI function calling to generate a random input
+    openai_client = AzureOpenAI(
+        api_key=config.AZURE_OPENAI_API_KEY,
+        api_version=config.AZURE_OPENAI_API_VERSION,
+        azure_endpoint=config.AZURE_OPENAI_ENDPOINT,
+    )
     function_args = _generate_fuzzy_function_call_arguments(
         openai_client, model, function_definition, prompt=prompt
     )
@@ -114,7 +118,7 @@ def fuzzy_test_function_execution_helper(
 
 
 def _generate_fuzzy_function_call_arguments(
-    openai_client: OpenAI,
+    openai_client: AzureOpenAI,
     model: str,
     function_definition: dict,
     prompt: str | None = None,

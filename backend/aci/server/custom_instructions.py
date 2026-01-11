@@ -1,6 +1,6 @@
 import json
 
-from openai import OpenAI
+from azure.ai.openai import AzureOpenAI
 from pydantic import BaseModel
 
 from aci.common.db.sql_models import Function
@@ -17,7 +17,7 @@ class ViolationCheckResult(BaseModel):
 
 # TODO: consider adding function schema to the context
 def check_for_violation(
-    openai_client: OpenAI,
+    openai_client: AzureOpenAI,
     function: Function,
     function_input: dict,
     custom_instructions: dict[str, str],
@@ -29,7 +29,7 @@ def check_for_violation(
     TODO: For external requests failure such as inference calls, we let the request pass.
 
     Args:
-        openai_client: OpenAI client
+        openai_client: AzureOpenAI client
         function: Function object
         function_input: Function input
         custom_instructions: Custom instructions

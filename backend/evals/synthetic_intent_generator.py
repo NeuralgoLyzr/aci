@@ -1,4 +1,5 @@
-import openai
+import os
+from azure.ai.openai import AzureOpenAI
 import pandas as pd
 import wandb
 from dotenv import load_dotenv
@@ -20,7 +21,7 @@ class SyntheticIntentGenerator:
 
     This generator:
     1. Fetches app and function data from the database
-    2. Generates synthetic intents using OpenAI's API
+    2. Generates synthetic intents using AzureOpenAI's API
     3. Saves the dataset as a W&B artifact
     """
 
@@ -34,9 +35,9 @@ class SyntheticIntentGenerator:
         Initialize the generator with configuration.
 
         Args:
-            model: OpenAI model to use for generation
+            model: AzureOpenAI model to use for generation
             prompt_type: Type of prompt to use (must be in PROMPTS)
-            openai_api_key: OpenAI API key
+            openai_api_key: AzureOpenAI API key
         """
         self.model = model
         self.prompt_type = prompt_type
@@ -47,7 +48,11 @@ class SyntheticIntentGenerator:
             )
 
         # Initialize API clients
-        self.openai_client = openai.OpenAI(api_key=openai_api_key)
+        self.openai_client = AzureOpenAI(
+            api_key=openai_api_key,
+            api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-10-21"),
+            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+        )
 
     def _fetch_app_function_data(self) -> pd.DataFrame:
         """
@@ -79,7 +84,7 @@ class SyntheticIntentGenerator:
     )
     def _generate_intent(self, prompt: str) -> str:
         """
-        Generate a single intent using OpenAI's API.
+        Generate a single intent using AzureOpenAI's API.
 
         Args:
             prompt: The prompt to send to the model

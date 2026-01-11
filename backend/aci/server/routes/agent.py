@@ -2,12 +2,12 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
-from openai import OpenAI
+from azure.ai.openai import AzureOpenAI
 from pydantic import BaseModel
 
 from aci.common.enums import FunctionDefinitionFormat
 from aci.common.logging_setup import get_logger
-from aci.common.schemas.function import OpenAIResponsesFunctionDefinition
+from aci.common.schemas.function import AzureOpenAIResponsesFunctionDefinition
 from aci.server import config
 from aci.server import dependencies as deps
 from aci.server.agent.prompt import (
@@ -19,7 +19,11 @@ from aci.server.routes.functions import get_functions_definitions
 
 router = APIRouter()
 logger = get_logger(__name__)
-openai_client = OpenAI(api_key=config.OPENAI_API_KEY)
+openai_client = AzureOpenAI(
+    api_key=config.AZURE_OPENAI_API_KEY,
+    api_version=config.AZURE_OPENAI_API_VERSION,
+    azure_endpoint=config.AZURE_OPENAI_ENDPOINT,
+)
 
 
 class AgentChat(BaseModel):
@@ -59,7 +63,7 @@ async def handle_chat(
     )
 
     tools = [
-        func for func in selected_functions if isinstance(func, OpenAIResponsesFunctionDefinition)
+        func for func in selected_functions if isinstance(func, AzureOpenAIResponsesFunctionDefinition)
     ]
 
     response = StreamingResponse(openai_chat_stream(openai_messages, tools=tools))

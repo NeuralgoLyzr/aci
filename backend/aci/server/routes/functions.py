@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
-from openai import OpenAI
+from azure.ai.openai import AzureOpenAI
 from sqlalchemy.orm import Session
 
 from aci.common import processor
@@ -44,7 +44,11 @@ router = APIRouter()
 logger = get_logger(__name__)
 # TODO: will this be a bottleneck and problem if high concurrent requests from users?
 # TODO: should probably be a singleton and inject into routes, shared access with Apps route
-openai_client = OpenAI(api_key=config.OPENAI_API_KEY)
+openai_client = AzureOpenAI(
+    api_key=config.AZURE_OPENAI_API_KEY,
+    api_version=config.AZURE_OPENAI_API_VERSION,
+    azure_endpoint=config.AZURE_OPENAI_ENDPOINT,
+)
 
 
 @router.get("", response_model=list[FunctionDetails])
@@ -386,7 +390,7 @@ async def execute_function(
     function_name: str,
     function_input: dict,
     linked_account_owner_id: str,
-    openai_client: OpenAI,
+    openai_client: AzureOpenAI,
     api_key_id,
 ) -> FunctionExecutionResult:
     """

@@ -5,7 +5,7 @@ from uuid import UUID
 import click
 from deepdiff import DeepDiff
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, Template
-from openai import OpenAI
+from azure.ai.openai import AzureOpenAI
 from rich.console import Console
 from sqlalchemy.orm import Session
 
@@ -17,7 +17,11 @@ from aci.common.schemas.app import AppEmbeddingFields, AppUpsert
 
 console = Console()
 
-openai_client = OpenAI(api_key=config.OPENAI_API_KEY)
+openai_client = AzureOpenAI(
+    api_key=config.AZURE_OPENAI_API_KEY,
+    api_version=config.AZURE_OPENAI_API_VERSION,
+    azure_endpoint=config.AZURE_OPENAI_ENDPOINT,
+)
 
 
 @click.command()

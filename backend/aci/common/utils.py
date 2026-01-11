@@ -1,6 +1,7 @@
 import json
 import os
 import re
+from datetime import datetime, timedelta
 from functools import cache
 from uuid import UUID
 
@@ -24,77 +25,149 @@ def check_and_get_env_variable(name: str) -> str:
 
 
 _db_url_cache: str | None = None
+_db_token_cache: tuple[str, datetime] | None = None  # (token, expiry_time) - used for both local caching
 
 
 def get_db_password_sync() -> str:
     """
-    Fetches the DB password from Azure Key Vault synchronously.
-    For local development, falls back to environment variables.
+    Fetches the database authentication credential (password or token) synchronously.
+
+    Behavior depends on configuration:
+    - If SERVER_USE_AZURE_MANAGED_IDENTITY=true: Fetches Azure Database token via Managed Identity
+    - Else: Fetches password from environment or Azure Key Vault
+
+    Tokens are cached and auto-refreshed 5 minutes before expiry.
     """
-    # Try to get from environment variable first (for local development)
-    env_password = os.getenv("SERVER_DB_PASSWORD")
-    if env_password:
-        return env_password
+    global _db_token_cache
 
-    # For production, fetch from Azure Key Vault
-    try:
-        keyvault_url = check_and_get_env_variable("AZURE_KEYVAULT_URL_FOR_DB")
-        secret_name = check_and_get_env_variable("AZURE_DB_SECRET_NAME")
+    use_managed_identity = os.getenv("SERVER_USE_AZURE_MANAGED_IDENTITY", "false").lower() == "true"
 
-        credential = DefaultAzureCredential()
-        client = SecretClient(vault_url=keyvault_url, credential=credential)
-        secret = client.get_secret(secret_name)
-        secret_dict = json.loads(secret.value)
-        return secret_dict["password"]
-    except ValueError as e:
-        raise RuntimeError(
-            "Database password not found. Either set SERVER_DB_PASSWORD "
-            "for local development, or configure AZURE_KEYVAULT_URL_FOR_DB and AZURE_DB_SECRET_NAME "
-            "for production."
-        ) from e
+    if use_managed_identity:
+        # Return cached token if still valid (refresh 5 minutes before expiry)
+        if _db_token_cache is not None:
+            token, expiry_time = _db_token_cache
+            if datetime.utcnow() < (expiry_time - timedelta(minutes=5)):
+                return token
+
+        try:
+            # Get token for Azure Database (works for PostgreSQL, MySQL, MariaDB, etc.)
+            credential = DefaultAzureCredential()
+            token_credential = credential.get_token("https://ossrdbms-aad.database.windows.net/.default")
+
+            # Cache token with expiry time (Azure tokens are typically valid for 1 hour)
+            expiry_time = datetime.utcnow() + timedelta(hours=1)
+            _db_token_cache = (token_credential.token, expiry_time)
+
+            return token_credential.token
+        except Exception as e:
+            raise RuntimeError(
+                f"Failed to obtain Azure Database token using Managed Identity: {e}. "
+                "Ensure the application has appropriate Azure RBAC permissions for database access."
+            ) from e
+    else:
+        # Password-based authentication (local dev or Key Vault)
+        env_password = os.getenv("SERVER_DB_PASSWORD")
+        if env_password:
+            return env_password
+
+        # For production, fetch from Azure Key Vault
+        try:
+            keyvault_url = check_and_get_env_variable("AZURE_KEYVAULT_URL_FOR_DB")
+            secret_name = check_and_get_env_variable("AZURE_DB_SECRET_NAME")
+
+            credential = DefaultAzureCredential()
+            client = SecretClient(vault_url=keyvault_url, credential=credential)
+            secret = client.get_secret(secret_name)
+            secret_dict = json.loads(secret.value)
+            return secret_dict["password"]
+        except ValueError as e:
+            raise RuntimeError(
+                "Database password not found. Either set SERVER_DB_PASSWORD "
+                "for local development, or configure AZURE_KEYVAULT_URL_FOR_DB and AZURE_DB_SECRET_NAME "
+                "for production."
+            ) from e
 
 
 async def get_db_password() -> str:
     """
-    Fetches the DB password from Azure Key Vault asynchronously.
-    For local development, falls back to environment variables.
+    Fetches the database authentication credential (password or token) asynchronously.
+
+    Behavior depends on configuration:
+    - If SERVER_USE_AZURE_MANAGED_IDENTITY=true: Fetches Azure Database token via Managed Identity
+    - Else: Fetches password from environment or Azure Key Vault
+
+    Tokens are cached and auto-refreshed 5 minutes before expiry.
     """
-    # Try to get from environment variable first (for local development)
-    env_password = os.getenv("SERVER_DB_PASSWORD")
-    if env_password:
-        return env_password
+    global _db_token_cache
 
-    # For production, fetch from Azure Key Vault
-    try:
-        keyvault_url = check_and_get_env_variable("AZURE_KEYVAULT_URL_FOR_DB")
-        secret_name = check_and_get_env_variable("AZURE_DB_SECRET_NAME")
+    use_managed_identity = os.getenv("SERVER_USE_AZURE_MANAGED_IDENTITY", "false").lower() == "true"
 
-        credential = DefaultAzureCredential()
-        client = SecretClient(vault_url=keyvault_url, credential=credential)
-        secret = client.get_secret(secret_name)
-        secret_dict = json.loads(secret.value)
-        return secret_dict["password"]
-    except ValueError as e:
-        raise RuntimeError(
-            "Database password not found. Either set SERVER_DB_PASSWORD "
-            "for local development, or configure AZURE_KEYVAULT_URL_FOR_DB and AZURE_DB_SECRET_NAME "
-            "for production."
-        ) from e
+    if use_managed_identity:
+        # Return cached token if still valid (refresh 5 minutes before expiry)
+        if _db_token_cache is not None:
+            token, expiry_time = _db_token_cache
+            if datetime.utcnow() < (expiry_time - timedelta(minutes=5)):
+                return token
+
+        try:
+            # Get token for Azure Database (works for PostgreSQL, MySQL, MariaDB, etc.)
+            credential = DefaultAzureCredential()
+            token_credential = credential.get_token("https://ossrdbms-aad.database.windows.net/.default")
+
+            # Cache token with expiry time (Azure tokens are typically valid for 1 hour)
+            expiry_time = datetime.utcnow() + timedelta(hours=1)
+            _db_token_cache = (token_credential.token, expiry_time)
+
+            return token_credential.token
+        except Exception as e:
+            raise RuntimeError(
+                f"Failed to obtain Azure Database token using Managed Identity: {e}. "
+                "Ensure the application has appropriate Azure RBAC permissions for database access."
+            ) from e
+    else:
+        # Password-based authentication (local dev or Key Vault)
+        env_password = os.getenv("SERVER_DB_PASSWORD")
+        if env_password:
+            return env_password
+
+        # For production, fetch from Azure Key Vault
+        try:
+            keyvault_url = check_and_get_env_variable("AZURE_KEYVAULT_URL_FOR_DB")
+            secret_name = check_and_get_env_variable("AZURE_DB_SECRET_NAME")
+
+            credential = DefaultAzureCredential()
+            client = SecretClient(vault_url=keyvault_url, credential=credential)
+            secret = client.get_secret(secret_name)
+            secret_dict = json.loads(secret.value)
+            return secret_dict["password"]
+        except ValueError as e:
+            raise RuntimeError(
+                "Database password not found. Either set SERVER_DB_PASSWORD "
+                "for local development, or configure AZURE_KEYVAULT_URL_FOR_DB and AZURE_DB_SECRET_NAME "
+                "for production."
+            ) from e
 
 
 def construct_db_url_sync(
     scheme: str, user: str, host: str, port: str, db_name: str
 ) -> str:
     """
-    Constructs the database URL by fetching the password from AWS Secrets Manager synchronously.
+    Constructs the database URL synchronously.
+
+    Fetches authentication credential (password or Azure Managed Identity token) based on configuration.
     The result is cached to avoid repeated API calls.
+
+    Supports:
+    - Local password-based auth (SERVER_DB_PASSWORD)
+    - Azure Key Vault password storage
+    - Azure Managed Identity tokens (if SERVER_USE_AZURE_MANAGED_IDENTITY=true)
     """
     global _db_url_cache
     if _db_url_cache is not None:
         return _db_url_cache
 
-    password = get_db_password_sync()
-    _db_url_cache = f"{scheme}://{user}:{password}@{host}:{port}/{db_name}"
+    credential = get_db_password_sync()
+    _db_url_cache = f"{scheme}://{user}:{credential}@{host}:{port}/{db_name}"
     return _db_url_cache
 
 
@@ -102,15 +175,22 @@ async def construct_db_url(
     scheme: str, user: str, host: str, port: str, db_name: str
 ) -> str:
     """
-    Constructs the database URL by fetching the password from AWS Secrets Manager asynchronously.
+    Constructs the database URL asynchronously.
+
+    Fetches authentication credential (password or Azure Managed Identity token) based on configuration.
     The result is cached to avoid repeated API calls.
+
+    Supports:
+    - Local password-based auth (SERVER_DB_PASSWORD)
+    - Azure Key Vault password storage
+    - Azure Managed Identity tokens (if SERVER_USE_AZURE_MANAGED_IDENTITY=true)
     """
     global _db_url_cache
     if _db_url_cache is not None:
         return _db_url_cache
 
-    password = await get_db_password()
-    _db_url_cache = f"{scheme}://{user}:{password}@{host}:{port}/{db_name}"
+    credential = await get_db_password()
+    _db_url_cache = f"{scheme}://{user}:{credential}@{host}:{port}/{db_name}"
     return _db_url_cache
 
 

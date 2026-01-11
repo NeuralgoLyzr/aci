@@ -1,4 +1,4 @@
-from openai import OpenAI
+from azure.ai.openai import AzureOpenAI
 
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.app import AppEmbeddingFields
@@ -9,7 +9,7 @@ logger = get_logger(__name__)
 
 def generate_app_embedding(
     app: AppEmbeddingFields,
-    openai_client: OpenAI,
+    openai_client: AzureOpenAI,
     embedding_model: str,
     embedding_dimension: int,
 ) -> list[float]:
@@ -30,7 +30,7 @@ def generate_app_embedding(
 # TODO: update app embedding to include function embeddings whenever functions are added/updated?
 def generate_function_embeddings(
     functions: list[FunctionEmbeddingFields],
-    openai_client: OpenAI,
+    openai_client: AzureOpenAI,
     embedding_model: str,
     embedding_dimension: int,
 ) -> list[list[float]]:
@@ -48,7 +48,7 @@ def generate_function_embeddings(
 
 def generate_function_embedding(
     function: FunctionEmbeddingFields,
-    openai_client: OpenAI,
+    openai_client: AzureOpenAI,
     embedding_model: str,
     embedding_dimension: int,
 ) -> list[float]:
@@ -63,10 +63,10 @@ def generate_function_embedding(
 # TODO: allow different inference providers
 # TODO: exponential backoff?
 def generate_embedding(
-    openai_client: OpenAI, embedding_model: str, embedding_dimension: int, text: str
+    openai_client: AzureOpenAI, embedding_model: str, embedding_dimension: int, text: str
 ) -> list[float]:
     """
-    Generate an embedding for the given text using OpenAI's model.
+    Generate an embedding for the given text using Azure OpenAI.
     """
     logger.debug(f"Generating embedding for text: {text}")
     try:

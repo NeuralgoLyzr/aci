@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Query
-from langchain_openai import OpenAIEmbeddings
+from langchain_openai import AzureOpenAIEmbeddings
 from pgvector.sqlalchemy import Vector
 from pydantic import SecretStr
 from sqlalchemy import Column, DateTime, String, Text
@@ -37,9 +37,12 @@ class Document(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
-def _get_embedding_model() -> OpenAIEmbeddings:
-    return OpenAIEmbeddings(
-        model=config.OPENAI_EMBEDDING_MODEL, api_key=SecretStr(config.OPENAI_API_KEY)
+def _get_embedding_model() -> AzureOpenAIEmbeddings:
+    return AzureOpenAIEmbeddings(
+        model=config.OPENAI_EMBEDDING_MODEL,
+        api_key=SecretStr(config.AZURE_OPENAI_API_KEY),
+        azure_endpoint=config.AZURE_OPENAI_ENDPOINT,
+        api_version=config.AZURE_OPENAI_API_VERSION,
     )
 
 

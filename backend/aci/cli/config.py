@@ -4,7 +4,14 @@ from aci.common.utils import check_and_get_env_variable, construct_db_url, const
 
 load_dotenv()
 
-OPENAI_API_KEY = check_and_get_env_variable("CLI_OPENAI_API_KEY")
+# Azure OpenAI
+AZURE_OPENAI_API_KEY = check_and_get_env_variable("CLI_AZURE_OPENAI_API_KEY")
+AZURE_OPENAI_ENDPOINT = check_and_get_env_variable("CLI_AZURE_OPENAI_ENDPOINT")
+AZURE_OPENAI_API_VERSION = check_and_get_env_variable("CLI_AZURE_OPENAI_API_VERSION")
+AZURE_OPENAI_EMBEDDING_DEPLOYMENT = check_and_get_env_variable(
+    "CLI_AZURE_OPENAI_EMBEDDING_DEPLOYMENT"
+)
+AZURE_OPENAI_CHAT_DEPLOYMENT = check_and_get_env_variable("CLI_AZURE_OPENAI_CHAT_DEPLOYMENT")
 OPENAI_EMBEDDING_MODEL = check_and_get_env_variable("CLI_OPENAI_EMBEDDING_MODEL")
 OPENAI_EMBEDDING_DIMENSION = int(check_and_get_env_variable("CLI_OPENAI_EMBEDDING_DIMENSION"))
 DB_SCHEME = check_and_get_env_variable("CLI_DB_SCHEME")
@@ -21,7 +28,10 @@ DB_FULL_URL: str | None = None
 def get_db_full_url_sync() -> str:
     """
     Lazily initializes and returns the database URL synchronously.
-    Fetches password from AWS Secrets Manager on first call.
+
+    Automatically handles:
+    - Azure Managed Identity authentication (if CLI_USE_AZURE_MANAGED_IDENTITY=true)
+    - Password-based authentication (environment variable or Azure Key Vault)
     """
     global DB_FULL_URL
     if DB_FULL_URL is not None:
@@ -34,7 +44,10 @@ def get_db_full_url_sync() -> str:
 async def get_db_full_url() -> str:
     """
     Lazily initializes and returns the database URL asynchronously.
-    Fetches password from AWS Secrets Manager on first call.
+
+    Automatically handles:
+    - Azure Managed Identity authentication (if CLI_USE_AZURE_MANAGED_IDENTITY=true)
+    - Password-based authentication (environment variable or Azure Key Vault)
     """
     global DB_FULL_URL
     if DB_FULL_URL is not None:

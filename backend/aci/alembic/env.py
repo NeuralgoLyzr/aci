@@ -1,5 +1,6 @@
 import json
 import os
+from datetime import datetime, timedelta
 from logging.config import fileConfig
 
 from alembic import context
@@ -11,6 +12,9 @@ from sqlalchemy import engine_from_config, pool
 from aci.common.db.sql_models import Base
 
 load_dotenv()
+
+# Cache for database tokens/passwords
+_db_credential_cache: tuple[str, datetime] | None = None
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -42,44 +46,87 @@ def _check_and_get_env_variable(name: str) -> str:
     return value
 
 
-def _get_db_password() -> str:
+def _get_db_credential() -> str:
     """
-    Fetches the DB password from Azure Key Vault.
-    For local development, falls back to environment variables.
+    Fetches the database authentication credential (password or token).
+
+    Behavior depends on configuration:
+    - If USE_AZURE_MANAGED_IDENTITY=true: Fetches Azure Database token via Managed Identity
+    - Else: Fetches password from environment or Azure Key Vault
+
+    Tokens are cached and auto-refreshed 5 minutes before expiry.
     """
-    # Try to get from environment variable first (for local development)
-    env_password = os.getenv("ALEMBIC_DB_PASSWORD") or os.getenv("SERVER_DB_PASSWORD")
-    if env_password:
-        return env_password
+    global _db_credential_cache
 
-    # For production, fetch from Azure Key Vault
-    try:
-        keyvault_url = _check_and_get_env_variable("AZURE_KEYVAULT_URL_FOR_DB")
-        secret_name = _check_and_get_env_variable("AZURE_DB_SECRET_NAME")
+    # Check for Managed Identity mode (try both ALEMBIC and SERVER variants)
+    use_managed_identity = (
+        os.getenv("ALEMBIC_USE_AZURE_MANAGED_IDENTITY", "false").lower() == "true"
+        or os.getenv("SERVER_USE_AZURE_MANAGED_IDENTITY", "false").lower() == "true"
+    )
 
-        credential = DefaultAzureCredential()
-        client = SecretClient(vault_url=keyvault_url, credential=credential)
-        secret = client.get_secret(secret_name)
-        secret_dict = json.loads(secret.value)
-        return secret_dict["password"]
-    except ValueError as e:
-        # If Azure Key Vault variables are not set, raise an error
-        raise RuntimeError(
-            "Database password not found. Either set ALEMBIC_DB_PASSWORD/SERVER_DB_PASSWORD "
-            "for local development, or configure AZURE_KEYVAULT_URL_FOR_DB and AZURE_DB_SECRET_NAME "
-            "for production."
-        ) from e
+    if use_managed_identity:
+        # Return cached token if still valid (refresh 5 minutes before expiry)
+        if _db_credential_cache is not None:
+            credential, expiry_time = _db_credential_cache
+            if datetime.utcnow() < (expiry_time - timedelta(minutes=5)):
+                return credential
+
+        try:
+            # Get token for Azure Database (works for PostgreSQL, MySQL, MariaDB, etc.)
+            credential = DefaultAzureCredential()
+            token_credential = credential.get_token("https://ossrdbms-aad.database.windows.net/.default")
+
+            # Cache token with expiry time (Azure tokens are typically valid for 1 hour)
+            expiry_time = datetime.utcnow() + timedelta(hours=1)
+            _db_credential_cache = (token_credential.token, expiry_time)
+
+            return token_credential.token
+        except Exception as e:
+            raise RuntimeError(
+                f"Failed to obtain Azure Database token using Managed Identity: {e}. "
+                "Ensure the application has appropriate Azure RBAC permissions for database access."
+            ) from e
+    else:
+        # Password-based authentication (local dev or Key Vault)
+        env_password = os.getenv("ALEMBIC_DB_PASSWORD") or os.getenv("SERVER_DB_PASSWORD")
+        if env_password:
+            return env_password
+
+        # For production, fetch from Azure Key Vault
+        try:
+            keyvault_url = _check_and_get_env_variable("AZURE_KEYVAULT_URL_FOR_DB")
+            secret_name = _check_and_get_env_variable("AZURE_DB_SECRET_NAME")
+
+            credential = DefaultAzureCredential()
+            client = SecretClient(vault_url=keyvault_url, credential=credential)
+            secret = client.get_secret(secret_name)
+            secret_dict = json.loads(secret.value)
+            return secret_dict["password"]
+        except ValueError as e:
+            # If Azure Key Vault variables are not set, raise an error
+            raise RuntimeError(
+                "Database password not found. Either set ALEMBIC_DB_PASSWORD/SERVER_DB_PASSWORD "
+                "for local development, or configure AZURE_KEYVAULT_URL_FOR_DB and AZURE_DB_SECRET_NAME "
+                "for production."
+            ) from e
 
 
 def _get_db_url() -> str:
+    """
+    Constructs database URL for migrations.
+    Automatically handles both Managed Identity and password-based authentication.
+    """
     # construct db url from env variables - try ALEMBIC_* first, fallback to SERVER_*
     DB_SCHEME = os.getenv("ALEMBIC_DB_SCHEME") or os.getenv("SERVER_DB_SCHEME") or "postgresql+psycopg"
     DB_USER = os.getenv("ALEMBIC_DB_USER") or os.getenv("SERVER_DB_USER") or "postgres"
     DB_HOST = os.getenv("ALEMBIC_DB_HOST") or os.getenv("SERVER_DB_HOST") or "localhost"
     DB_PORT = os.getenv("ALEMBIC_DB_PORT") or os.getenv("SERVER_DB_PORT") or "5432"
     DB_NAME = os.getenv("ALEMBIC_DB_NAME") or os.getenv("SERVER_DB_NAME") or "my_app_db"
-    DB_PASSWORD = _get_db_password()
-    return f"{DB_SCHEME}://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
+    # Get credential (password or token) - automatically handles both modes
+    DB_CREDENTIAL = _get_db_credential()
+
+    return f"{DB_SCHEME}://{DB_USER}:{DB_CREDENTIAL}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 
 def run_migrations_offline() -> None:
