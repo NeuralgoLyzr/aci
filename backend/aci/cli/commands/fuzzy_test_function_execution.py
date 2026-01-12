@@ -6,8 +6,8 @@ from uuid import UUID
 
 import click
 import httpx
-from azure.ai.openai import AzureOpenAI
 from rich.console import Console
+from openai import AzureOpenAI
 
 from aci.cli import config
 from aci.common.enums import FunctionDefinitionFormat

@@ -3,7 +3,7 @@ FROM public.ecr.aws/docker/library/python:3.12
 WORKDIR /workdir
 
 COPY ./requirements.txt /workdir/
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --default-timeout=1000 -r requirements.txt
 
 # Install PostgreSQL client for schema creation
 RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*

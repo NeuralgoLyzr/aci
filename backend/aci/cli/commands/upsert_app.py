@@ -5,8 +5,8 @@ from uuid import UUID
 import click
 from deepdiff import DeepDiff
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, Template
-from azure.ai.openai import AzureOpenAI
 from rich.console import Console
+from openai import AzureOpenAI
 from sqlalchemy.orm import Session
 
 from aci.cli import config

@@ -1,7 +1,7 @@
 # mypy: ignore-errors
 import json
 
-from azure.ai.openai import AzureOpenAI
+from openai import AzureOpenAI
 from openai.types.chat import ChatCompletionMessageParam
 
 from aci.common.logging_setup import get_logger

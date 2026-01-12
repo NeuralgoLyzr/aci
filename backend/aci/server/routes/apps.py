@@ -2,7 +2,7 @@ from typing import Annotated
 import os
 from uuid import UUID
 from fastapi import APIRouter, Depends, Query
-from azure.ai.openai import AzureOpenAI
+from openai import AzureOpenAI
 
 from aci.common.db import crud
 from aci.common.embeddings import generate_embedding

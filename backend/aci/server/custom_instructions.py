@@ -1,7 +1,7 @@
 import json
 
-from azure.ai.openai import AzureOpenAI
 from pydantic import BaseModel
+from openai import AzureOpenAI
 
 from aci.common.db.sql_models import Function
 from aci.common.exceptions import CustomInstructionViolation

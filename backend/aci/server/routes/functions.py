@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
-from azure.ai.openai import AzureOpenAI
+from openai import AzureOpenAI
 from sqlalchemy.orm import Session
 
 from aci.common import processor

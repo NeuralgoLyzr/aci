@@ -1,4 +1,4 @@
-from azure.ai.openai import AzureOpenAI
+from openai import AzureOpenAI
 
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.app import AppEmbeddingFields

@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
-from azure.ai.openai import AzureOpenAI
+from openai import AzureOpenAI
 from pydantic import BaseModel
 
 from aci.common.enums import FunctionDefinitionFormat

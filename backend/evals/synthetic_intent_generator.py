@@ -1,5 +1,5 @@
 import os
-from azure.ai.openai import AzureOpenAI
+from openai import AzureOpenAI
 import pandas as pd
 import wandb
 from dotenv import load_dotenv

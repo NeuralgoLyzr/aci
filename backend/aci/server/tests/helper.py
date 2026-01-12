@@ -2,7 +2,7 @@ import json
 import logging
 from pathlib import Path
 
-from azure.ai.openai import AzureOpenAI
+from openai import AzureOpenAI
 
 from aci.common import embeddings
 from aci.common.schemas.app import AppEmbeddingFields, AppUpsert

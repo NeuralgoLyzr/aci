@@ -5,8 +5,8 @@ This module provides helper functions to create and configure Azure OpenAI clien
 for different deployment scenarios (embeddings, chat completions, etc.).
 """
 
-from azure.ai.openai import AzureOpenAI
 from typing import Optional
+from openai import AzureOpenAI
 
 # Cache for Azure OpenAI client (lazy initialization)
 _azure_openai_client: Optional[AzureOpenAI] = None

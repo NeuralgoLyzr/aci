@@ -4,8 +4,8 @@ from uuid import UUID
 
 import click
 from deepdiff import DeepDiff
-from azure.ai.openai import AzureOpenAI
 from rich.console import Console
+from openai import AzureOpenAI
 from rich.table import Table
 from sqlalchemy.orm import Session
 
