@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 from aci.common.enums import FunctionDefinitionFormat
 from aci.common.logging_setup import get_logger
-from aci.common.schemas.function import AzureOpenAIResponsesFunctionDefinition
+from aci.common.schemas.function import OpenAIResponsesFunctionDefinition
 from aci.server import config
 from aci.server import dependencies as deps
 from aci.server.agent.prompt import (
@@ -63,7 +63,7 @@ async def handle_chat(
     )
 
     tools = [
-        func for func in selected_functions if isinstance(func, AzureOpenAIResponsesFunctionDefinition)
+        func for func in selected_functions if isinstance(func, OpenAIResponsesFunctionDefinition)
     ]
 
     response = StreamingResponse(openai_chat_stream(openai_messages, tools=tools))

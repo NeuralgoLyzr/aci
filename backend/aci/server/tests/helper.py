@@ -10,7 +10,11 @@ from aci.common.schemas.function import FunctionEmbeddingFields, FunctionUpsert
 from aci.server import config
 
 logger = logging.getLogger(__name__)
-openai_client = AzureOpenAI(api_key=config.OPENAI_API_KEY)
+openai_client = AzureOpenAI(
+    api_key=config.AZURE_OPENAI_API_KEY,
+    api_version=config.AZURE_OPENAI_API_VERSION,
+    azure_endpoint=config.AZURE_OPENAI_ENDPOINT,
+)
 DUMMY_APPS_DIR = Path(__file__).parent / "dummy_apps"
 REAL_APPS_DIR = Path(__file__).parent.parent.parent.parent / "apps"
 CONNECTOR_APPS = [

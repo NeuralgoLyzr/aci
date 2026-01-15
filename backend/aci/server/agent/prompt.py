@@ -5,7 +5,7 @@ from openai import AzureOpenAI
 from openai.types.chat import ChatCompletionMessageParam
 
 from aci.common.logging_setup import get_logger
-from aci.common.schemas.function import AzureOpenAIResponsesFunctionDefinition
+from aci.common.schemas.function import OpenAIResponsesFunctionDefinition
 from aci.server import config
 
 from .types import ClientMessage
@@ -61,7 +61,7 @@ def convert_to_openai_messages(messages: list[ClientMessage]) -> list[ChatComple
 
 async def openai_chat_stream(
     messages: list[ChatCompletionMessageParam],
-    tools: list[AzureOpenAIResponsesFunctionDefinition],
+    tools: list[OpenAIResponsesFunctionDefinition],
 ):
     """
     Stream chat completion responses and handle tool calls asynchronously.
@@ -70,7 +70,11 @@ async def openai_chat_stream(
         messages: List of chat messages
         tools: List of tools to use
     """
-    client = AzureOpenAI(api_key=config.OPENAI_API_KEY)
+    client = AzureOpenAI(
+        api_key=config.AZURE_OPENAI_API_KEY,
+        api_version=config.AZURE_OPENAI_API_VERSION,
+        azure_endpoint=config.AZURE_OPENAI_ENDPOINT,
+    )
 
     # TODO: support different meta function mode ACI_META_FUNCTIONS_SCHEMA_LIST
     stream = client.responses.create(model="gpt-4o", input=messages, stream=True, tools=tools)
