@@ -128,14 +128,14 @@ async def upsert_app_via_api(
                 json.dump(request.secrets, f)
                 secrets_file_path = Path(f.name)
 
-            # Use the CLI helper function
-            app_id = upsert_app.upsert_app_helper(
-                db_session=db_session,
-                app_file=app_file_path,
-                secrets_file=secrets_file_path,
-                skip_dry_run=request.skip_dry_run,
-                api_key_id=LYZR_API_KEY_ID_DB
-            )
+        # Use the CLI helper function
+        app_id = upsert_app.upsert_app_helper(
+            db_session=db_session,
+            app_file=app_file_path,
+            secrets_file=secrets_file_path,
+            skip_dry_run=request.skip_dry_run,
+            api_key_id=LYZR_API_KEY_ID_DB
+        )
 
         # Clean up temporary secrets file if created
         if request.secrets and secrets_file_path and secrets_file_path.exists():
