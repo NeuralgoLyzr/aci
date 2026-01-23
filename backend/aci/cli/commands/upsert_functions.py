@@ -4,7 +4,6 @@ from uuid import UUID
 
 import click
 from deepdiff import DeepDiff
-from openai import OpenAI
 from rich.console import Console
 from rich.table import Table
 from sqlalchemy.orm import Session
@@ -16,7 +15,7 @@ from aci.common.schemas.function import FunctionEmbeddingFields, FunctionUpsert
 
 console = Console()
 
-openai_client = OpenAI(api_key=config.OPENAI_API_KEY)
+openai_client = config.get_openai_client()
 
 
 @click.command()

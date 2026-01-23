@@ -1,7 +1,6 @@
 # mypy: ignore-errors
 import json
 
-from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
 
 from aci.common.logging_setup import get_logger
@@ -70,7 +69,7 @@ async def openai_chat_stream(
         messages: List of chat messages
         tools: List of tools to use
     """
-    client = OpenAI(api_key=config.OPENAI_API_KEY)
+    client = config.get_openai_client()
 
     # TODO: support different meta function mode ACI_META_FUNCTIONS_SCHEMA_LIST
     stream = client.responses.create(model="gpt-4o", input=messages, stream=True, tools=tools)

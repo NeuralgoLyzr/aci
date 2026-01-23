@@ -1,8 +1,8 @@
 import json
 import os
+import time
 from logging.config import fileConfig
 
-import boto3
 from alembic import context
 from dotenv import load_dotenv
 from sqlalchemy import engine_from_config, pool
@@ -31,6 +31,9 @@ target_metadata = Base.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
+# Cache for Azure DB token
+_db_token_cache: dict | None = None
+
 
 def _check_and_get_env_variable(name: str) -> str:
     value = os.getenv(name)
@@ -41,8 +44,71 @@ def _check_and_get_env_variable(name: str) -> str:
     return value
 
 
-def _get_db_password() -> str:
+def _get_environment() -> str:
+    """Get the current environment (AWS, AZURE, or AZURE/WTW)."""
+    dev_env = os.getenv("DEV_ENV", "").upper()
+    if dev_env in ("AZURE", "AZURE/WTW"):
+        return dev_env
+    return "AWS"
+
+
+def _is_azure_environment() -> bool:
+    """Check if running in Azure environment."""
+    return _get_environment() in ("AZURE", "AZURE/WTW")
+
+
+def _get_azure_db_token() -> str:
+    """Get Azure PostgreSQL access token using Managed Identity."""
+    global _db_token_cache
+
+    # Check if we have a valid cached token (with 5-minute buffer)
+    if _db_token_cache and time.time() < (_db_token_cache["expires_on"] - 300):
+        return _db_token_cache["token"]
+
+    try:
+        from azure.identity import DefaultAzureCredential, ManagedIdentityCredential
+
+        client_id = os.getenv("AZURE_CLIENT_ID")
+        if client_id:
+            # Use User-Assigned Managed Identity
+            credential = ManagedIdentityCredential(client_id=client_id)
+        else:
+            # Fall back to DefaultAzureCredential
+            credential = DefaultAzureCredential()
+
+        # Get token for Azure PostgreSQL
+        token = credential.get_token("https://ossrdbms-aad.database.windows.net/.default")
+        _db_token_cache = {"token": token.token, "expires_on": token.expires_on}
+        return token.token
+
+    except Exception as e:
+        raise RuntimeError(f"Failed to obtain Azure Database token: {e}") from e
+
+
+def _get_azure_keyvault_password() -> str:
+    """Fetch DB password from Azure Key Vault."""
+    from azure.identity import DefaultAzureCredential, ManagedIdentityCredential
+    from azure.keyvault.secrets import SecretClient
+
+    keyvault_url = _check_and_get_env_variable("AZURE_KEYVAULT_URL_FOR_DB")
+    secret_name = _check_and_get_env_variable("AZURE_DB_SECRET_NAME")
+
+    client_id = os.getenv("AZURE_CLIENT_ID")
+    if client_id:
+        credential = ManagedIdentityCredential(client_id=client_id)
+    else:
+        credential = DefaultAzureCredential()
+
+    client = SecretClient(vault_url=keyvault_url, credential=credential)
+    secret = client.get_secret(secret_name)
+    secret_dict = json.loads(secret.value)
+    return secret_dict["password"]
+
+
+def _get_aws_db_password() -> str:
     """Fetches the DB password from AWS Secrets Manager synchronously."""
+    import boto3
+
     secret_name = _check_and_get_env_variable("DB_SECRET_NAME")
     region_name = _check_and_get_env_variable("AWS_REGION_NAME")
 
@@ -50,6 +116,34 @@ def _get_db_password() -> str:
     response = client.get_secret_value(SecretId=secret_name)
     secret_dict = json.loads(response["SecretString"])
     return secret_dict["password"]
+
+
+def _get_db_password() -> str:
+    """
+    Fetches the database credential based on environment.
+
+    For AZURE/AZURE/WTW:
+    - If SERVER_USE_AZURE_MANAGED_IDENTITY=true: Uses Managed Identity token
+    - If SERVER_DB_PASSWORD is set: Uses that password directly
+    - Otherwise: Fetches from Azure Key Vault
+
+    For AWS:
+    - Fetches from AWS Secrets Manager
+    """
+    if _is_azure_environment():
+        use_mi = os.getenv("SERVER_USE_AZURE_MANAGED_IDENTITY", "false").lower() == "true"
+        if use_mi:
+            return _get_azure_db_token()
+
+        # Check for direct password
+        env_password = os.getenv("SERVER_DB_PASSWORD")
+        if env_password:
+            return env_password
+
+        # Fetch from Key Vault
+        return _get_azure_keyvault_password()
+    else:
+        return _get_aws_db_password()
 
 
 def _get_db_url() -> str:
