@@ -68,6 +68,10 @@ else:
     WTW_API_VERSION = None
     WTW_API_SCOPE = None
 
+# Anthropic (used by agent playground)
+ANTHROPIC_API_KEY = os.getenv("SERVER_ANTHROPIC_API_KEY", "")
+ANTHROPIC_MODEL_FOR_FRONTEND_QA_AGENT = "claude-3-5-sonnet-latest"
+
 # JWT
 SIGNING_KEY = check_and_get_env_variable("SERVER_SIGNING_KEY")
 JWT_ALGORITHM = check_and_get_env_variable("SERVER_JWT_ALGORITHM")
@@ -115,13 +119,6 @@ async def get_db_full_url() -> str:
     DB_FULL_URL = await construct_db_url(DB_SCHEME, DB_USER, DB_HOST, DB_PORT, DB_NAME)
     return DB_FULL_URL
 
-# PropelAuth
-PROPELAUTH_AUTH_URL = check_and_get_env_variable("SERVER_PROPELAUTH_AUTH_URL")
-PROPELAUTH_API_KEY = check_and_get_env_variable("SERVER_PROPELAUTH_API_KEY")
-
-# SVIX
-SVIX_SIGNING_SECRET = check_and_get_env_variable("SERVER_SVIX_SIGNING_SECRET")
-
 # RATE LIMITS
 RATE_LIMIT_IP_PER_SECOND = int(check_and_get_env_variable("SERVER_RATE_LIMIT_IP_PER_SECOND"))
 RATE_LIMIT_IP_PER_DAY = int(check_and_get_env_variable("SERVER_RATE_LIMIT_IP_PER_DAY"))
@@ -147,24 +144,11 @@ ROUTER_PREFIX_FUNCTIONS = "/v1/functions"
 ROUTER_PREFIX_APP_CONFIGURATIONS = "/v1/app-configurations"
 ROUTER_PREFIX_LINKED_ACCOUNTS = "/v1/linked-accounts"
 ROUTER_PREFIX_AGENT = "/v1/agent"
-ROUTER_PREFIX_ANALYTICS = "/v1/analytics"
-ROUTER_PREFIX_WEBHOOKS = "/v1/webhooks"
-ROUTER_PREFIX_BILLING = "/v1/billing"
-ROUTER_PREFIX_ORGANIZATIONS = "/v1/organizations"
-ROUTER_PREFIX_DOCS = "/v1/docs"
 ROUTER_PREFIX_TOOL_SEEDING = "/v1/tool-seeding"
 ROUTER_PREFIX_SEEDING_INFO = "/v1/seeding-info"
 
 # DEV PORTAL
-DEV_PORTAL_URL = check_and_get_env_variable("SERVER_DEV_PORTAL_URL")
-
-# LOGFIRE
-LOGFIRE_WRITE_TOKEN = check_and_get_env_variable("SERVER_LOGFIRE_WRITE_TOKEN")
-LOGFIRE_READ_TOKEN = check_and_get_env_variable("SERVER_LOGFIRE_READ_TOKEN")
-
-# STRIPE
-STRIPE_SECRET_KEY = check_and_get_env_variable("SERVER_STRIPE_SECRET_KEY")
-STRIPE_WEBHOOK_SIGNING_SECRET = check_and_get_env_variable("SERVER_STRIPE_WEBHOOK_SIGNING_SECRET")
+DEV_PORTAL_URL = os.getenv("SERVER_DEV_PORTAL_URL", "http://localhost:3000")
 
 # HEADERS
 ACI_ORG_ID_HEADER = "X-ACI-ORG-ID"
@@ -172,13 +156,6 @@ ACI_API_KEY_HEADER = "X-API-KEY"
 
 # 8KB
 MAX_LOG_FIELD_SIZE = 8 * 1024
-
-# Agentic Apps
-ANTHROPIC_API_KEY = check_and_get_env_variable("SERVER_ANTHROPIC_API_KEY")
-ANTHROPIC_MODEL_FOR_FRONTEND_QA_AGENT = "claude-3-5-sonnet-latest"
-
-# Vector DB
-VECTOR_DB_FULL_URL = check_and_get_env_variable("SERVER_VECTOR_DB_FULL_URL")
 
 
 # OpenAI client singleton

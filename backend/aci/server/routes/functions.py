@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
+from openai import OpenAI
 from sqlalchemy.orm import Session
 
 from aci.common import processor

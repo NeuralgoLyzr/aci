@@ -19,6 +19,7 @@ from aci.common.exceptions import (
     ProjectNotFound,
 )
 from aci.common.logging_setup import get_logger
+from aci.common.utils import is_azure_environment
 from aci.server import billing, config
 
 logger = get_logger(__name__)
@@ -37,6 +38,10 @@ def enforce_project_creation_quota(db_session: Session, org_id: str) -> None:
         MaxProjectsReached: If the user has reached their maximum allowed projects
         SubscriptionPlanNotFound: If the organization's subscription plan cannot be found
     """
+    # Skip billing checks for Azure environments (no subscription management)
+    if is_azure_environment():
+        return
+
     active_plan = billing.get_active_plan_by_org_id(db_session, org_id)
 
     # Get the projects quota from the plan's features
@@ -91,6 +96,10 @@ def enforce_linked_accounts_creation_quota(
         allowed unique linked account owner ids
         SubscriptionPlanNotFound: If the organization's subscription plan cannot be found
     """
+    # Skip billing checks for Azure environments (no subscription management)
+    if is_azure_environment():
+        return
+
     if crud.linked_accounts.linked_account_owner_id_exists_in_org(
         db_session, org_id, linked_account_owner_id
     ):
@@ -134,6 +143,10 @@ def enforce_agent_secrets_quota(db_session: Session, project_id: UUID) -> None:
         SubscriptionPlanNotFound: If the organization's subscription plan cannot be found
         ProjectNotFound: If the project cannot be found
     """
+    # Skip billing checks for Azure environments (no subscription management)
+    if is_azure_environment():
+        return
+
     # Get the project
     project = crud.projects.get_project(db_session, project_id)
     if not project:

@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from aci.common import utils
 from aci.common.db import crud
+from aci.common.utils import is_azure_environment
 from aci.common.db.sql_models import Agent, Project
 from aci.common.enums import APIKeyStatus
 from aci.common.exceptions import (
@@ -131,6 +132,10 @@ def validate_monthly_api_quota(
     2. Reset quota if it's a new month
     3. Increment usage or raise error if exceeded
     """
+    # Skip billing checks for Azure environments (no subscription management)
+    if is_azure_environment():
+        return
+
     # Only check quota for app search and function search/execute endpoints
     path = request.url.path
     is_quota_limited_endpoint = path.startswith(f"{config.ROUTER_PREFIX_APPS}/search") or (

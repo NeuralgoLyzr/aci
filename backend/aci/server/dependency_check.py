@@ -2,6 +2,7 @@ import os
 import traceback
 from aci.common.encryption import decrypt, encrypt
 from aci.common.exceptions import DependencyCheckError
+from aci.common.utils import is_azure_environment
 
 
 def check_aws_kms_dependency() -> None:
@@ -32,9 +33,14 @@ def check_aws_kms_dependency() -> None:
 
 
 def check_dependencies() -> None:
-    # Skip KMS check only in local environment (for development)
+    # Skip KMS check for local environment (for development)
     if os.getenv("SERVER_ENVIRONMENT") == "local":
         print("Skipping KMS dependency check for local environment")
         return
-    
+
+    # Skip KMS check for Azure environments (uses different encryption)
+    if is_azure_environment():
+        print("Skipping AWS KMS dependency check for Azure environment")
+        return
+
     check_aws_kms_dependency()

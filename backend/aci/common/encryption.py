@@ -3,27 +3,30 @@ import hmac
 import os
 from typing import cast
 
-import aws_encryption_sdk  # type: ignore
-import boto3  # type: ignore
-from aws_cryptographic_material_providers.mpl import (  # type: ignore
-    AwsCryptographicMaterialProviders,
-)
-from aws_cryptographic_material_providers.mpl.config import MaterialProvidersConfig  # type: ignore
-from aws_cryptographic_material_providers.mpl.models import CreateAwsKmsKeyringInput  # type: ignore
-from aws_cryptographic_material_providers.mpl.references import IKeyring  # type: ignore
-from aws_encryption_sdk import CommitmentPolicy
-
 from aci.common import config
+from aci.common.utils import is_azure_environment
 
-client = aws_encryption_sdk.EncryptionSDKClient(
-    commitment_policy=CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT
-)
+# Only import AWS encryption SDK when not in Azure environment
+if not is_azure_environment() and os.getenv("SERVER_ENVIRONMENT") != "local":
+    import aws_encryption_sdk  # type: ignore
+    import boto3  # type: ignore
+    from aws_cryptographic_material_providers.mpl import (  # type: ignore
+        AwsCryptographicMaterialProviders,
+    )
+    from aws_cryptographic_material_providers.mpl.config import MaterialProvidersConfig  # type: ignore
+    from aws_cryptographic_material_providers.mpl.models import CreateAwsKmsKeyringInput  # type: ignore
+    from aws_cryptographic_material_providers.mpl.references import IKeyring  # type: ignore
+    from aws_encryption_sdk import CommitmentPolicy
 
-# Lazy initialization of KMS resources
-_kms_keyring: IKeyring | None = None
+    client = aws_encryption_sdk.EncryptionSDKClient(
+        commitment_policy=CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT
+    )
+
+    # Lazy initialization of KMS resources
+    _kms_keyring: IKeyring | None = None
 
 
-def _get_kms_keyring() -> IKeyring:
+def _get_kms_keyring():
     """Lazy initialization of KMS keyring to avoid errors in local environment."""
     global _kms_keyring
     if _kms_keyring is None:
@@ -47,8 +50,8 @@ def _get_kms_keyring() -> IKeyring:
 
 
 def encrypt(plain_data: bytes) -> bytes:
-    # Skip encryption in local environment (for development)
-    if os.getenv("SERVER_ENVIRONMENT") == "local":
+    # Skip encryption in local or Azure environment
+    if os.getenv("SERVER_ENVIRONMENT") == "local" or is_azure_environment():
         return plain_data
 
     # TODO: ignore encryptor_header for now
@@ -57,8 +60,8 @@ def encrypt(plain_data: bytes) -> bytes:
 
 
 def decrypt(cipher_data: bytes) -> bytes:
-    # Skip decryption in local environment (for development)
-    if os.getenv("SERVER_ENVIRONMENT") == "local":
+    # Skip decryption in local or Azure environment
+    if os.getenv("SERVER_ENVIRONMENT") == "local" or is_azure_environment():
         return cipher_data
 
     # TODO: ignore decryptor_header for now

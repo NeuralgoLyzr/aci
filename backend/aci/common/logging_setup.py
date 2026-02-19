@@ -1,8 +1,6 @@
 import logging
 from logging.handlers import RotatingFileHandler
 
-import logfire
-
 
 # the setup is called once at the start of the app
 def setup_logging(
@@ -41,7 +39,11 @@ def setup_logging(
         root_logger.addHandler(file_handler)
 
     if environment != "local":
-        root_logger.addHandler(logfire.LogfireLoggingHandler())
+        try:
+            import logfire
+            root_logger.addHandler(logfire.LogfireLoggingHandler())
+        except ImportError:
+            pass  # logfire not available, skip
 
     # Set up module-specific loggers if necessary (e.g., with different levels)
     logging.getLogger("httpx").setLevel(logging.WARNING)
