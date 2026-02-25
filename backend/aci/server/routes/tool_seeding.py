@@ -654,6 +654,7 @@ async def list_my_custom_apps(
                 "description": app.description,
                 "categories": app.categories,
                 "active": app.active,
+                "security_schemes": app.security_schemes,
                 "created_at": app.created_at.isoformat(),
                 "updated_at": app.updated_at.isoformat(),
             }
