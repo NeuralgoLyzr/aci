@@ -80,6 +80,11 @@ class OAuth2Scheme(BaseModel):
         default=None, min_length=1, max_length=2048, description="Redirect URL for OAuth2 callback."
     )
 
+    prompt: str | None = Field(
+        default='consent',
+        description="Prompt for OAuth2 authorization.",
+    )
+
 
 # NOTE: need to show these fields for custom oauth2 app feature.
 class OAuth2SchemePublic(BaseModel):
@@ -120,6 +125,11 @@ class OAuth2SchemeOverride(BaseModel):
         description="Custom redirect URL for OAuth2 callback for complete whitelabeling. "
         "If not provided, ACI.dev's server redirect URL will be used. "
         "When user uses a custom redirect URL, their backend should forward the OAuth2 callback response to ACI.dev's callback endpoint.",
+    )
+
+    prompt: str | None = Field(
+        default='consent',
+        description="Prompt for OAuth2 authorization.",
     )
 
     @field_validator("redirect_url")
