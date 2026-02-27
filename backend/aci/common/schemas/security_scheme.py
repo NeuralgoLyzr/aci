@@ -122,6 +122,11 @@ class OAuth2SchemeOverride(BaseModel):
         "When user uses a custom redirect URL, their backend should forward the OAuth2 callback response to ACI.dev's callback endpoint.",
     )
 
+    prompt: str | None = Field(
+        default=None,
+        description="Prompt for OAuth2 authorization.",
+    )
+
     @field_validator("redirect_url")
     def validate_redirect_url(cls, v: str | None) -> str | None:
         if v is None:
