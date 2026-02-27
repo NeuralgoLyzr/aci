@@ -80,6 +80,11 @@ class OAuth2Scheme(BaseModel):
         default=None, min_length=1, max_length=2048, description="Redirect URL for OAuth2 callback."
     )
 
+    prompt: str | None = Field(
+        default=None,
+        description="Prompt for OAuth2 authorization.",
+    )
+
 
 # NOTE: need to show these fields for custom oauth2 app feature.
 class OAuth2SchemePublic(BaseModel):
