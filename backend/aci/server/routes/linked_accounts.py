@@ -1,3 +1,4 @@
+import time
 from typing import Annotated
 from uuid import UUID
 
@@ -26,6 +27,7 @@ from aci.common.schemas.linked_accounts import (
     LinkedAccountDefaultCreate,
     LinkedAccountNoAuthCreate,
     LinkedAccountNoAuthCreateByAppId,
+    LinkedAccountOAuth2ClientCredentialsCreate,
     LinkedAccountOAuth2Create,
     LinkedAccountOAuth2CreateByAppId,
     LinkedAccountOAuth2CreateState,
@@ -37,6 +39,8 @@ from aci.common.schemas.linked_accounts import (
 from aci.common.schemas.security_scheme import (
     APIKeySchemeCredentials,
     NoAuthSchemeCredentials,
+    OAuth2FlowType,
+    OAuth2SchemeCredentials,
 )
 from aci.server import config, quota_manager
 from aci.server import dependencies as deps
@@ -834,6 +838,114 @@ async def linked_accounts_oauth2_callback(
         return RedirectResponse(
             url=state.after_oauth2_link_redirect_url, status_code=status.HTTP_302_FOUND
         )
+
+    return linked_account
+
+
+@router.post("/oauth2/client-credentials", response_model=LinkedAccountPublic)
+async def link_oauth2_client_credentials_account(
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    body: Annotated[LinkedAccountOAuth2ClientCredentialsCreate, Body()],
+) -> LinkedAccount:
+    """
+    Create a linked account using OAuth2 client_credentials grant.
+    This flow directly exchanges client_id + client_secret for an access token
+    (no user browser interaction), suitable for server-to-server/daemon scenarios.
+    """
+    app_configuration = crud.app_configurations.get_app_configuration(
+        context.db_session, context.project.id, body.app_name
+    )
+    if not app_configuration:
+        raise AppConfigurationNotFound(
+            f"configuration for app={body.app_name} not found, please configure the app first"
+        )
+    if app_configuration.security_scheme != SecurityScheme.OAUTH2:
+        raise NoImplementationFound(
+            f"The security_scheme configured for app={body.app_name} is "
+            f"{app_configuration.security_scheme}, not OAuth2"
+        )
+
+    # Check for existing linked account
+    existing = crud.linked_accounts.get_linked_account(
+        context.db_session,
+        context.project.id,
+        body.app_name,
+        body.linked_account_owner_id,
+    )
+    if existing:
+        raise LinkedAccountAlreadyExists(
+            f"linked account already exists for app={body.app_name}, "
+            f"owner={body.linked_account_owner_id}"
+        )
+
+    # Enforce quota
+    quota_manager.enforce_linked_accounts_creation_quota(
+        context.db_session, context.project.org_id, body.linked_account_owner_id
+    )
+
+    # Get OAuth2 scheme (with overrides applied)
+    oauth2_scheme = scm.get_app_configuration_oauth2_scheme(
+        app_configuration.app, app_configuration
+    )
+
+    # Determine effective values
+    client_id = body.client_id or oauth2_scheme.client_id
+    client_secret = body.client_secret or oauth2_scheme.client_secret
+    scope = body.scope or oauth2_scheme.scope
+
+    # Build token_url from tenant_id if not directly provided
+    if body.token_url:
+        token_url = body.token_url
+    else:
+        token_url = f"https://login.microsoftonline.com/{body.tenant_id}/oauth2/v2.0/token"
+
+    # Fetch token using client_credentials grant
+    token_response = await OAuth2Manager.fetch_client_credentials_token(
+        token_url=token_url,
+        client_id=client_id,
+        client_secret=client_secret,
+        scope=scope,
+    )
+
+    # Parse expiration
+    expires_at: int | None = None
+    if "expires_at" in token_response:
+        expires_at = int(token_response["expires_at"])
+    elif "expires_in" in token_response:
+        expires_at = int(time.time()) + int(token_response["expires_in"])
+
+    if not token_response.get("access_token"):
+        raise OAuth2Error("Failed to obtain access token via client_credentials grant")
+
+    # Build credentials
+    credentials = OAuth2SchemeCredentials(
+        client_id=client_id,
+        client_secret=client_secret,
+        scope=scope,
+        access_token=token_response["access_token"],
+        token_type=token_response.get("token_type"),
+        expires_at=expires_at,
+        refresh_token=None,
+        raw_token_response=token_response,
+        oauth2_flow_type=OAuth2FlowType.CLIENT_CREDENTIALS,
+        token_url=token_url,
+    )
+
+    # Create linked account
+    linked_account = crud.linked_accounts.create_linked_account(
+        context.db_session,
+        project_id=context.project.id,
+        app_name=body.app_name,
+        linked_account_owner_id=body.linked_account_owner_id,
+        security_scheme=SecurityScheme.OAUTH2,
+        security_credentials=credentials,
+    )
+
+    context.db_session.commit()
+    logger.info(
+        f"Created linked account via client_credentials, "
+        f"app={body.app_name}, linked_account_id={linked_account.id}"
+    )
 
     return linked_account
 

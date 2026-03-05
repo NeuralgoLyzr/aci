@@ -13,6 +13,7 @@ from aci.common.schemas.security_scheme import (
     APIKeySchemeCredentials,
     NoAuthScheme,
     NoAuthSchemeCredentials,
+    OAuth2FlowType,
     OAuth2Scheme,
     OAuth2SchemeCredentials,
     SecuritySchemeOverrides,
@@ -142,6 +143,18 @@ async def _get_oauth2_credentials(
 async def _refresh_oauth2_access_token(
     app_name: str, oauth2_scheme: OAuth2Scheme, oauth2_scheme_credentials: OAuth2SchemeCredentials
 ) -> dict:
+    # Client credentials flow: re-fetch token directly (no refresh_token needed)
+    if oauth2_scheme_credentials.oauth2_flow_type == OAuth2FlowType.CLIENT_CREDENTIALS:
+        if not oauth2_scheme_credentials.token_url:
+            raise OAuth2Error("no token_url found for client_credentials flow")
+        return await OAuth2Manager.fetch_client_credentials_token(
+            token_url=oauth2_scheme_credentials.token_url,
+            client_id=oauth2_scheme_credentials.client_id,
+            client_secret=oauth2_scheme_credentials.client_secret,
+            scope=oauth2_scheme_credentials.scope,
+        )
+
+    # Authorization code flow: use refresh_token
     refresh_token = oauth2_scheme_credentials.refresh_token
     if not refresh_token:
         raise OAuth2Error("no refresh token found")
