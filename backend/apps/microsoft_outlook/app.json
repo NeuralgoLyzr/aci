@@ -10,6 +10,7 @@
       "location": "header",
       "name": "Authorization",
       "prefix": "Bearer",
+      "prompt": "select_account",
       "client_id": "{{ AIPOLABS_MICROSOFT_OUTLOOK_CLIENT_ID }}",
       "client_secret": "{{ AIPOLABS_MICROSOFT_OUTLOOK_CLIENT_SECRET }}",
       "scope": "User.Read Mail.ReadWrite Mail.Send offline_access",
