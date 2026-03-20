@@ -128,7 +128,7 @@ class OAuth2SchemeOverride(BaseModel):
     )
 
     prompt: str | None = Field(
-        default='consent',
+        default=None,
         description="Prompt for OAuth2 authorization.",
     )
 
