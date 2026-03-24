@@ -81,17 +81,57 @@ app = FastAPI(
 @app.on_event("startup")
 async def startup_event() -> None:
     """Initialize database connection on server startup."""
+    import subprocess
+    import os
+
     await config.get_db_full_url()
     logger.info("Database URL initialized")
+
+    # Run database migrations
+    try:
+        logger.info("Running database migrations...")
+        result = subprocess.run(
+            ["alembic", "upgrade", "head"],
+            cwd="/workdir",
+            capture_output=True,
+            text=True,
+            timeout=120
+        )
+        if result.returncode == 0:
+            logger.info("Database migrations completed successfully")
+        else:
+            logger.error(f"Migration failed: {result.stderr}")
+    except Exception as e:
+        logger.error(f"Error running migrations: {str(e)}")
+
+    # Run database seeding (only if AUTO_SEED is enabled)
+    auto_seed = os.getenv("AUTO_SEED", "true").lower() == "true"
+    if auto_seed:
+        try:
+            logger.info("Running database seeding...")
+            result = subprocess.run(
+                ["bash", "./scripts/seed_db.sh", "--all", "--mock"],
+                cwd="/workdir",
+                capture_output=True,
+                text=True,
+                timeout=300
+            )
+            if result.returncode == 0:
+                logger.info("Database seeding completed successfully")
+            else:
+                logger.warning(f"Seeding completed with warnings: {result.stderr}")
+        except Exception as e:
+            logger.error(f"Error running seeding: {str(e)}")
+    else:
+        logger.info("Skipping auto-seeding (set AUTO_SEED=true to enable)")
 
 
 auth = get_propelauth()
 
 
-# No auto-seeding - manual seeding only
+# Setup logger
 import logging
 logger = logging.getLogger(__name__)
-logger.info("Skipping auto-seeding - manual seeding required")
 
 
 def scrubbing_callback(m: logfire.ScrubMatch) -> Any:

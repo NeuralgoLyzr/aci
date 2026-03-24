@@ -10,8 +10,5 @@ fi
 echo "Waiting for database to be ready..."
 sleep 5
 
-# Skip all seeding scripts - they will be handled by the auto-seeding system
-echo "🚀 Skipping manual seeding - using auto-seeding system instead"
-
-# Start the application
+# Start the application (migrations and seeding handled in startup event if AUTO_SEED=true)
 exec uvicorn aci.server.main:app --proxy-headers --forwarded-allow-ips=* --host 0.0.0.0 --port 8000 --no-access-log
