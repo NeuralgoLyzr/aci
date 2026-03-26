@@ -60,7 +60,7 @@ class OAuth2Scheme(BaseModel):
         description="The client secret of the OAuth2 client (provided by ACI) used for the app",
     )
     scope: str = Field(
-        ...,
+        default="",
         description="Space separated scopes of the OAuth2 client (provided by ACI) used for the app, "
         "e.g., 'openid email profile https://www.googleapis.com/auth/calendar'",
     )
