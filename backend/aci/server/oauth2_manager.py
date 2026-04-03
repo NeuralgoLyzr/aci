@@ -68,7 +68,7 @@ class OAuth2Manager:
         state: str,
         code_verifier: str,
         access_type: str = "offline",
-        prompt: str = "consent",
+        prompt: str = "select_account",
     ) -> str:
         """
         Create authorization URL for user to authorize your application
