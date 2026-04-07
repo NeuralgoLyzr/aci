@@ -1,0 +1,28 @@
+{
+  "name": "CONFLUENCE",
+  "display_name": "Confluence",
+  "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/confluence.svg",
+  "provider": "Atlassian",
+  "version": "1.0.0",
+  "description": "Confluence API integration for knowledge management. Enables agents to search, read, create, update, and manage pages, spaces, and metadata.",
+  "security_schemes": {
+    "oauth2": {
+      "location": "header",
+      "name": "Authorization",
+      "prefix": "Bearer",
+      "client_id": "{{ AIPOLABS_CONFLUENCE_APP_CLIENT_ID }}",
+      "client_secret": "{{ AIPOLABS_CONFLUENCE_APP_CLIENT_SECRET }}",
+      "scope": "read:audit-log:confluence write:label:confluence read:label:confluence read:space:confluence read:page:confluence write:page:confluence search:confluence offline_access",
+      "authorize_url": "https://auth.atlassian.com/authorize?audience=api.atlassian.com&response_type=code&prompt=consent",
+      "access_token_url": "https://auth.atlassian.com/oauth/token",
+      "refresh_token_url": "https://auth.atlassian.com/oauth/token"
+    }
+  },
+  "default_security_credentials_by_scheme": {},
+  "categories": [
+    "Productivity",
+    "Dev Tools"
+  ],
+  "visibility": "public",
+  "active": true
+}
