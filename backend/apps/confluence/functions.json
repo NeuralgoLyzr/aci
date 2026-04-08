@@ -1,0 +1,755 @@
+[
+  {
+    "name": "CONFLUENCE__GET_ACCESSIBLE_RESOURCES",
+    "description": "Get Atlassian cloud IDs.",
+    "tags": [
+      "confluence",
+      "auth"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/oauth/token/accessible-resources",
+      "server_url": "https://api.atlassian.com"
+    },
+    "security_schemes": [
+      "oauth2"
+    ],
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "header": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "Accept": {
+              "type": "string",
+              "default": "application/json"
+            }
+          },
+          "required": [],
+          "visible": [
+            "Accept"
+          ]
+        }
+      },
+      "required": [],
+      "visible": [
+        "header"
+      ]
+    }
+  },
+  {
+    "name": "CONFLUENCE__SEARCH_CONTENT",
+    "description": "Search content using CQL.",
+    "tags": [
+      "confluence",
+      "search"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/ex/confluence/{cloudid}/wiki/rest/api/search",
+      "server_url": "https://api.atlassian.com"
+    },
+    "security_schemes": [
+      "oauth2"
+    ],
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cloudid": {
+              "type": "string"
+            }
+          },
+          "required": [],
+          "visible": [
+            "cloudid"
+          ]
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cql": {
+              "type": "string"
+            },
+            "limit": {
+              "type": "integer",
+              "default": 25
+            }
+          },
+          "required": [],
+          "visible": [
+            "cql",
+            "limit"
+          ]
+        }
+      },
+      "required": [],
+      "visible": [
+        "path",
+        "query"
+      ]
+    }
+  },
+  {
+    "name": "CONFLUENCE__GET_PAGE_BY_ID",
+    "description": "Fetch page content by ID.",
+    "tags": [
+      "confluence",
+      "pages"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/ex/confluence/{cloudid}/wiki/api/v2/pages/{pageId}",
+      "server_url": "https://api.atlassian.com"
+    },
+    "security_schemes": [
+      "oauth2"
+    ],
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cloudid": {
+              "type": "string"
+            },
+            "pageId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "pageId"
+          ],
+          "visible": [
+            "cloudid",
+            "pageId"
+          ]
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "visible": [
+        "path"
+      ]
+    }
+  },
+  {
+    "name": "CONFLUENCE__CREATE_PAGE",
+    "description": "Create a new Confluence page using storage format (HTML).",
+    "tags": [
+      "confluence",
+      "write"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "POST",
+      "path": "/ex/confluence/{cloudid}/wiki/api/v2/pages",
+      "server_url": "https://api.atlassian.com"
+    },
+    "security_schemes": [
+      "oauth2"
+    ],
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cloudid": {
+              "type": "string"
+            }
+          },
+          "required": [],
+          "visible": [
+            "cloudid"
+          ]
+        },
+        "body": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "spaceId": {
+              "type": "string",
+              "description": "ID of the space where the page will be created"
+            },
+            "status": {
+              "type": "string",
+              "default": "current",
+              "description": "Page status"
+            },
+            "title": {
+              "type": "string",
+              "description": "Title of the page"
+            },
+            "body": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "representation": {
+                  "type": "string",
+                  "default": "storage",
+                  "description": "Content format (must be 'storage')"
+                },
+                "value": {
+                  "type": "string",
+                  "description": "HTML content of the page"
+                }
+              },
+              "required": [
+                "representation",
+                "value"
+              ],
+              "visible": [
+                "representation",
+                "value"
+              ]
+            }
+          },
+          "required": [
+            "spaceId",
+            "title",
+            "body"
+          ],
+          "visible": [
+            "spaceId",
+            "status",
+            "title",
+            "body"
+          ]
+        }
+      },
+      "required": [
+        "body"
+      ],
+      "visible": [
+        "path",
+        "body"
+      ]
+    }
+  },
+  {
+    "name": "CONFLUENCE__GET_CONTENT_PROPERTIES_FOR_PAGE",
+    "description": "Get content properties for a Confluence page using API v2.",
+    "tags": [
+      "confluence",
+      "metadata",
+      "v2"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/ex/confluence/{cloudid}/wiki/api/v2/pages/{pageId}/properties",
+      "server_url": "https://api.atlassian.com"
+    },
+    "security_schemes": [
+      "oauth2"
+    ],
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cloudid": {
+              "type": "string",
+              "description": "The Confluence Cloud ID"
+            },
+            "pageId": {
+              "type": "string",
+              "description": "The ID of the Confluence page"
+            }
+          },
+          "required": [
+            "cloudid",
+            "pageId"
+          ],
+          "visible": [
+            "cloudid",
+            "pageId"
+          ]
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "visible": [
+        "path"
+      ]
+    }
+  },
+  {
+    "name": "CONFLUENCE__GET_PAGES",
+    "description": "List pages in Confluence.",
+    "tags": [
+      "confluence",
+      "pages"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/ex/confluence/{cloudid}/wiki/api/v2/pages",
+      "server_url": "https://api.atlassian.com"
+    },
+    "security_schemes": [
+      "oauth2"
+    ],
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cloudid": {
+              "type": "string"
+            }
+          },
+          "required": [],
+          "visible": [
+            "cloudid"
+          ]
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "default": 25
+            }
+          },
+          "required": [],
+          "visible": [
+            "limit"
+          ]
+        }
+      },
+      "required": [],
+      "visible": [
+        "path",
+        "query"
+      ]
+    }
+  },
+  {
+    "name": "CONFLUENCE__GET_SPACES",
+    "description": "List spaces in Confluence.",
+    "tags": [
+      "confluence",
+      "spaces"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/ex/confluence/{cloudid}/wiki/api/v2/spaces",
+      "server_url": "https://api.atlassian.com"
+    },
+    "security_schemes": [
+      "oauth2"
+    ],
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cloudid": {
+              "type": "string"
+            }
+          },
+          "required": [],
+          "visible": [
+            "cloudid"
+          ]
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "default": 25
+            }
+          },
+          "required": [],
+          "visible": [
+            "limit"
+          ]
+        }
+      },
+      "required": [],
+      "visible": [
+        "path",
+        "query"
+      ]
+    }
+  },
+  {
+    "name": "CONFLUENCE__GET_AUDIT_LOGS",
+    "description": "Fetch audit logs from Confluence.",
+    "tags": [
+      "confluence",
+      "audit"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/ex/confluence/{cloudid}/wiki/rest/api/audit",
+      "server_url": "https://api.atlassian.com"
+    },
+    "security_schemes": [
+      "oauth2"
+    ],
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cloudid": {
+              "type": "string"
+            }
+          },
+          "required": [],
+          "visible": [
+            "cloudid"
+          ]
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "default": 25
+            }
+          },
+          "required": [],
+          "visible": [
+            "limit"
+          ]
+        }
+      },
+      "required": [],
+      "visible": [
+        "path",
+        "query"
+      ]
+    }
+  },
+  {
+    "name": "CONFLUENCE__UPDATE_PAGE",
+    "description": "Update an existing Confluence page. Requires current version + 1.",
+    "tags": [
+      "confluence",
+      "write"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "PUT",
+      "path": "/ex/confluence/{cloudid}/wiki/api/v2/pages/{pageId}",
+      "server_url": "https://api.atlassian.com"
+    },
+    "security_schemes": [
+      "oauth2"
+    ],
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cloudid": {
+              "type": "string"
+            },
+            "pageId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "pageId"
+          ],
+          "visible": [
+            "cloudid",
+            "pageId"
+          ]
+        },
+        "body": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Page ID (must match pageId in path)"
+            },
+            "status": {
+              "type": "string",
+              "default": "current",
+              "description": "Page status"
+            },
+            "title": {
+              "type": "string",
+              "description": "Updated title of the page"
+            },
+            "version": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "number": {
+                  "type": "integer",
+                  "description": "Must be current version + 1"
+                }
+              },
+              "required": [
+                "number"
+              ],
+              "visible": [
+                "number"
+              ]
+            },
+            "body": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "representation": {
+                  "type": "string",
+                  "default": "storage",
+                  "description": "Content format (must be 'storage')"
+                },
+                "value": {
+                  "type": "string",
+                  "description": "Updated HTML content"
+                }
+              },
+              "required": [
+                "representation",
+                "value"
+              ],
+              "visible": [
+                "representation",
+                "value"
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "version",
+            "body"
+          ],
+          "visible": [
+            "id",
+            "status",
+            "title",
+            "version",
+            "body"
+          ]
+        }
+      },
+      "required": [
+        "path",
+        "body"
+      ],
+      "visible": [
+        "path",
+        "body"
+      ]
+    }
+  },
+  {
+    "name": "CONFLUENCE__CREATE_PAGE_PROPERTY",
+    "description": "Create a content property for a Confluence page using API v2.",
+    "tags": [
+      "confluence",
+      "metadata",
+      "v2"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "POST",
+      "path": "/ex/confluence/{cloudid}/wiki/api/v2/pages/{pageId}/properties",
+      "server_url": "https://api.atlassian.com"
+    },
+    "security_schemes": [
+      "oauth2"
+    ],
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cloudid": {
+              "type": "string",
+              "description": "The Confluence Cloud ID"
+            },
+            "pageId": {
+              "type": "string",
+              "description": "The ID of the Confluence page"
+            }
+          },
+          "required": [
+            "cloudid",
+            "pageId"
+          ],
+          "visible": [
+            "cloudid",
+            "pageId"
+          ]
+        },
+        "body": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "key": {
+              "type": "string",
+              "description": "Property key"
+            },
+            "value": {
+              "description": "Property value (any JSON object, not stringified)"
+            }
+          },
+          "required": [
+            "key",
+            "value"
+          ],
+          "visible": [
+            "key",
+            "value"
+          ]
+        }
+      },
+      "required": [
+        "path",
+        "body"
+      ],
+      "visible": [
+        "path",
+        "body"
+      ]
+    }
+  },
+  {
+    "name": "CONFLUENCE__ADD_CONTENT_LABEL",
+    "description": "Add label(s) to a Confluence page.",
+    "tags": [
+      "confluence",
+      "labels"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "POST",
+      "path": "/ex/confluence/{cloudid}/wiki/rest/api/content/{pageId}/label",
+      "server_url": "https://api.atlassian.com"
+    },
+    "security_schemes": [
+      "oauth2"
+    ],
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cloudid": {
+              "type": "string"
+            },
+            "pageId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "pageId"
+          ],
+          "visible": [
+            "cloudid",
+            "pageId"
+          ]
+        },
+        "body": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "prefix": {
+                "type": "string",
+                "default": "global",
+                "description": "Label prefix (usually 'global')"
+              },
+              "name": {
+                "type": "string",
+                "description": "Label name"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "visible": [
+              "prefix",
+              "name"
+            ]
+          }
+        }
+      },
+      "required": [
+        "path",
+        "body"
+      ],
+      "visible": [
+        "path",
+        "body"
+      ]
+    }
+  }
+]
