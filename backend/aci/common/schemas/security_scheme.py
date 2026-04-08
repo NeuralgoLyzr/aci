@@ -112,6 +112,24 @@ class OAuth2SchemeOverride(BaseModel):
         max_length=2048,
         description="The client secret of the OAuth2 client used for the app",
     )
+    authorize_url: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=2048,
+        description="Custom URL of the OAuth2 authorization server.",
+    )
+    access_token_url: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=2048,
+        description="Custom URL of the OAuth2 access token server.",
+    )
+    refresh_token_url: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=2048,
+        description="Custom URL of the OAuth2 refresh token server.",
+    )
     # NOTE: for some OAuth2 app such as google apps, it will still show "ACI.dev" on the authorization page even if the user provides their own OAuth2 app.
     # It's because the domains shown there is determined by the redirect URL.
     # If user needs complete whitelabeling, they need to provide a custom redirect URL (and set it as redirect URL in their OAuth2 app)
@@ -130,13 +148,18 @@ class OAuth2SchemeOverride(BaseModel):
         description="Prompt for OAuth2 authorization.",
     )
 
-    @field_validator("redirect_url")
-    def validate_redirect_url(cls, v: str | None) -> str | None:
+    @field_validator(
+        "authorize_url",
+        "access_token_url",
+        "refresh_token_url",
+        "redirect_url",
+    )
+    def validate_url(cls, v: str | None) -> str | None:
         if v is None:
             return v
         # sanity check: must be http or https
         if not (v.startswith("http") or v.startswith("https")):
-            raise ValueError("Redirect URL must start with http or https")
+            raise ValueError("URL must start with http or https")
         return v
 
     # TODO: might need to support "scope" in the future
