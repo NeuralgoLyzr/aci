@@ -18,6 +18,7 @@ from aci.common.schemas.security_scheme import (
     OAuth2SchemeCredentials,
     SecuritySchemeOverrides,
 )
+from aci.server import config
 from aci.server.oauth2_manager import OAuth2Manager
 
 logger = get_logger(__name__)
@@ -29,6 +30,25 @@ class SecurityCredentialsResponse(BaseModel):
     credentials: APIKeySchemeCredentials | OAuth2SchemeCredentials | NoAuthSchemeCredentials
     is_app_default_credentials: bool
     is_updated: bool
+
+
+def resolve_oauth2_expires_at(
+    token_response: dict,
+    oauth2_flow_type: OAuth2FlowType,
+) -> int | None:
+    expires_at: int | None = None
+    if "expires_at" in token_response:
+        expires_at = int(token_response["expires_at"])
+    elif "expires_in" in token_response:
+        expires_at = int(time.time()) + int(token_response["expires_in"])
+    elif oauth2_flow_type == OAuth2FlowType.CLIENT_CREDENTIALS:
+        expires_at = int(time.time()) + config.OAUTH2_CLIENT_CREDENTIALS_FALLBACK_TTL_SECONDS
+        logger.warning(
+            "OAuth2 client_credentials token response missing expiry, "
+            "using fallback "
+            f"ttl_seconds={config.OAUTH2_CLIENT_CREDENTIALS_FALLBACK_TTL_SECONDS}"
+        )
+    return expires_at
 
 
 async def get_security_credentials(
@@ -104,14 +124,12 @@ async def _get_oauth2_credentials(
         token_response = await _refresh_oauth2_access_token(
             app.name, oauth2_scheme, oauth2_scheme_credentials, app_configuration
         )
-        # TODO: refactor parsing to _refresh_oauth2_access_token
-        expires_at: int | None = None
-        if "expires_at" in token_response:
-            expires_at = int(token_response["expires_at"])
-        elif "expires_in" in token_response:
-            expires_at = int(time.time()) + int(token_response["expires_in"])
+        expires_at = resolve_oauth2_expires_at(
+            token_response,
+            oauth2_scheme_credentials.oauth2_flow_type,
+        )
 
-        if not token_response.get("access_token") or not expires_at:
+        if not token_response.get("access_token") or expires_at is None:
             logger.error(
                 f"Failed to refresh access token, token_response={token_response}, "
                 f"app={app.name}, linked_account_id={linked_account.id}, "
@@ -248,7 +266,7 @@ def _get_no_auth_credentials(
 # TODO: consider adding leeway for expiration
 def _access_token_is_expired(oauth2_credentials: OAuth2SchemeCredentials) -> bool:
     if oauth2_credentials.expires_at is None:
-        return False
+        return oauth2_credentials.oauth2_flow_type == OAuth2FlowType.CLIENT_CREDENTIALS
     return oauth2_credentials.expires_at < int(time.time())
 
 
