@@ -18,6 +18,7 @@ from aci.common.schemas.security_scheme import (
     OAuth2SchemeCredentials,
     SecuritySchemeOverrides,
 )
+from aci.server import config
 from aci.server.oauth2_manager import OAuth2Manager
 
 logger = get_logger(__name__)
@@ -29,6 +30,25 @@ class SecurityCredentialsResponse(BaseModel):
     credentials: APIKeySchemeCredentials | OAuth2SchemeCredentials | NoAuthSchemeCredentials
     is_app_default_credentials: bool
     is_updated: bool
+
+
+def resolve_oauth2_expires_at(
+    token_response: dict,
+    oauth2_flow_type: OAuth2FlowType,
+) -> int | None:
+    expires_at: int | None = None
+    if "expires_at" in token_response:
+        expires_at = int(token_response["expires_at"])
+    elif "expires_in" in token_response:
+        expires_at = int(time.time()) + int(token_response["expires_in"])
+    elif oauth2_flow_type == OAuth2FlowType.CLIENT_CREDENTIALS:
+        expires_at = int(time.time()) + config.OAUTH2_CLIENT_CREDENTIALS_FALLBACK_TTL_SECONDS
+        logger.warning(
+            "OAuth2 client_credentials token response missing expiry, "
+            "using fallback "
+            f"ttl_seconds={config.OAUTH2_CLIENT_CREDENTIALS_FALLBACK_TTL_SECONDS}"
+        )
+    return expires_at
 
 
 async def get_security_credentials(
@@ -102,16 +122,14 @@ async def _get_oauth2_credentials(
             f"security_scheme={linked_account.security_scheme}, app={app.name}"
         )
         token_response = await _refresh_oauth2_access_token(
-            app.name, oauth2_scheme, oauth2_scheme_credentials
+            app.name, oauth2_scheme, oauth2_scheme_credentials, app_configuration
         )
-        # TODO: refactor parsing to _refresh_oauth2_access_token
-        expires_at: int | None = None
-        if "expires_at" in token_response:
-            expires_at = int(token_response["expires_at"])
-        elif "expires_in" in token_response:
-            expires_at = int(time.time()) + int(token_response["expires_in"])
+        expires_at = resolve_oauth2_expires_at(
+            token_response,
+            oauth2_scheme_credentials.oauth2_flow_type,
+        )
 
-        if not token_response.get("access_token") or not expires_at:
+        if not token_response.get("access_token") or expires_at is None:
             logger.error(
                 f"Failed to refresh access token, token_response={token_response}, "
                 f"app={app.name}, linked_account_id={linked_account.id}, "
@@ -141,17 +159,40 @@ async def _get_oauth2_credentials(
 
 
 async def _refresh_oauth2_access_token(
-    app_name: str, oauth2_scheme: OAuth2Scheme, oauth2_scheme_credentials: OAuth2SchemeCredentials
+    app_name: str,
+    oauth2_scheme: OAuth2Scheme,
+    oauth2_scheme_credentials: OAuth2SchemeCredentials,
+    app_configuration: AppConfiguration,
 ) -> dict:
-    # Client credentials flow: re-fetch token directly (no refresh_token needed)
+    # Client credentials flow: re-fetch token directly (no refresh_token needed).
+    # Unlike authorization_code (where stored creds must match the issued refresh_token),
+    # client_credentials issues a brand-new token on every call, so it's safe — and
+    # desirable — to honor live AppConfiguration overrides (e.g. rotated client_secret,
+    # changed token endpoint) instead of frozen-at-link-time values.
     if oauth2_scheme_credentials.oauth2_flow_type == OAuth2FlowType.CLIENT_CREDENTIALS:
-        if not oauth2_scheme_credentials.token_url:
+        oauth2_override = SecuritySchemeOverrides.model_validate(
+            app_configuration.security_scheme_overrides
+        ).oauth2
+
+        if oauth2_override is not None:
+            client_id = oauth2_override.client_id
+            client_secret = oauth2_override.client_secret
+            token_url = oauth2_override.access_token_url or oauth2_scheme_credentials.token_url
+        else:
+            client_id = oauth2_scheme_credentials.client_id
+            client_secret = oauth2_scheme_credentials.client_secret
+            token_url = oauth2_scheme_credentials.token_url
+
+        # scope is not part of OAuth2SchemeOverride; keep the value captured at link time
+        scope = oauth2_scheme_credentials.scope
+
+        if not token_url:
             raise OAuth2Error("no token_url found for client_credentials flow")
         return await OAuth2Manager.fetch_client_credentials_token(
-            token_url=oauth2_scheme_credentials.token_url,
-            client_id=oauth2_scheme_credentials.client_id,
-            client_secret=oauth2_scheme_credentials.client_secret,
-            scope=oauth2_scheme_credentials.scope,
+            token_url=token_url,
+            client_id=client_id,
+            client_secret=client_secret,
+            scope=scope,
         )
 
     # Authorization code flow: use refresh_token
@@ -225,7 +266,7 @@ def _get_no_auth_credentials(
 # TODO: consider adding leeway for expiration
 def _access_token_is_expired(oauth2_credentials: OAuth2SchemeCredentials) -> bool:
     if oauth2_credentials.expires_at is None:
-        return False
+        return oauth2_credentials.oauth2_flow_type == OAuth2FlowType.CLIENT_CREDENTIALS
     return oauth2_credentials.expires_at < int(time.time())
 
 

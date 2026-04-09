@@ -1,4 +1,3 @@
-import time
 from typing import Annotated
 from uuid import UUID
 
@@ -908,12 +907,10 @@ async def link_oauth2_client_credentials_account(
         scope=scope,
     )
 
-    # Parse expiration
-    expires_at: int | None = None
-    if "expires_at" in token_response:
-        expires_at = int(token_response["expires_at"])
-    elif "expires_in" in token_response:
-        expires_at = int(time.time()) + int(token_response["expires_in"])
+    expires_at = scm.resolve_oauth2_expires_at(
+        token_response,
+        OAuth2FlowType.CLIENT_CREDENTIALS,
+    )
 
     if not token_response.get("access_token"):
         raise OAuth2Error("Failed to obtain access token via client_credentials grant")
