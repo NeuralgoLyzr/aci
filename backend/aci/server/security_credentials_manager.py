@@ -102,7 +102,7 @@ async def _get_oauth2_credentials(
             f"security_scheme={linked_account.security_scheme}, app={app.name}"
         )
         token_response = await _refresh_oauth2_access_token(
-            app.name, oauth2_scheme, oauth2_scheme_credentials
+            app.name, oauth2_scheme, oauth2_scheme_credentials, app_configuration
         )
         # TODO: refactor parsing to _refresh_oauth2_access_token
         expires_at: int | None = None
@@ -141,17 +141,40 @@ async def _get_oauth2_credentials(
 
 
 async def _refresh_oauth2_access_token(
-    app_name: str, oauth2_scheme: OAuth2Scheme, oauth2_scheme_credentials: OAuth2SchemeCredentials
+    app_name: str,
+    oauth2_scheme: OAuth2Scheme,
+    oauth2_scheme_credentials: OAuth2SchemeCredentials,
+    app_configuration: AppConfiguration,
 ) -> dict:
-    # Client credentials flow: re-fetch token directly (no refresh_token needed)
+    # Client credentials flow: re-fetch token directly (no refresh_token needed).
+    # Unlike authorization_code (where stored creds must match the issued refresh_token),
+    # client_credentials issues a brand-new token on every call, so it's safe — and
+    # desirable — to honor live AppConfiguration overrides (e.g. rotated client_secret,
+    # changed token endpoint) instead of frozen-at-link-time values.
     if oauth2_scheme_credentials.oauth2_flow_type == OAuth2FlowType.CLIENT_CREDENTIALS:
-        if not oauth2_scheme_credentials.token_url:
+        oauth2_override = SecuritySchemeOverrides.model_validate(
+            app_configuration.security_scheme_overrides
+        ).oauth2
+
+        if oauth2_override is not None:
+            client_id = oauth2_override.client_id
+            client_secret = oauth2_override.client_secret
+            token_url = oauth2_override.access_token_url or oauth2_scheme_credentials.token_url
+        else:
+            client_id = oauth2_scheme_credentials.client_id
+            client_secret = oauth2_scheme_credentials.client_secret
+            token_url = oauth2_scheme_credentials.token_url
+
+        # scope is not part of OAuth2SchemeOverride; keep the value captured at link time
+        scope = oauth2_scheme_credentials.scope
+
+        if not token_url:
             raise OAuth2Error("no token_url found for client_credentials flow")
         return await OAuth2Manager.fetch_client_credentials_token(
-            token_url=oauth2_scheme_credentials.token_url,
-            client_id=oauth2_scheme_credentials.client_id,
-            client_secret=oauth2_scheme_credentials.client_secret,
-            scope=oauth2_scheme_credentials.scope,
+            token_url=token_url,
+            client_id=client_id,
+            client_secret=client_secret,
+            scope=scope,
         )
 
     # Authorization code flow: use refresh_token
