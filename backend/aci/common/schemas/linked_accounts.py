@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from aci.common.db.sql_models import MAX_STRING_LENGTH, SecurityScheme
 from aci.common.schemas.security_scheme import (
@@ -89,6 +89,22 @@ class LinkedAccountWithCredentials(LinkedAccountPublic):
         | APIKeySchemeCredentialsLimited
         | NoAuthSchemeCredentialsLimited
     )
+
+
+class LinkedAccountOAuth2ClientCredentialsCreate(BaseModel):
+    app_name: str
+    linked_account_owner_id: str
+    tenant_id: str | None = None
+    token_url: str | None = None
+    client_id: str | None = None
+    client_secret: str | None = None
+    scope: str | None = None
+
+    @model_validator(mode="after")
+    def validate_token_url_or_tenant_id(self) -> "LinkedAccountOAuth2ClientCredentialsCreate":
+        if not self.tenant_id and not self.token_url:
+            raise ValueError("Either tenant_id or token_url must be provided")
+        return self
 
 
 class LinkedAccountsList(BaseModel):

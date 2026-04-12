@@ -1,8 +1,16 @@
+from enum import StrEnum
 from typing import Literal, TypeVar
 
 from pydantic import BaseModel, Field, field_validator
 
 from aci.common.enums import HttpLocation
+
+
+class OAuth2FlowType(StrEnum):
+    """Type of OAuth2 flow used to obtain credentials."""
+
+    AUTHORIZATION_CODE = "authorization_code"
+    CLIENT_CREDENTIALS = "client_credentials"
 
 
 class APIKeyScheme(BaseModel):
@@ -52,7 +60,7 @@ class OAuth2Scheme(BaseModel):
         description="The client secret of the OAuth2 client (provided by ACI) used for the app",
     )
     scope: str = Field(
-        ...,
+        default="",
         description="Space separated scopes of the OAuth2 client (provided by ACI) used for the app, "
         "e.g., 'openid email profile https://www.googleapis.com/auth/calendar'",
     )
@@ -218,6 +226,8 @@ class OAuth2SchemeCredentials(BaseModel):
     expires_at: int | None = None
     refresh_token: str | None = None
     raw_token_response: dict | None = None
+    oauth2_flow_type: OAuth2FlowType = OAuth2FlowType.AUTHORIZATION_CODE
+    token_url: str | None = None  # For client_credentials: token endpoint for re-fetching
 
 
 class OAuth2SchemeCredentialsLimited(BaseModel):

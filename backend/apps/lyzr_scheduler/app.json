@@ -1,0 +1,23 @@
+{
+    "name": "LYZR_SCHEDULER",
+    "display_name": "Lyzr Scheduler",
+    "logo": "https://assets.lyzr.ai/logo.svg",
+    "provider": "Lyzr AI",
+    "version": "1.0.0",
+    "description": "Lyzr Scheduler API allows creating, managing, pausing, resuming, and monitoring scheduled agent executions.",
+    "security_schemes": {
+      "api_key": {
+        "location": "header",
+        "name": "x-api-key",
+        "prefix": null
+      }
+    },
+    "default_security_credentials_by_scheme": {},
+    "categories": [
+      "Scheduling",
+      "Automation",
+      "Agents"
+    ],
+    "visibility": "public",
+    "active": true
+  }

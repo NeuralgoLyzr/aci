@@ -1,0 +1,300 @@
+[
+    {
+      "name": "LYZR_SCHEDULER__CREATE_SCHEDULE",
+      "description": "Create a new agent schedule using cron expression.",
+      "tags": ["scheduler", "create"],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+        "method": "POST",
+        "path": "/schedules/",
+        "server_url": "https://scheduler.studio.lyzr.ai"
+      },
+      "parameters": {
+        "type": "object",
+        "visible": ["body"],
+        "properties": {
+          "body": {
+            "type": "object",
+            "visible": ["agent_id","cron_expression","message","timezone","user_id","max_retries","retry_delay"],
+            "properties": {
+              "agent_id": { "type": "string" },
+              "cron_expression": { "type": "string" },
+              "message": { "type": "string" },
+              "timezone": { "type": "string", "default": "UTC" },
+              "user_id": { "type": "string" },
+              "max_retries": { "type": "integer", "default": 0 },
+              "retry_delay": { "type": "integer", "default": 60 }
+            },
+            "required": ["agent_id","cron_expression","message","timezone","user_id"],
+            "additionalProperties": false
+          },
+          "header": {
+            "type": "object",
+            "visible": [],
+            "properties": {
+              "Content-Type": { "type": "string", "default": "application/json" },
+              "accept": { "type": "string", "default": "application/json" },
+              "x-api-key": { "type": "string", "default": "{{api_key}}" }
+            },
+            "required": ["x-api-key"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["body","header"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "LYZR_SCHEDULER__LIST_SCHEDULES",
+      "description": "List all schedules with pagination.",
+      "tags": ["scheduler","list"],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+        "method": "GET",
+        "path": "/schedules/",
+        "server_url": "https://scheduler.studio.lyzr.ai"
+      },
+      "parameters": {
+        "type": "object",
+        "visible": ["query"],
+        "properties": {
+          "query": {
+            "type": "object",
+            "visible": ["skip","limit"],
+            "properties": {
+              "skip": { "type": "integer", "default": 0 },
+              "limit": { "type": "integer", "default": 50 }
+            },
+            "required": [],
+            "additionalProperties": false
+          },
+          "header": {
+            "type": "object",
+            "visible": [],
+            "properties": {
+              "accept": { "type": "string", "default": "application/json" },
+              "x-api-key": { "type": "string", "default": "{{api_key}}" }
+            },
+            "required": ["x-api-key"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["header"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "LYZR_SCHEDULER__GET_SCHEDULE",
+      "description": "Get details of a specific schedule.",
+      "tags": ["scheduler","get"],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+        "method": "GET",
+        "path": "/schedules/{schedule_id}",
+        "server_url": "https://scheduler.studio.lyzr.ai"
+      },
+      "parameters": {
+        "type": "object",
+        "visible": ["path"],
+        "properties": {
+          "path": {
+            "type": "object",
+            "visible": ["schedule_id"],
+            "properties": {
+              "schedule_id": { "type": "string" }
+            },
+            "required": ["schedule_id"],
+            "additionalProperties": false
+          },
+          "header": {
+            "type": "object",
+            "visible": [],
+            "properties": {
+              "accept": { "type": "string", "default": "application/json" },
+              "x-api-key": { "type": "string", "default": "{{api_key}}" }
+            },
+            "required": ["x-api-key"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["path","header"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "LYZR_SCHEDULER__GET_LOGS",
+      "description": "Get execution logs for a schedule.",
+      "tags": ["scheduler","logs"],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+        "method": "GET",
+        "path": "/schedules/{schedule_id}/logs",
+        "server_url": "https://scheduler.studio.lyzr.ai"
+      },
+      "parameters": {
+        "type": "object",
+        "visible": ["path","query"],
+        "properties": {
+          "path": {
+            "type": "object",
+            "visible": ["schedule_id"],
+            "properties": {
+              "schedule_id": { "type": "string" }
+            },
+            "required": ["schedule_id"],
+            "additionalProperties": false
+          },
+          "query": {
+            "type": "object",
+            "visible": ["skip","limit"],
+            "properties": {
+              "skip": { "type": "integer", "default": 0 },
+              "limit": { "type": "integer", "default": 20 }
+            },
+            "required": [],
+            "additionalProperties": false
+          },
+          "header": {
+            "type": "object",
+            "visible": [],
+            "properties": {
+              "accept": { "type": "string", "default": "application/json" },
+              "x-api-key": { "type": "string", "default": "{{api_key}}" }
+            },
+            "required": ["x-api-key"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["path","header"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "LYZR_SCHEDULER__DELETE_SCHEDULE",
+      "description": "Delete a schedule permanently.",
+      "tags": ["scheduler","delete"],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+        "method": "DELETE",
+        "path": "/schedules/{schedule_id}",
+        "server_url": "https://scheduler.studio.lyzr.ai"
+      },
+      "parameters": {
+        "type": "object",
+        "visible": ["path"],
+        "properties": {
+          "path": {
+            "type": "object",
+            "visible": ["schedule_id"],
+            "properties": {
+              "schedule_id": { "type": "string" }
+            },
+            "required": ["schedule_id"],
+            "additionalProperties": false
+          },
+          "header": {
+            "type": "object",
+            "visible": [],
+            "properties": {
+              "accept": { "type": "string", "default": "*/*" },
+              "x-api-key": { "type": "string", "default": "{{api_key}}" }
+            },
+            "required": ["x-api-key"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["path","header"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "LYZR_SCHEDULER__PAUSE_SCHEDULE",
+      "description": "Pause an active schedule.",
+      "tags": ["scheduler","pause"],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+        "method": "POST",
+        "path": "/schedules/{schedule_id}/pause",
+        "server_url": "https://scheduler.studio.lyzr.ai"
+      },
+      "parameters": {
+        "type": "object",
+        "visible": ["path"],
+        "properties": {
+          "path": {
+            "type": "object",
+            "visible": ["schedule_id"],
+            "properties": {
+              "schedule_id": { "type": "string" }
+            },
+            "required": ["schedule_id"],
+            "additionalProperties": false
+          },
+          "header": {
+            "type": "object",
+            "visible": [],
+            "properties": {
+              "accept": { "type": "string", "default": "application/json" },
+              "x-api-key": { "type": "string", "default": "{{api_key}}" }
+            },
+            "required": ["x-api-key"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["path","header"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "LYZR_SCHEDULER__RESUME_SCHEDULE",
+      "description": "Resume a paused schedule.",
+      "tags": ["scheduler","resume"],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+        "method": "POST",
+        "path": "/schedules/{schedule_id}/resume",
+        "server_url": "https://scheduler.studio.lyzr.ai"
+      },
+      "parameters": {
+        "type": "object",
+        "visible": ["path"],
+        "properties": {
+          "path": {
+            "type": "object",
+            "visible": ["schedule_id"],
+            "properties": {
+              "schedule_id": { "type": "string" }
+            },
+            "required": ["schedule_id"],
+            "additionalProperties": false
+          },
+          "header": {
+            "type": "object",
+            "visible": [],
+            "properties": {
+              "accept": { "type": "string", "default": "application/json" },
+              "x-api-key": { "type": "string", "default": "{{api_key}}" }
+            },
+            "required": ["x-api-key"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["path","header"],
+        "additionalProperties": false
+      }
+    }
+  ]

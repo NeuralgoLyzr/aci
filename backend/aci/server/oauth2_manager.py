@@ -3,6 +3,7 @@ import string
 import time
 from typing import Any, cast
 
+import httpx
 from authlib.integrations.httpx_client import AsyncOAuth2Client
 
 from aci.common.exceptions import OAuth2Error
@@ -204,6 +205,41 @@ class OAuth2Manager:
             refresh_token=data.get("refresh_token"),
             raw_token_response=token,
         )
+
+    @staticmethod
+    async def fetch_client_credentials_token(
+        token_url: str,
+        client_id: str,
+        client_secret: str,
+        scope: str,
+    ) -> dict[str, Any]:
+        """Exchange client_id + client_secret for an access token using client_credentials grant."""
+        try:
+            async with httpx.AsyncClient() as client:
+                data: dict[str, str] = {
+                    "grant_type": "client_credentials",
+                    "client_id": client_id,
+                    "client_secret": client_secret,
+                }
+                if scope:
+                    data["scope"] = scope
+
+                response = await client.post(token_url, data=data)
+                if not response.is_success:
+                    logger.error(
+                        f"client_credentials token request failed, "
+                        f"token_url={token_url}, status={response.status_code}, "
+                        f"response_body={response.text}"
+                    )
+                    response.raise_for_status()
+                return response.json()
+        except OAuth2Error:
+            raise
+        except Exception as e:
+            logger.error(
+                f"Failed to fetch client_credentials token, token_url={token_url}, error={e}"
+            )
+            raise OAuth2Error("Failed to fetch client_credentials token") from e
 
     @staticmethod
     def generate_code_verifier(length: int = 48) -> str:
