@@ -5,7 +5,7 @@ import time
 from functools import cache
 from uuid import UUID
 
-from sqlalchemy import Engine, create_engine
+from sqlalchemy import Engine, create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 
 from aci.common.logging_setup import get_logger
@@ -263,14 +263,24 @@ def format_to_screaming_snake_case(name: str) -> str:
 # TODO: fine tune the pool settings
 @cache
 def get_db_engine(db_url: str) -> Engine:
-    return create_engine(
+    engine = create_engine(
         db_url,
         pool_size=10,
         max_overflow=10,
         pool_timeout=30,
-        pool_recycle=3600,  # recycle connections after 1 hour
+        pool_recycle=1800,  # recycle connections after 30 min (before Azure MI token expires)
         pool_pre_ping=True,
     )
+
+    # For Azure Managed Identity: refresh the token on each new physical connection
+    # so that expired tokens don't cause connection failures.
+    if is_azure_environment() and os.getenv("SERVER_USE_AZURE_MANAGED_IDENTITY", "false").lower() == "true":
+
+        @event.listens_for(engine, "do_connect")
+        def _refresh_azure_token(dialect, conn_rec, cargs, cparams):
+            cparams["password"] = _get_azure_db_token_sync()
+
+    return engine
 
 
 # NOTE: cache this because only one sessionmaker is needed for all db sessions
