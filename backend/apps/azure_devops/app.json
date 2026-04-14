@@ -1,0 +1,30 @@
+{
+    "name": "AZURE_DEVOPS",
+    "display_name": "Azure DevOps",
+    "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/sharepoint.png",
+    "provider": "Microsoft",
+    "version": "2.0.0",
+    "description": "The Azure DevOps REST API enables access to repositories, pull requests, work items, pipelines, and boards. This integration allows agents to read and manage Azure DevOps resources on behalf of the signed-in WTW user.",
+    "security_schemes": {
+      "oauth2": {
+        "location": "header",
+        "name": "Authorization",
+        "prefix": "Bearer",
+        "client_id": "{{ AZURE_DEVOPS_CLIENT_ID }}",
+        "client_secret": "{{ AZURE_DEVOPS_CLIENT_SECRET }}",
+        "scope": "499b84ac-1321-427f-aa17-267ca6975798/vso.project 499b84ac-1321-427f-aa17-267ca6975798/vso.code 499b84ac-1321-427f-aa17-267ca6975798/vso.code_write 499b84ac-1321-427f-aa17-267ca6975798/vso.work 499b84ac-1321-427f-aa17-267ca6975798/vso.work_write 499b84ac-1321-427f-aa17-267ca6975798/vso.build 499b84ac-1321-427f-aa17-267ca6975798/vso.build_execute offline_access",
+        "authorize_url": "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+        "access_token_url": "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+        "refresh_token_url": "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+        "prompt": "select_account"
+      }
+    },
+    "default_security_credentials_by_scheme": {},
+    "categories": [
+      "Developer Tools",
+      "DevOps",
+      "Productivity"
+    ],
+    "visibility": "public",
+    "active": true
+  }

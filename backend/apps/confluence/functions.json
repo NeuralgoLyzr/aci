@@ -105,7 +105,7 @@
   },
   {
     "name": "CONFLUENCE__GET_PAGE_BY_ID",
-    "description": "Fetch page content by ID.",
+    "description": "Fetch page content by ID with full storage body support.",
     "tags": [
       "confluence",
       "pages"
@@ -137,11 +137,31 @@
             }
           },
           "required": [
-            "pageId"
+            "pageId",
+            "cloudid"
           ],
           "visible": [
             "cloudid",
             "pageId"
+          ]
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "body-format": {
+              "type": "string",
+              "enum": [
+                "storage",
+                "atlas_doc_format"
+              ],
+              "default": "storage",
+              "description": "The format in which the body of the page should be returned."
+            }
+          },
+          "required": [],
+          "visible": [
+            "body-format"
           ]
         }
       },
@@ -149,7 +169,8 @@
         "path"
       ],
       "visible": [
-        "path"
+        "path",
+        "query"
       ]
     }
   },

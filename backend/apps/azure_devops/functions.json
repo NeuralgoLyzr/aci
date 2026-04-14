@@ -1,0 +1,1776 @@
+[
+    {
+      "name": "AZURE_DEVOPS__LIST_PROJECTS",
+      "description": "List all projects in the Azure DevOps organisation that the signed-in user has access to.",
+      "tags": [
+        "projects"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+        "method": "GET",
+        "path": "/lyzrdev/_apis/projects?api-version=7.1",
+        "server_url": "https://dev.azure.com"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "object",
+            "description": "Optional query parameters.",
+            "properties": {
+              "top": {
+                "type": "string",
+                "description": "Maximum number of projects to return. (numeric ID as string)",
+                "examples": [
+                  50,
+                  100
+                ]
+              },
+              "skip": {
+                "type": "string",
+                "description": "Number of projects to skip for pagination. (numeric ID as string)",
+                "examples": [
+                  0,
+                  50
+                ]
+              },
+              "stateFilter": {
+                "type": "string",
+                "description": "Filter by project state.",
+                "enum": [
+                  "wellFormed",
+                  "createPending",
+                  "deleting",
+                  "new",
+                  "unchanged",
+                  "all"
+                ]
+              }
+            },
+            "required": [],
+            "visible": [
+              "top",
+              "skip",
+              "stateFilter"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [],
+        "visible": [
+          "query"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "AZURE_DEVOPS__GET_PROJECT",
+      "description": "Get details of a specific Azure DevOps project by name or ID, including description, visibility, and capabilities.",
+      "tags": [
+        "projects"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+        "method": "GET",
+        "path": "/lyzrdev/_apis/projects/{project_id}?api-version=7.1",
+        "server_url": "https://dev.azure.com"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "object",
+            "description": "Path parameters to identify the project.",
+            "properties": {
+              "project_id": {
+                "type": "string",
+                "description": "The project name or project ID (GUID).",
+                "examples": [
+                  "MyProject",
+                  "3e4d5f6a-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                ]
+              }
+            },
+            "required": [
+              "project_id"
+            ],
+            "visible": [
+              "project_id"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "visible": [
+          "path"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "AZURE_DEVOPS__LIST_REPOSITORIES",
+      "description": "List all Git repositories in a specific Azure DevOps project. Returns repo names, URLs, default branches, and sizes.",
+      "tags": [
+        "repos",
+        "git"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+        "method": "GET",
+        "path": "/lyzrdev/{project}/_apis/git/repositories?api-version=7.1",
+        "server_url": "https://dev.azure.com"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "object",
+            "description": "Path parameters identifying the project.",
+            "properties": {
+              "project": {
+                "type": "string",
+                "description": "The project name or ID containing the repositories.",
+                "examples": [
+                  "MyProject",
+                  "platform-services"
+                ]
+              }
+            },
+            "required": [
+              "project"
+            ],
+            "visible": [
+              "project"
+            ],
+            "additionalProperties": false
+          },
+          "query": {
+            "type": "object",
+            "description": "Optional query parameters.",
+            "properties": {
+              "includeHidden": {
+                "type": "boolean",
+                "description": "Set to true to include hidden repositories.",
+                "examples": [
+                  false
+                ]
+              }
+            },
+            "required": [],
+            "visible": [
+              "includeHidden"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "visible": [
+          "path",
+          "query"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "AZURE_DEVOPS__GET_REPOSITORY",
+      "description": "Get details of a specific Git repository including its default branch, clone URLs, size, and remote URL.",
+      "tags": [
+        "repos",
+        "git"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+        "method": "GET",
+        "path": "/lyzrdev/{project}/_apis/git/repositories/{repository_id}?api-version=7.1",
+        "server_url": "https://dev.azure.com"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "object",
+            "description": "Path parameters identifying the repository.",
+            "properties": {
+              "project": {
+                "type": "string",
+                "description": "The project name or ID.",
+                "examples": [
+                  "platform-services"
+                ]
+              },
+              "repository_id": {
+                "type": "string",
+                "description": "The repository name or repository ID (GUID).",
+                "examples": [
+                  "my-repo",
+                  "a1b2c3d4-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                ]
+              }
+            },
+            "required": [
+              "project",
+              "repository_id"
+            ],
+            "visible": [
+              "project",
+              "repository_id"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "visible": [
+          "path"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "AZURE_DEVOPS__LIST_BRANCHES",
+      "description": "List all branches in a Git repository. Returns branch names, latest commit info, and ahead/behind counts relative to default branch.",
+      "tags": [
+        "repos",
+        "git",
+        "branches"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+        "method": "GET",
+        "path": "/lyzrdev/{project}/_apis/git/repositories/{repository_id}/refs?api-version=7.1",
+        "server_url": "https://dev.azure.com"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "object",
+            "description": "Path parameters identifying the repository.",
+            "properties": {
+              "project": {
+                "type": "string",
+                "description": "The project name or ID.",
+                "examples": [
+                  "platform-services"
+                ]
+              },
+              "repository_id": {
+                "type": "string",
+                "description": "The repository name or ID.",
+                "examples": [
+                  "my-repo"
+                ]
+              }
+            },
+            "required": [
+              "project",
+              "repository_id"
+            ],
+            "visible": [
+              "project",
+              "repository_id"
+            ],
+            "additionalProperties": false
+          },
+          "query": {
+            "type": "object",
+            "description": "Optional query parameters.",
+            "properties": {
+              "filter": {
+                "type": "string",
+                "description": "Filter branches by prefix. e.g., 'heads/' for all branches, 'heads/feature' for feature branches.",
+                "examples": [
+                  "heads/",
+                  "heads/feature",
+                  "heads/main"
+                ]
+              },
+              "top": {
+                "type": "string",
+                "description": "Maximum number of branches to return. (numeric ID as string)",
+                "examples": [
+                  50,
+                  100
+                ]
+              }
+            },
+            "required": [],
+            "visible": [
+              "filter",
+              "top"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "visible": [
+          "path",
+          "query"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "AZURE_DEVOPS__LIST_COMMITS",
+      "description": "List commits in a Git repository with optional filters by branch, author, date range, or file path.",
+      "tags": [
+        "repos",
+        "git",
+        "commits"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+        "method": "GET",
+        "path": "/lyzrdev/{project}/_apis/git/repositories/{repository_id}/commits?api-version=7.1",
+        "server_url": "https://dev.azure.com"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "object",
+            "description": "Path parameters identifying the repository.",
+            "properties": {
+              "project": {
+                "type": "string",
+                "description": "The project name or ID.",
+                "examples": [
+                  "platform-services"
+                ]
+              },
+              "repository_id": {
+                "type": "string",
+                "description": "The repository name or ID.",
+                "examples": [
+                  "my-repo"
+                ]
+              }
+            },
+            "required": [
+              "project",
+              "repository_id"
+            ],
+            "visible": [
+              "project",
+              "repository_id"
+            ],
+            "additionalProperties": false
+          },
+          "query": {
+            "type": "object",
+            "description": "Query parameters for filtering commits.",
+            "properties": {
+              "searchCriteria_itemVersion_version": {
+                "type": "string",
+                "description": "Branch name to filter commits by.",
+                "examples": [
+                  "main",
+                  "develop",
+                  "feature/my-feature"
+                ]
+              },
+              "searchCriteria_author": {
+                "type": "string",
+                "description": "Filter by commit author name or email.",
+                "examples": [
+                  "john.doe@wtw.com"
+                ]
+              },
+              "searchCriteria_fromDate": {
+                "type": "string",
+                "description": "Start date filter in ISO 8601 format.",
+                "examples": [
+                  "2025-01-01T00:00:00Z"
+                ]
+              },
+              "searchCriteria_toDate": {
+                "type": "string",
+                "description": "End date filter in ISO 8601 format.",
+                "examples": [
+                  "2025-06-01T00:00:00Z"
+                ]
+              },
+              "top": {
+                "type": "string",
+                "description": "Maximum number of commits to return. (numeric ID as string)",
+                "examples": [
+                  20,
+                  50
+                ]
+              },
+              "skip": {
+                "type": "string",
+                "description": "Number of commits to skip for pagination. (numeric ID as string)",
+                "examples": [
+                  0,
+                  20
+                ]
+              }
+            },
+            "required": [],
+            "visible": [
+              "searchCriteria_itemVersion_version",
+              "searchCriteria_author",
+              "searchCriteria_fromDate",
+              "searchCriteria_toDate",
+              "top",
+              "skip"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "visible": [
+          "path",
+          "query"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "AZURE_DEVOPS__LIST_PULL_REQUESTS",
+      "description": "List pull requests in a Git repository. Filter by status, creator, reviewer, or target branch.",
+      "tags": [
+        "repos",
+        "git",
+        "pull-requests"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+        "method": "GET",
+        "path": "/lyzrdev/{project}/_apis/git/repositories/{repository_id}/pullrequests?api-version=7.1",
+        "server_url": "https://dev.azure.com"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "object",
+            "description": "Path parameters identifying the repository.",
+            "properties": {
+              "project": {
+                "type": "string",
+                "description": "The project name or ID.",
+                "examples": [
+                  "platform-services"
+                ]
+              },
+              "repository_id": {
+                "type": "string",
+                "description": "The repository name or ID.",
+                "examples": [
+                  "my-repo"
+                ]
+              }
+            },
+            "required": [
+              "project",
+              "repository_id"
+            ],
+            "visible": [
+              "project",
+              "repository_id"
+            ],
+            "additionalProperties": false
+          },
+          "query": {
+            "type": "object",
+            "description": "Query parameters to filter pull requests.",
+            "properties": {
+              "searchCriteria_status": {
+                "type": "string",
+                "description": "Filter by PR status.",
+                "enum": [
+                  "active",
+                  "completed",
+                  "abandoned",
+                  "all"
+                ]
+              },
+              "searchCriteria_creatorId": {
+                "type": "string",
+                "description": "Filter by creator's user ID (GUID).",
+                "examples": [
+                  "user-guid-xxxx"
+                ]
+              },
+              "searchCriteria_reviewerId": {
+                "type": "string",
+                "description": "Filter by reviewer's user ID (GUID).",
+                "examples": [
+                  "reviewer-guid-xxxx"
+                ]
+              },
+              "searchCriteria_targetRefName": {
+                "type": "string",
+                "description": "Filter by target branch (full ref name).",
+                "examples": [
+                  "refs/heads/main",
+                  "refs/heads/develop"
+                ]
+              },
+              "top": {
+                "type": "string",
+                "description": "Maximum number of PRs to return. (numeric ID as string)",
+                "examples": [
+                  20,
+                  50
+                ]
+              },
+              "skip": {
+                "type": "string",
+                "description": "Number of PRs to skip for pagination. (numeric ID as string)",
+                "examples": [
+                  0,
+                  20
+                ]
+              }
+            },
+            "required": [],
+            "visible": [
+              "searchCriteria_status",
+              "searchCriteria_creatorId",
+              "searchCriteria_reviewerId",
+              "searchCriteria_targetRefName",
+              "top",
+              "skip"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "visible": [
+          "path",
+          "query"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "AZURE_DEVOPS__GET_PULL_REQUEST",
+      "description": "Get full details of a specific pull request including description, reviewers, status, merge strategy, and comments.",
+      "tags": [
+        "repos",
+        "git",
+        "pull-requests"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+        "method": "GET",
+        "path": "/lyzrdev/{project}/_apis/git/repositories/{repository_id}/pullrequests/{pull_request_id}?api-version=7.1",
+        "server_url": "https://dev.azure.com"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "object",
+            "description": "Path parameters identifying the pull request.",
+            "properties": {
+              "project": {
+                "type": "string",
+                "description": "The project name or ID.",
+                "examples": [
+                  "platform-services"
+                ]
+              },
+              "repository_id": {
+                "type": "string",
+                "description": "The repository name or ID.",
+                "examples": [
+                  "my-repo"
+                ]
+              },
+              "pull_request_id": {
+                "type": "string",
+                "description": "The pull request ID number. (numeric ID as string)",
+                "examples": [
+                  142,
+                  278
+                ]
+              }
+            },
+            "required": [
+              "project",
+              "repository_id",
+              "pull_request_id"
+            ],
+            "visible": [
+              "project",
+              "repository_id",
+              "pull_request_id"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "visible": [
+          "path"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "AZURE_DEVOPS__CREATE_PULL_REQUEST",
+      "description": "Create a new pull request in a Git repository. Specify source branch, target branch, title, description, and reviewers.",
+      "tags": [
+        "repos",
+        "git",
+        "pull-requests",
+        "create"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+        "method": "POST",
+        "path": "/lyzrdev/{project}/_apis/git/repositories/{repository_id}/pullrequests?api-version=7.1",
+        "server_url": "https://dev.azure.com"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "object",
+            "description": "Path parameters identifying the repository.",
+            "properties": {
+              "project": {
+                "type": "string",
+                "description": "The project name or ID.",
+                "examples": [
+                  "platform-services"
+                ]
+              },
+              "repository_id": {
+                "type": "string",
+                "description": "The repository name or ID.",
+                "examples": [
+                  "my-repo"
+                ]
+              }
+            },
+            "required": [
+              "project",
+              "repository_id"
+            ],
+            "visible": [
+              "project",
+              "repository_id"
+            ],
+            "additionalProperties": false
+          },
+          "body": {
+            "type": "object",
+            "description": "Pull request creation payload.",
+            "properties": {
+              "title": {
+                "type": "string",
+                "description": "Title of the pull request.",
+                "examples": [
+                  "feat: add new payment gateway integration"
+                ]
+              },
+              "description": {
+                "type": "string",
+                "description": "Detailed description of the changes in this PR.",
+                "examples": [
+                  "This PR adds Stripe payment gateway support. Closes #234."
+                ]
+              },
+              "sourceRefName": {
+                "type": "string",
+                "description": "Source branch full ref name (the branch with your changes).",
+                "examples": [
+                  "refs/heads/feature/payment-gateway",
+                  "refs/heads/fix/login-bug"
+                ]
+              },
+              "targetRefName": {
+                "type": "string",
+                "description": "Target branch full ref name (the branch to merge into).",
+                "examples": [
+                  "refs/heads/main",
+                  "refs/heads/develop"
+                ]
+              },
+              "reviewers": {
+                "type": "string",
+                "description": "List of reviewer objects. Each object needs an 'id' (user GUID). Provide as a JSON array string."
+              },
+              "isDraft": {
+                "type": "boolean",
+                "description": "Set to true to create the PR as a draft.",
+                "examples": [
+                  false,
+                  true
+                ]
+              },
+              "workItemRefs": {
+                "type": "string",
+                "description": "Work items to link to this PR. Each object needs an 'id' (work item ID as string). Provide as a JSON array string."
+              }
+            },
+            "required": [
+              "title",
+              "sourceRefName",
+              "targetRefName"
+            ],
+            "visible": [
+              "title",
+              "description",
+              "sourceRefName",
+              "targetRefName",
+              "reviewers",
+              "isDraft",
+              "workItemRefs"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "path",
+          "body"
+        ],
+        "visible": [
+          "path",
+          "body"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "AZURE_DEVOPS__UPDATE_PULL_REQUEST",
+      "description": "Update an existing pull request \u2014 change status (approve/abandon/complete), update title, description, or target branch.",
+      "tags": [
+        "repos",
+        "git",
+        "pull-requests",
+        "update"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+        "method": "PATCH",
+        "path": "/lyzrdev/{project}/_apis/git/repositories/{repository_id}/pullrequests/{pull_request_id}?api-version=7.1",
+        "server_url": "https://dev.azure.com"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "object",
+            "description": "Path parameters identifying the pull request.",
+            "properties": {
+              "project": {
+                "type": "string",
+                "description": "The project name or ID.",
+                "examples": [
+                  "platform-services"
+                ]
+              },
+              "repository_id": {
+                "type": "string",
+                "description": "The repository name or ID.",
+                "examples": [
+                  "my-repo"
+                ]
+              },
+              "pull_request_id": {
+                "type": "string",
+                "description": "The pull request ID number. (numeric ID as string)",
+                "examples": [
+                  142
+                ]
+              }
+            },
+            "required": [
+              "project",
+              "repository_id",
+              "pull_request_id"
+            ],
+            "visible": [
+              "project",
+              "repository_id",
+              "pull_request_id"
+            ],
+            "additionalProperties": false
+          },
+          "body": {
+            "type": "object",
+            "description": "Fields to update on the pull request.",
+            "properties": {
+              "title": {
+                "type": "string",
+                "description": "Updated PR title.",
+                "examples": [
+                  "feat: add Stripe payment gateway integration"
+                ]
+              },
+              "description": {
+                "type": "string",
+                "description": "Updated PR description."
+              },
+              "status": {
+                "type": "string",
+                "description": "Update PR status. Use 'abandoned' to close, 'completed' to merge.",
+                "enum": [
+                  "active",
+                  "abandoned",
+                  "completed"
+                ]
+              },
+              "isDraft": {
+                "type": "boolean",
+                "description": "Set to false to mark a draft PR as ready for review.",
+                "examples": [
+                  false
+                ]
+              },
+              "targetRefName": {
+                "type": "string",
+                "description": "Change the target branch for the PR.",
+                "examples": [
+                  "refs/heads/main"
+                ]
+              }
+            },
+            "required": [],
+            "visible": [
+              "title",
+              "description",
+              "status",
+              "isDraft",
+              "targetRefName"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "path",
+          "body"
+        ],
+        "visible": [
+          "path",
+          "body"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "AZURE_DEVOPS__LIST_WORK_ITEMS",
+      "description": "Run a WIQL (Work Item Query Language) query to retrieve work items such as user stories, bugs, tasks, and epics with flexible filtering.",
+      "tags": [
+        "work-items",
+        "boards"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+        "method": "POST",
+        "path": "/lyzrdev/{project}/_apis/wit/wiql?api-version=7.1",
+        "server_url": "https://dev.azure.com"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "object",
+            "description": "Path parameters identifying the project.",
+            "properties": {
+              "project": {
+                "type": "string",
+                "description": "The project name or ID.",
+                "examples": [
+                  "platform-services"
+                ]
+              }
+            },
+            "required": [
+              "project"
+            ],
+            "visible": [
+              "project"
+            ],
+            "additionalProperties": false
+          },
+          "query": {
+            "type": "object",
+            "description": "Required API version query parameter.",
+            "properties": {
+              "top": {
+                "type": "string",
+                "description": "Maximum number of work items to return. (numeric ID as string)",
+                "examples": [
+                  50,
+                  100
+                ]
+              }
+            },
+            "required": [],
+            "visible": [
+              "top"
+            ],
+            "additionalProperties": false
+          },
+          "body": {
+            "type": "object",
+            "description": "WIQL query body.",
+            "properties": {
+              "query": {
+                "type": "string",
+                "description": "WIQL query string to retrieve work items. Use SQL-like syntax with Work Item fields.",
+                "examples": [
+                  "SELECT [System.Id],[System.Title],[System.State],[System.AssignedTo] FROM WorkItems WHERE [System.TeamProject] = @project AND [System.State] <> 'Closed' ORDER BY [System.ChangedDate] DESC",
+                  "SELECT [System.Id],[System.Title] FROM WorkItems WHERE [System.WorkItemType] = 'Bug' AND [System.State] = 'Active' AND [System.AssignedTo] = @me"
+                ]
+              }
+            },
+            "required": [
+              "query"
+            ],
+            "visible": [
+              "query"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "path",
+          "query",
+          "body"
+        ],
+        "visible": [
+          "path",
+          "query",
+          "body"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "AZURE_DEVOPS__GET_WORK_ITEM",
+      "description": "Get full details of a specific work item by its ID, including all fields, relations, and history.",
+      "tags": [
+        "work-items",
+        "boards"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+        "method": "GET",
+        "path": "/lyzrdev/{project}/_apis/wit/workitems/{work_item_id}?api-version=7.1",
+        "server_url": "https://dev.azure.com"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "object",
+            "description": "Path parameters identifying the work item.",
+            "properties": {
+              "project": {
+                "type": "string",
+                "description": "The project name or ID.",
+                "examples": [
+                  "platform-services"
+                ]
+              },
+              "work_item_id": {
+                "type": "string",
+                "description": "The work item ID number. (numeric ID as string)",
+                "examples": [
+                  1234,
+                  5678
+                ]
+              }
+            },
+            "required": [
+              "project",
+              "work_item_id"
+            ],
+            "visible": [
+              "project",
+              "work_item_id"
+            ],
+            "additionalProperties": false
+          },
+          "query": {
+            "type": "object",
+            "description": "Optional query parameters.",
+            "properties": {
+              "expand": {
+                "type": "string",
+                "description": "Expand additional details.",
+                "enum": [
+                  "all",
+                  "relations",
+                  "fields",
+                  "links",
+                  "none"
+                ]
+              }
+            },
+            "required": [],
+            "visible": [
+              "expand"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "visible": [
+          "path",
+          "query"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "AZURE_DEVOPS__CREATE_WORK_ITEM",
+      "description": "Create a new work item (User Story, Bug, Task, Epic, Feature) in an Azure DevOps project.",
+      "tags": [
+        "work-items",
+        "boards",
+        "create"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+        "method": "POST",
+        "path": "/lyzrdev/{project}/_apis/wit/workitems/${work_item_type}?api-version=7.1",
+        "server_url": "https://dev.azure.com"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "object",
+            "description": "Path parameters identifying project and work item type.",
+            "properties": {
+              "project": {
+                "type": "string",
+                "description": "The project name or ID.",
+                "examples": [
+                  "platform-services"
+                ]
+              },
+              "work_item_type": {
+                "type": "string",
+                "description": "The type of work item to create.",
+                "enum": [
+                  "Bug",
+                  "Task",
+                  "User Story",
+                  "Epic",
+                  "Feature",
+                  "Issue"
+                ],
+                "examples": [
+                  "Bug",
+                  "User Story",
+                  "Task"
+                ]
+              }
+            },
+            "required": [
+              "project",
+              "work_item_type"
+            ],
+            "visible": [
+              "project",
+              "work_item_type"
+            ],
+            "additionalProperties": false
+          },
+          "body": {
+            "type": "object",
+            "description": "Fields to set on the new work item.",
+            "properties": {
+              "title": {
+                "type": "string",
+                "description": "Title of the work item.",
+                "examples": [
+                  "Fix login timeout after 2FA",
+                  "Add payment gateway integration"
+                ]
+              },
+              "description": {
+                "type": "string",
+                "description": "Detailed description of the work item.",
+                "examples": [
+                  "Users are timing out after 2FA step. Affects all browsers."
+                ]
+              },
+              "assigned_to": {
+                "type": "string",
+                "description": "Email of the user to assign the work item to.",
+                "examples": [
+                  "john.doe@wtw.com"
+                ]
+              },
+              "priority": {
+                "type": "string",
+                "description": "Priority level. 1=Critical, 2=High, 3=Medium, 4=Low.",
+                "enum": [
+                  "1",
+                  "2",
+                  "3",
+                  "4"
+                ]
+              },
+              "tags": {
+                "type": "string",
+                "description": "Semicolon-separated tags to apply.",
+                "examples": [
+                  "bug; login; authentication"
+                ]
+              },
+              "area_path": {
+                "type": "string",
+                "description": "Area path for the work item.",
+                "examples": [
+                  "platform-services\\backend"
+                ]
+              }
+            },
+            "required": [
+              "title"
+            ],
+            "visible": [
+              "title",
+              "description",
+              "assigned_to",
+              "priority",
+              "tags",
+              "area_path"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "path",
+          "body"
+        ],
+        "visible": [
+          "path",
+          "body"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "AZURE_DEVOPS__UPDATE_WORK_ITEM",
+      "description": "Update fields on an existing work item \u2014 change state, assignee, priority, add comments, or update any field using JSON Patch.",
+      "tags": [
+        "work-items",
+        "boards",
+        "update"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+        "method": "PATCH",
+        "path": "/lyzrdev/{project}/_apis/wit/workitems/{work_item_id}?api-version=7.1",
+        "server_url": "https://dev.azure.com"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "object",
+            "description": "Path parameters identifying the work item.",
+            "properties": {
+              "project": {
+                "type": "string",
+                "description": "The project name or ID.",
+                "examples": [
+                  "platform-services"
+                ]
+              },
+              "work_item_id": {
+                "type": "string",
+                "description": "The work item ID to update. (numeric ID as string)",
+                "examples": [
+                  1234
+                ]
+              }
+            },
+            "required": [
+              "project",
+              "work_item_id"
+            ],
+            "visible": [
+              "project",
+              "work_item_id"
+            ],
+            "additionalProperties": false
+          },
+          "body": {
+            "type": "object",
+            "description": "Fields to update on the work item.",
+            "properties": {
+              "title": {
+                "type": "string",
+                "description": "Updated title of the work item.",
+                "examples": [
+                  "Fix login timeout after 2FA - urgent"
+                ]
+              },
+              "state": {
+                "type": "string",
+                "description": "Updated state of the work item.",
+                "enum": [
+                  "New",
+                  "Active",
+                  "Resolved",
+                  "Closed",
+                  "Removed"
+                ]
+              },
+              "assigned_to": {
+                "type": "string",
+                "description": "Email of the user to reassign to.",
+                "examples": [
+                  "jane.doe@wtw.com"
+                ]
+              },
+              "priority": {
+                "type": "string",
+                "description": "Updated priority. 1=Critical, 2=High, 3=Medium, 4=Low.",
+                "enum": [
+                  "1",
+                  "2",
+                  "3",
+                  "4"
+                ]
+              },
+              "comment": {
+                "type": "string",
+                "description": "Comment to add to the work item history.",
+                "examples": [
+                  "Reproduced on staging. Assigning to Jane for fix."
+                ]
+              },
+              "tags": {
+                "type": "string",
+                "description": "Semicolon-separated tags.",
+                "examples": [
+                  "bug; login; p1"
+                ]
+              }
+            },
+            "required": [],
+            "visible": [
+              "title",
+              "state",
+              "assigned_to",
+              "priority",
+              "comment",
+              "tags"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "path",
+          "body"
+        ],
+        "visible": [
+          "path",
+          "body"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "AZURE_DEVOPS__LIST_PIPELINES",
+      "description": "List all pipelines (build and release) in an Azure DevOps project.",
+      "tags": [
+        "pipelines",
+        "ci-cd"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+        "method": "GET",
+        "path": "/lyzrdev/{project}/_apis/pipelines?api-version=7.1",
+        "server_url": "https://dev.azure.com"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "object",
+            "description": "Path parameters identifying the project.",
+            "properties": {
+              "project": {
+                "type": "string",
+                "description": "The project name or ID.",
+                "examples": [
+                  "platform-services"
+                ]
+              }
+            },
+            "required": [
+              "project"
+            ],
+            "visible": [
+              "project"
+            ],
+            "additionalProperties": false
+          },
+          "query": {
+            "type": "object",
+            "description": "Optional query parameters.",
+            "properties": {
+              "top": {
+                "type": "string",
+                "description": "Maximum number of pipelines to return. (numeric ID as string)",
+                "examples": [
+                  50,
+                  100
+                ]
+              },
+              "orderBy": {
+                "type": "string",
+                "description": "Sort order for results.",
+                "examples": [
+                  "name asc",
+                  "name desc"
+                ]
+              }
+            },
+            "required": [],
+            "visible": [
+              "top",
+              "orderBy"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "visible": [
+          "path",
+          "query"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "AZURE_DEVOPS__GET_PIPELINE_RUNS",
+      "description": "Get recent runs of a specific pipeline. Shows run status, result, triggered by, start time, and duration.",
+      "tags": [
+        "pipelines",
+        "ci-cd"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+        "method": "GET",
+        "path": "/lyzrdev/{project}/_apis/pipelines/{pipeline_id}/runs?api-version=7.1",
+        "server_url": "https://dev.azure.com"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "object",
+            "description": "Path parameters identifying the pipeline.",
+            "properties": {
+              "project": {
+                "type": "string",
+                "description": "The project name or ID.",
+                "examples": [
+                  "platform-services"
+                ]
+              },
+              "pipeline_id": {
+                "type": "string",
+                "description": "The pipeline ID number. (numeric ID as string)",
+                "examples": [
+                  12,
+                  45
+                ]
+              }
+            },
+            "required": [
+              "project",
+              "pipeline_id"
+            ],
+            "visible": [
+              "project",
+              "pipeline_id"
+            ],
+            "additionalProperties": false
+          },
+          "query": {
+            "type": "object",
+            "description": "Optional query parameters.",
+            "properties": {
+              "top": {
+                "type": "string",
+                "description": "Maximum number of runs to return. (numeric ID as string)",
+                "examples": [
+                  10,
+                  20
+                ]
+              }
+            },
+            "required": [],
+            "visible": [
+              "top"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "visible": [
+          "path",
+          "query"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "AZURE_DEVOPS__TRIGGER_PIPELINE",
+      "description": "Trigger a new run of a specific pipeline. Optionally specify a branch, commit, or custom pipeline variables.",
+      "tags": [
+        "pipelines",
+        "ci-cd",
+        "trigger"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+        "method": "POST",
+        "path": "/lyzrdev/{project}/_apis/pipelines/{pipeline_id}/runs?api-version=7.1",
+        "server_url": "https://dev.azure.com"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "object",
+            "description": "Path parameters identifying the pipeline.",
+            "properties": {
+              "project": {
+                "type": "string",
+                "description": "The project name or ID.",
+                "examples": [
+                  "platform-services"
+                ]
+              },
+              "pipeline_id": {
+                "type": "string",
+                "description": "The pipeline ID to trigger. (numeric ID as string)",
+                "examples": [
+                  12,
+                  45
+                ]
+              }
+            },
+            "required": [
+              "project",
+              "pipeline_id"
+            ],
+            "visible": [
+              "project",
+              "pipeline_id"
+            ],
+            "additionalProperties": false
+          },
+          "body": {
+            "type": "object",
+            "description": "Pipeline run configuration.",
+            "properties": {
+              "resources": {
+                "type": "string",
+                "description": "Resource overrides for the run \u2014 specify branch or commit. Provide as a JSON object string."
+              },
+              "variables": {
+                "type": "string",
+                "description": "Runtime variable overrides as key-value pairs. e.g., {\"MY_VAR\": {\"value\": \"my-value\"}} Provide as a JSON object string."
+              },
+              "stagesToSkip": {
+                "type": "string",
+                "description": "List of stage names to skip in this run. Provide as a JSON array string."
+              }
+            },
+            "required": [],
+            "visible": [
+              "resources",
+              "variables",
+              "stagesToSkip"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "visible": [
+          "path",
+          "body"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "AZURE_DEVOPS__LIST_TEAMS",
+      "description": "List all teams in an Azure DevOps project. Useful for finding team IDs needed for board and sprint queries.",
+      "tags": [
+        "teams",
+        "boards"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+        "method": "GET",
+        "path": "/lyzrdev/_apis/projects/{project}/teams?api-version=7.1",
+        "server_url": "https://dev.azure.com"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "object",
+            "description": "Path parameters identifying the project.",
+            "properties": {
+              "project": {
+                "type": "string",
+                "description": "The project name or ID.",
+                "examples": [
+                  "platform-services"
+                ]
+              }
+            },
+            "required": [
+              "project"
+            ],
+            "visible": [
+              "project"
+            ],
+            "additionalProperties": false
+          },
+          "query": {
+            "type": "object",
+            "description": "Optional query parameters.",
+            "properties": {
+              "top": {
+                "type": "string",
+                "description": "Maximum number of teams to return. (numeric ID as string)",
+                "examples": [
+                  20,
+                  50
+                ]
+              }
+            },
+            "required": [],
+            "visible": [
+              "top"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "visible": [
+          "path",
+          "query"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "AZURE_DEVOPS__LIST_SPRINTS",
+      "description": "List all sprints (iterations) for a specific team in an Azure DevOps project. Returns sprint names, start dates, end dates, and status.",
+      "tags": [
+        "sprints",
+        "boards",
+        "iterations"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+        "method": "GET",
+        "path": "/lyzrdev/{project}/{team}/_apis/work/teamsettings/iterations?api-version=7.1",
+        "server_url": "https://dev.azure.com"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "object",
+            "description": "Path parameters identifying the project and team.",
+            "properties": {
+              "project": {
+                "type": "string",
+                "description": "The project name or ID.",
+                "examples": [
+                  "platform-services"
+                ]
+              },
+              "team": {
+                "type": "string",
+                "description": "The team name or team ID.",
+                "examples": [
+                  "backend-team",
+                  "platform-services Team"
+                ]
+              }
+            },
+            "required": [
+              "project",
+              "team"
+            ],
+            "visible": [
+              "project",
+              "team"
+            ],
+            "additionalProperties": false
+          },
+          "query": {
+            "type": "object",
+            "description": "Optional query parameters.",
+            "properties": {
+              "timeframe": {
+                "type": "string",
+                "description": "Filter sprints by timeframe.",
+                "enum": [
+                  "past",
+                  "current",
+                  "future"
+                ]
+              }
+            },
+            "required": [],
+            "visible": [
+              "timeframe"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "visible": [
+          "path",
+          "query"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "AZURE_DEVOPS__GET_SPRINT_WORK_ITEMS",
+      "description": "Get all work items assigned to a specific sprint for a team. Returns work item IDs which can then be fetched using GET_WORK_ITEM.",
+      "tags": [
+        "sprints",
+        "boards",
+        "work-items"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+        "method": "GET",
+        "path": "/lyzrdev/{project}/{team}/_apis/work/teamsettings/iterations/{iteration_id}/workitems?api-version=7.1",
+        "server_url": "https://dev.azure.com"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "object",
+            "description": "Path parameters identifying the sprint.",
+            "properties": {
+              "project": {
+                "type": "string",
+                "description": "The project name or ID.",
+                "examples": [
+                  "platform-services"
+                ]
+              },
+              "team": {
+                "type": "string",
+                "description": "The team name or ID.",
+                "examples": [
+                  "backend-team"
+                ]
+              },
+              "iteration_id": {
+                "type": "string",
+                "description": "The sprint/iteration ID (GUID) from LIST_SPRINTS.",
+                "examples": [
+                  "a1b2c3d4-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                ]
+              }
+            },
+            "required": [
+              "project",
+              "team",
+              "iteration_id"
+            ],
+            "visible": [
+              "project",
+              "team",
+              "iteration_id"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "visible": [
+          "path"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ]
