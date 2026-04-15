@@ -13,9 +13,9 @@
         "client_id": "{{ AZURE_DEVOPS_CLIENT_ID }}",
         "client_secret": "{{ AZURE_DEVOPS_CLIENT_SECRET }}",
         "scope": "499b84ac-1321-427f-aa17-267ca6975798/vso.project 499b84ac-1321-427f-aa17-267ca6975798/vso.code 499b84ac-1321-427f-aa17-267ca6975798/vso.code_write 499b84ac-1321-427f-aa17-267ca6975798/vso.work 499b84ac-1321-427f-aa17-267ca6975798/vso.work_write 499b84ac-1321-427f-aa17-267ca6975798/vso.build 499b84ac-1321-427f-aa17-267ca6975798/vso.build_execute offline_access",
-        "authorize_url": "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
-        "access_token_url": "https://login.microsoftonline.com/common/oauth2/v2.0/token",
-        "refresh_token_url": "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+        "authorize_url": "https://login.microsoftonline.com/{{ AZURE_DEVOPS_TENANT_ID }}/oauth2/v2.0/authorize",
+        "access_token_url": "https://login.microsoftonline.com/{{ AZURE_DEVOPS_TENANT_ID }}/oauth2/v2.0/token",
+        "refresh_token_url": "https://login.microsoftonline.com/{{ AZURE_DEVOPS_TENANT_ID }}/oauth2/v2.0/token",
         "prompt": "select_account"
       }
     },
