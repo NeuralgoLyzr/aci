@@ -1,0 +1,22 @@
+{
+    "name": "ORACLE_HCM",
+    "display_name": "Oracle HCM",
+    "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/oracle_hcm.svg",
+    "provider": "Oracle Corporation",
+    "version": "1.0.0",
+    "description": "Oracle Fusion HCM Cloud REST API integration for Human Capital Management. Provides programmatic access to workers, employees, assignments, salaries, work schedules, absences, payroll relationships, document records, BI Publisher reports, HCM Data Loader, lookups, and BPM workflow tasks. Supports retrieve, update, create, and approve operations across the full HR lifecycle.",
+    "security_schemes": {
+      "api_key": {
+        "location": "header",
+        "name": "Authorization",
+        "prefix": "Basic"
+      }
+    },
+    "default_security_credentials_by_scheme": {},
+    "categories": [
+      "HR & People",
+      "Enterprise"
+    ],
+    "visibility": "public",
+    "active": true
+  }
