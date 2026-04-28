@@ -1,0 +1,30 @@
+{
+  "name": "SERVICE_NOW",
+  "display_name": "ServiceNow",
+  "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/service-now.png",
+  "provider": "ServiceNow",
+  "version": "1.0.0",
+  "description": "The ServiceNow REST API enables access to ITSM modules including Incidents, Change Requests, Problems, Service Requests, CMDB Configuration Items, Users, Knowledge Base Articles, and Tasks. This integration allows agents to read and manage ServiceNow records on behalf of the user.",
+  "security_schemes": {
+    "oauth2": {
+      "location": "header",
+      "name": "Authorization",
+      "prefix": "Bearer",
+      "client_id": "{{ AIPOLABS_SERVICE_NOW_CLIENT_ID }}",
+      "client_secret": "{{ AIPOLABS_SERVICE_NOW_CLIENT_SECRET }}",
+      "scope": "useraccount table_api rest_api_explorer",
+      "authorize_url": "https://wtwdev.service-now.com/oauth_auth.do",
+      "access_token_url": "https://wtwdev.service-now.com/oauth_token.do",
+      "refresh_token_url": "https://wtwdev.service-now.com/oauth_token.do",
+      "prompt": "login"
+    }
+  },
+  "default_security_credentials_by_scheme": {},
+  "categories": [
+    "IT Service Management",
+    "Productivity",
+    "Enterprise"
+  ],
+  "visibility": "public",
+  "active": true
+}

@@ -1,0 +1,30 @@
+{
+    "name": "ADOBE_SIGN",
+    "display_name": "Adobe Acrobat Sign",
+    "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/adobe-sign.svg",
+    "provider": "Adobe",
+    "version": "6.0.0",
+    "description": "The Adobe Acrobat Sign REST API v6 enables access to e-signature workflows including creating and managing agreements, uploading documents, managing templates (library documents), web forms (widgets), sending bulk signatures (MegaSign), managing users and groups, and configuring webhooks. This integration allows sending documents for signature, tracking agreement status, downloading signed documents, and managing the full signing lifecycle on behalf of the user.",
+    "security_schemes": {
+      "oauth2": {
+        "location": "header",
+        "name": "Authorization",
+        "prefix": "Bearer",
+        "prompt": "select_account",
+        "client_id": "{{ AIPOLABS_ADOBE_SIGN_CLIENT_ID }}",
+        "client_secret": "{{ AIPOLABS_ADOBE_SIGN_CLIENT_SECRET }}",
+        "scope": "user_read:self user_write:self user_login:self agreement_read:self agreement_write:self agreement_send:self widget_read:self widget_write:self library_read:self library_write:self workflow_read:self workflow_write:self webhook_read:self webhook_write:self",
+        "authorize_url": "https://secure.{{ AIPOLABS_ADOBE_SIGN_SHARD }}.adobesign.com/public/oauth/v2",
+        "access_token_url": "https://api.{{ AIPOLABS_ADOBE_SIGN_SHARD }}.adobesign.com/oauth/v2/token",
+        "refresh_token_url": "https://api.{{ AIPOLABS_ADOBE_SIGN_SHARD }}.adobesign.com/oauth/v2/refresh"
+      }
+    },
+    "default_security_credentials_by_scheme": {},
+    "categories": [
+      "Productivity",
+      "Document Management",
+      "E-Signature"
+    ],
+    "visibility": "public",
+    "active": true
+  }
