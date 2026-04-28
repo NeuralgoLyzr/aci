@@ -1,0 +1,2794 @@
+[
+  {
+    "name": "SERVICE_NOW__LIST_INCIDENTS",
+    "description": "Retrieve a list of incidents from ServiceNow with optional filters, sorting, and pagination. Useful for dashboards, reporting, and monitoring open issues.",
+    "tags": [
+      "incidents",
+      "itsm"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/api/now/v2/table/incident",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "object",
+          "description": "Query parameters for filtering, sorting, and paginating incidents.",
+          "properties": {
+            "sysparm_query": {
+              "type": "string",
+              "description": "Encoded query string to filter and sort results. Use '^' as AND operator. Append '^ORDERBYfield' or '^ORDERBYDESCfield' for sorting. e.g., 'state=1^priority=1^ORDERBYDESCopened_at'.",
+              "examples": [
+                "state=1^priority=1^ORDERBYDESCopened_at",
+                "active=true^assigned_to=javascript:gs.getUserID()^ORDERBYopened_at"
+              ]
+            },
+            "sysparm_limit": {
+              "type": "integer",
+              "description": "Maximum number of records to return. Default is 10, max is 10000.",
+              "examples": [
+                10,
+                50,
+                100
+              ]
+            },
+            "sysparm_offset": {
+              "type": "integer",
+              "description": "Starting record index for pagination.",
+              "examples": [
+                0,
+                50,
+                100
+              ]
+            },
+            "sysparm_fields": {
+              "type": "string",
+              "description": "Comma-separated list of fields to return. Omit to return all fields.",
+              "examples": [
+                "number,short_description,state,priority,assigned_to,opened_at"
+              ]
+            },
+            "sysparm_display_value": {
+              "type": "string",
+              "description": "Controls whether to return display values or raw values. Use 'true' for human-readable labels.",
+              "enum": [
+                "true",
+                "false",
+                "all"
+              ]
+            }
+          },
+          "required": [],
+          "visible": [
+            "sysparm_query",
+            "sysparm_limit",
+            "sysparm_offset",
+            "sysparm_fields",
+            "sysparm_display_value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [],
+      "visible": [
+        "query"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__GET_INCIDENT",
+    "description": "Retrieve a single incident record by its sys_id from ServiceNow, including all field details.",
+    "tags": [
+      "incidents",
+      "itsm"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/api/now/v2/table/incident/{sys_id}",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "object",
+          "description": "Path parameters to identify the incident.",
+          "properties": {
+            "sys_id": {
+              "type": "string",
+              "description": "The unique sys_id of the incident record.",
+              "examples": [
+                "1234abcd1234abcd1234abcd1234abcd"
+              ]
+            }
+          },
+          "required": [
+            "sys_id"
+          ],
+          "visible": [
+            "sys_id"
+          ],
+          "additionalProperties": false
+        },
+        "query": {
+          "type": "object",
+          "description": "Optional query parameters.",
+          "properties": {
+            "sysparm_display_value": {
+              "type": "string",
+              "description": "Return display values instead of raw values.",
+              "enum": [
+                "true",
+                "false",
+                "all"
+              ]
+            },
+            "sysparm_fields": {
+              "type": "string",
+              "description": "Comma-separated list of fields to return.",
+              "examples": [
+                "number,short_description,state,priority,assigned_to,opened_at,close_notes"
+              ]
+            }
+          },
+          "required": [],
+          "visible": [
+            "sysparm_display_value",
+            "sysparm_fields"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "visible": [
+        "path",
+        "query"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__CREATE_INCIDENT",
+    "description": "Create a new incident record in ServiceNow. Used to log new IT issues, outages, or service disruptions.",
+    "tags": [
+      "incidents",
+      "itsm",
+      "create"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "POST",
+      "path": "/api/now/v2/table/incident",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "body": {
+          "type": "object",
+          "description": "The incident record fields to set on creation.",
+          "properties": {
+            "short_description": {
+              "type": "string",
+              "description": "Brief summary of the incident.",
+              "examples": [
+                "VPN connectivity issue for all remote users"
+              ]
+            },
+            "description": {
+              "type": "string",
+              "description": "Detailed description of the incident.",
+              "examples": [
+                "All users in the London office are unable to connect to the VPN since 09:00 AM GMT."
+              ]
+            },
+            "priority": {
+              "type": "string",
+              "description": "Priority of the incident. 1=Critical, 2=High, 3=Moderate, 4=Low, 5=Planning.",
+              "enum": [
+                "1",
+                "2",
+                "3",
+                "4",
+                "5"
+              ]
+            },
+            "impact": {
+              "type": "string",
+              "description": "Impact level. 1=High, 2=Medium, 3=Low.",
+              "enum": [
+                "1",
+                "2",
+                "3"
+              ]
+            },
+            "urgency": {
+              "type": "string",
+              "description": "Urgency level. 1=High, 2=Medium, 3=Low.",
+              "enum": [
+                "1",
+                "2",
+                "3"
+              ]
+            },
+            "category": {
+              "type": "string",
+              "description": "Incident category (e.g., 'network', 'hardware', 'software', 'inquiry').",
+              "examples": [
+                "network",
+                "software",
+                "hardware"
+              ]
+            },
+            "subcategory": {
+              "type": "string",
+              "description": "Incident subcategory.",
+              "examples": [
+                "vpn",
+                "email",
+                "printer"
+              ]
+            },
+            "assignment_group": {
+              "type": "string",
+              "description": "sys_id or name of the group to assign this incident to.",
+              "examples": [
+                "IT Support",
+                "Network Operations"
+              ]
+            },
+            "assigned_to": {
+              "type": "string",
+              "description": "sys_id or username of the user to assign the incident to.",
+              "examples": [
+                "john.doe"
+              ]
+            },
+            "caller_id": {
+              "type": "string",
+              "description": "sys_id or username of the person who reported the incident.",
+              "examples": [
+                "jane.smith"
+              ]
+            },
+            "cmdb_ci": {
+              "type": "string",
+              "description": "sys_id of the Configuration Item affected by this incident.",
+              "examples": [
+                "prod-web-server-01"
+              ]
+            }
+          },
+          "required": [
+            "short_description"
+          ],
+          "visible": [
+            "short_description",
+            "description",
+            "priority",
+            "impact",
+            "urgency",
+            "category",
+            "subcategory",
+            "assignment_group",
+            "assigned_to",
+            "caller_id",
+            "cmdb_ci"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "body"
+      ],
+      "visible": [
+        "body"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__UPDATE_INCIDENT",
+    "description": "Update an existing incident record in ServiceNow. Used to change state, add notes, reassign, or close an incident.",
+    "tags": [
+      "incidents",
+      "itsm",
+      "update"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "PATCH",
+      "path": "/api/now/v2/table/incident/{sys_id}",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "object",
+          "description": "Path parameters to identify the incident.",
+          "properties": {
+            "sys_id": {
+              "type": "string",
+              "description": "The unique sys_id of the incident to update.",
+              "examples": [
+                "1234abcd1234abcd1234abcd1234abcd"
+              ]
+            }
+          },
+          "required": [
+            "sys_id"
+          ],
+          "visible": [
+            "sys_id"
+          ],
+          "additionalProperties": false
+        },
+        "body": {
+          "type": "object",
+          "description": "Fields to update on the incident record.",
+          "properties": {
+            "state": {
+              "type": "string",
+              "description": "Incident state. 1=New, 2=In Progress, 3=On Hold, 4=Resolved, 6=Canceled, 7=Closed.",
+              "enum": [
+                "1",
+                "2",
+                "3",
+                "4",
+                "6",
+                "7"
+              ]
+            },
+            "short_description": {
+              "type": "string",
+              "description": "Updated summary of the incident."
+            },
+            "description": {
+              "type": "string",
+              "description": "Updated detailed description."
+            },
+            "work_notes": {
+              "type": "string",
+              "description": "Internal work notes visible only to agents.",
+              "examples": [
+                "Escalated to network team. Investigating router config."
+              ]
+            },
+            "comments": {
+              "type": "string",
+              "description": "Public comments visible to the caller/customer.",
+              "examples": [
+                "We are actively working on this issue. ETA for resolution is 2 hours."
+              ]
+            },
+            "close_code": {
+              "type": "string",
+              "description": "Resolution code when closing or resolving an incident.",
+              "examples": [
+                "Solved (Permanently)",
+                "Not Solved (Not Reproducible)"
+              ]
+            },
+            "close_notes": {
+              "type": "string",
+              "description": "Resolution notes when closing or resolving the incident.",
+              "examples": [
+                "Restarted the VPN concentrator. All users reconnected successfully."
+              ]
+            },
+            "assigned_to": {
+              "type": "string",
+              "description": "sys_id or username of the user to reassign the incident to."
+            },
+            "assignment_group": {
+              "type": "string",
+              "description": "sys_id or name of the group to reassign this incident to."
+            },
+            "priority": {
+              "type": "string",
+              "description": "Updated priority. 1=Critical, 2=High, 3=Moderate, 4=Low.",
+              "enum": [
+                "1",
+                "2",
+                "3",
+                "4"
+              ]
+            }
+          },
+          "required": [],
+          "visible": [
+            "state",
+            "short_description",
+            "description",
+            "work_notes",
+            "comments",
+            "close_code",
+            "close_notes",
+            "assigned_to",
+            "assignment_group",
+            "priority"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "path",
+        "body"
+      ],
+      "visible": [
+        "path",
+        "body"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__LIST_CHANGE_REQUESTS",
+    "description": "Retrieve a list of change requests from ServiceNow with optional filters. Used to track planned changes to IT infrastructure and services.",
+    "tags": [
+      "change-management",
+      "itsm"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/api/now/v2/table/change_request",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "object",
+          "description": "Query parameters for filtering and paginating change requests.",
+          "properties": {
+            "sysparm_query": {
+              "type": "string",
+              "description": "Encoded query string to filter change requests. e.g., 'state=assess^type=normal' for normal changes awaiting assessment.",
+              "examples": [
+                "state=assess^type=normal",
+                "type=emergency^active=true"
+              ]
+            },
+            "sysparm_limit": {
+              "type": "integer",
+              "description": "Maximum number of records to return.",
+              "examples": [
+                10,
+                50,
+                100
+              ]
+            },
+            "sysparm_offset": {
+              "type": "integer",
+              "description": "Starting record index for pagination.",
+              "examples": [
+                0,
+                50
+              ]
+            },
+            "sysparm_fields": {
+              "type": "string",
+              "description": "Comma-separated list of fields to return.",
+              "examples": [
+                "number,short_description,state,type,risk,start_date,end_date,assignment_group"
+              ]
+            },
+            "sysparm_display_value": {
+              "type": "string",
+              "description": "Return display values instead of raw values.",
+              "enum": [
+                "true",
+                "false",
+                "all"
+              ]
+            }
+          },
+          "required": [],
+          "visible": [
+            "sysparm_query",
+            "sysparm_limit",
+            "sysparm_offset",
+            "sysparm_fields",
+            "sysparm_display_value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [],
+      "visible": [
+        "query"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__GET_CHANGE_REQUEST",
+    "description": "Retrieve a single change request record by its sys_id from ServiceNow.",
+    "tags": [
+      "change-management",
+      "itsm"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/api/now/v2/table/change_request/{sys_id}",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "object",
+          "description": "Path parameters to identify the change request.",
+          "properties": {
+            "sys_id": {
+              "type": "string",
+              "description": "The unique sys_id of the change request record.",
+              "examples": [
+                "abcd1234abcd1234abcd1234abcd1234"
+              ]
+            }
+          },
+          "required": [
+            "sys_id"
+          ],
+          "visible": [
+            "sys_id"
+          ],
+          "additionalProperties": false
+        },
+        "query": {
+          "type": "object",
+          "description": "Optional query parameters.",
+          "properties": {
+            "sysparm_display_value": {
+              "type": "string",
+              "description": "Return display values instead of raw values.",
+              "enum": [
+                "true",
+                "false",
+                "all"
+              ]
+            },
+            "sysparm_fields": {
+              "type": "string",
+              "description": "Comma-separated list of fields to return."
+            }
+          },
+          "required": [],
+          "visible": [
+            "sysparm_display_value",
+            "sysparm_fields"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "visible": [
+        "path",
+        "query"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__CREATE_CHANGE_REQUEST",
+    "description": "Create a new change request in ServiceNow. Supports Standard, Normal, and Emergency change types.",
+    "tags": [
+      "change-management",
+      "itsm",
+      "create"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "POST",
+      "path": "/api/now/v2/table/change_request",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "body": {
+          "type": "object",
+          "description": "The change request record fields to set on creation.",
+          "properties": {
+            "short_description": {
+              "type": "string",
+              "description": "Brief summary of the change.",
+              "examples": [
+                "Upgrade database server from PostgreSQL 14 to 16"
+              ]
+            },
+            "description": {
+              "type": "string",
+              "description": "Detailed description and justification for the change."
+            },
+            "type": {
+              "type": "string",
+              "description": "Type of change request.",
+              "enum": [
+                "standard",
+                "normal",
+                "emergency"
+              ]
+            },
+            "risk": {
+              "type": "string",
+              "description": "Risk level of the change. 1=High, 2=Medium, 3=Low, 4=None.",
+              "enum": [
+                "1",
+                "2",
+                "3",
+                "4"
+              ]
+            },
+            "impact": {
+              "type": "string",
+              "description": "Impact level. 1=High, 2=Medium, 3=Low.",
+              "enum": [
+                "1",
+                "2",
+                "3"
+              ]
+            },
+            "start_date": {
+              "type": "string",
+              "description": "Planned start date/time of the change in format 'YYYY-MM-DD HH:MM:SS'.",
+              "examples": [
+                "2025-06-01 22:00:00"
+              ]
+            },
+            "end_date": {
+              "type": "string",
+              "description": "Planned end date/time of the change in format 'YYYY-MM-DD HH:MM:SS'.",
+              "examples": [
+                "2025-06-02 02:00:00"
+              ]
+            },
+            "assignment_group": {
+              "type": "string",
+              "description": "Name or sys_id of the group responsible for implementing the change.",
+              "examples": [
+                "Database Administration"
+              ]
+            },
+            "assigned_to": {
+              "type": "string",
+              "description": "sys_id or username of the person responsible for implementing the change."
+            },
+            "cmdb_ci": {
+              "type": "string",
+              "description": "sys_id of the Configuration Item being changed.",
+              "examples": [
+                "prod-db-server-01"
+              ]
+            },
+            "justification": {
+              "type": "string",
+              "description": "Business justification for the change.",
+              "examples": [
+                "Required for security compliance. Current version has known CVEs."
+              ]
+            },
+            "implementation_plan": {
+              "type": "string",
+              "description": "Step-by-step plan for implementing the change."
+            },
+            "backout_plan": {
+              "type": "string",
+              "description": "Plan for reverting the change if issues are encountered."
+            },
+            "test_plan": {
+              "type": "string",
+              "description": "Plan for testing the change after implementation."
+            }
+          },
+          "required": [
+            "short_description",
+            "type"
+          ],
+          "visible": [
+            "short_description",
+            "description",
+            "type",
+            "risk",
+            "impact",
+            "start_date",
+            "end_date",
+            "assignment_group",
+            "assigned_to",
+            "cmdb_ci",
+            "justification",
+            "implementation_plan",
+            "backout_plan",
+            "test_plan"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "body"
+      ],
+      "visible": [
+        "body"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__UPDATE_CHANGE_REQUEST",
+    "description": "Update an existing change request in ServiceNow. Used to update state, add implementation notes, or close a change.",
+    "tags": [
+      "change-management",
+      "itsm",
+      "update"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "PATCH",
+      "path": "/api/now/v2/table/change_request/{sys_id}",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "object",
+          "description": "Path parameters to identify the change request.",
+          "properties": {
+            "sys_id": {
+              "type": "string",
+              "description": "The unique sys_id of the change request to update."
+            }
+          },
+          "required": [
+            "sys_id"
+          ],
+          "visible": [
+            "sys_id"
+          ],
+          "additionalProperties": false
+        },
+        "body": {
+          "type": "object",
+          "description": "Fields to update on the change request.",
+          "properties": {
+            "state": {
+              "type": "string",
+              "description": "State of the change. -5=New, -4=Assess, -3=Authorize, -2=Scheduled, -1=Implement, 0=Review, 3=Closed, 4=Canceled.",
+              "enum": [
+                "-5",
+                "-4",
+                "-3",
+                "-2",
+                "-1",
+                "0",
+                "3",
+                "4"
+              ]
+            },
+            "work_notes": {
+              "type": "string",
+              "description": "Internal implementation notes.",
+              "examples": [
+                "Database upgrade completed successfully. All services verified."
+              ]
+            },
+            "close_code": {
+              "type": "string",
+              "description": "Close code when closing the change.",
+              "enum": [
+                "successful",
+                "successful_issues",
+                "unsuccessful"
+              ]
+            },
+            "close_notes": {
+              "type": "string",
+              "description": "Notes summarizing the outcome of the change."
+            },
+            "start_date": {
+              "type": "string",
+              "description": "Actual or revised start date in format 'YYYY-MM-DD HH:MM:SS'."
+            },
+            "end_date": {
+              "type": "string",
+              "description": "Actual or revised end date in format 'YYYY-MM-DD HH:MM:SS'."
+            }
+          },
+          "required": [],
+          "visible": [
+            "state",
+            "work_notes",
+            "close_code",
+            "close_notes",
+            "start_date",
+            "end_date"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "path",
+        "body"
+      ],
+      "visible": [
+        "path",
+        "body"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__LIST_PROBLEMS",
+    "description": "Retrieve a list of problem records from ServiceNow. Problems represent the root cause of one or more incidents.",
+    "tags": [
+      "problem-management",
+      "itsm"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/api/now/v2/table/problem",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "object",
+          "description": "Query parameters for filtering and paginating problem records.",
+          "properties": {
+            "sysparm_query": {
+              "type": "string",
+              "description": "Encoded query to filter problems.",
+              "examples": [
+                "state=101^known_error=true",
+                "active=true^priority=1"
+              ]
+            },
+            "sysparm_limit": {
+              "type": "integer",
+              "description": "Maximum number of records to return.",
+              "examples": [
+                10,
+                50
+              ]
+            },
+            "sysparm_offset": {
+              "type": "integer",
+              "description": "Starting record index for pagination.",
+              "examples": [
+                0,
+                50
+              ]
+            },
+            "sysparm_fields": {
+              "type": "string",
+              "description": "Comma-separated list of fields to return.",
+              "examples": [
+                "number,short_description,state,priority,known_error,workaround,assignment_group"
+              ]
+            },
+            "sysparm_display_value": {
+              "type": "string",
+              "description": "Return display values instead of raw values.",
+              "enum": [
+                "true",
+                "false",
+                "all"
+              ]
+            }
+          },
+          "required": [],
+          "visible": [
+            "sysparm_query",
+            "sysparm_limit",
+            "sysparm_offset",
+            "sysparm_fields",
+            "sysparm_display_value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [],
+      "visible": [
+        "query"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__GET_PROBLEM",
+    "description": "Retrieve a single problem record by its sys_id from ServiceNow.",
+    "tags": [
+      "problem-management",
+      "itsm"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/api/now/v2/table/problem/{sys_id}",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "object",
+          "description": "Path parameters to identify the problem record.",
+          "properties": {
+            "sys_id": {
+              "type": "string",
+              "description": "The unique sys_id of the problem record.",
+              "examples": [
+                "abcd5678abcd5678abcd5678abcd5678"
+              ]
+            }
+          },
+          "required": [
+            "sys_id"
+          ],
+          "visible": [
+            "sys_id"
+          ],
+          "additionalProperties": false
+        },
+        "query": {
+          "type": "object",
+          "description": "Optional query parameters.",
+          "properties": {
+            "sysparm_display_value": {
+              "type": "string",
+              "description": "Return display values instead of raw values.",
+              "enum": [
+                "true",
+                "false",
+                "all"
+              ]
+            }
+          },
+          "required": [],
+          "visible": [
+            "sysparm_display_value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "visible": [
+        "path",
+        "query"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__CREATE_PROBLEM",
+    "description": "Create a new problem record in ServiceNow to track root cause investigation of recurring or major incidents.",
+    "tags": [
+      "problem-management",
+      "itsm",
+      "create"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "POST",
+      "path": "/api/now/v2/table/problem",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "body": {
+          "type": "object",
+          "description": "Fields for the new problem record.",
+          "properties": {
+            "short_description": {
+              "type": "string",
+              "description": "Brief summary of the problem.",
+              "examples": [
+                "Recurring VPN disconnections for remote workers"
+              ]
+            },
+            "description": {
+              "type": "string",
+              "description": "Detailed description of the problem and its impact."
+            },
+            "priority": {
+              "type": "string",
+              "description": "Priority. 1=Critical, 2=High, 3=Moderate, 4=Low.",
+              "enum": [
+                "1",
+                "2",
+                "3",
+                "4"
+              ]
+            },
+            "assignment_group": {
+              "type": "string",
+              "description": "Name or sys_id of the group assigned to investigate the problem."
+            },
+            "assigned_to": {
+              "type": "string",
+              "description": "sys_id or username of the person assigned to investigate."
+            },
+            "known_error": {
+              "type": "boolean",
+              "description": "Set to true if the root cause has been identified (known error).",
+              "examples": [
+                false
+              ]
+            },
+            "workaround": {
+              "type": "string",
+              "description": "Temporary workaround to mitigate the problem until resolved.",
+              "examples": [
+                "Users should reconnect to the backup VPN endpoint."
+              ]
+            }
+          },
+          "required": [
+            "short_description"
+          ],
+          "visible": [
+            "short_description",
+            "description",
+            "priority",
+            "assignment_group",
+            "assigned_to",
+            "known_error",
+            "workaround"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "body"
+      ],
+      "visible": [
+        "body"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__LIST_SERVICE_REQUESTS",
+    "description": "Retrieve a list of service catalog requests (sc_request) from ServiceNow. Used to track requests submitted through the service catalog.",
+    "tags": [
+      "service-catalog",
+      "itsm"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/api/now/v2/table/sc_request",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "object",
+          "description": "Query parameters for filtering and paginating service requests.",
+          "properties": {
+            "sysparm_query": {
+              "type": "string",
+              "description": "Encoded query string to filter service requests.",
+              "examples": [
+                "state=1^active=true",
+                "requested_for=javascript:gs.getUserID()"
+              ]
+            },
+            "sysparm_limit": {
+              "type": "integer",
+              "description": "Maximum number of records to return.",
+              "examples": [
+                10,
+                50,
+                100
+              ]
+            },
+            "sysparm_offset": {
+              "type": "integer",
+              "description": "Starting record index for pagination.",
+              "examples": [
+                0,
+                50
+              ]
+            },
+            "sysparm_fields": {
+              "type": "string",
+              "description": "Comma-separated list of fields to return.",
+              "examples": [
+                "number,short_description,state,requested_for,opened_at"
+              ]
+            },
+            "sysparm_display_value": {
+              "type": "string",
+              "description": "Return display values instead of raw values.",
+              "enum": [
+                "true",
+                "false",
+                "all"
+              ]
+            }
+          },
+          "required": [],
+          "visible": [
+            "sysparm_query",
+            "sysparm_limit",
+            "sysparm_offset",
+            "sysparm_fields",
+            "sysparm_display_value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [],
+      "visible": [
+        "query"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__GET_REQUEST_ITEMS",
+    "description": "Retrieve all requested items (RITM - sc_req_item) associated with a service request. Each item represents a catalog item ordered by the user.",
+    "tags": [
+      "service-catalog",
+      "itsm"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/api/now/v2/table/sc_req_item",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "object",
+          "description": "Query parameters for filtering request items.",
+          "properties": {
+            "sysparm_query": {
+              "type": "string",
+              "description": "Encoded query string. Use 'request={request_sys_id}' to filter items for a specific request.",
+              "examples": [
+                "request=abcd1234abcd1234abcd1234abcd1234",
+                "state=1^active=true"
+              ]
+            },
+            "sysparm_limit": {
+              "type": "integer",
+              "description": "Maximum number of records to return.",
+              "examples": [
+                10,
+                50
+              ]
+            },
+            "sysparm_display_value": {
+              "type": "string",
+              "description": "Return display values instead of raw values.",
+              "enum": [
+                "true",
+                "false",
+                "all"
+              ]
+            },
+            "sysparm_fields": {
+              "type": "string",
+              "description": "Comma-separated list of fields to return.",
+              "examples": [
+                "number,short_description,state,cat_item,quantity,assigned_to"
+              ]
+            }
+          },
+          "required": [],
+          "visible": [
+            "sysparm_query",
+            "sysparm_limit",
+            "sysparm_display_value",
+            "sysparm_fields"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [],
+      "visible": [
+        "query"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__LIST_CMDB_CIS",
+    "description": "Retrieve configuration items (CIs) from the ServiceNow CMDB. Used to discover and audit IT assets such as servers, applications, and network devices.",
+    "tags": [
+      "cmdb",
+      "assets",
+      "itsm"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/api/now/v2/table/cmdb_ci",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "object",
+          "description": "Query parameters for filtering and paginating CMDB configuration items.",
+          "properties": {
+            "sysparm_query": {
+              "type": "string",
+              "description": "Encoded query to filter CIs.",
+              "examples": [
+                "operational_status=1^sys_class_name=cmdb_ci_server",
+                "name=prod-web-01"
+              ]
+            },
+            "sysparm_limit": {
+              "type": "integer",
+              "description": "Maximum number of records to return.",
+              "examples": [
+                10,
+                50,
+                100
+              ]
+            },
+            "sysparm_offset": {
+              "type": "integer",
+              "description": "Starting record index for pagination.",
+              "examples": [
+                0,
+                50
+              ]
+            },
+            "sysparm_fields": {
+              "type": "string",
+              "description": "Comma-separated list of fields to return.",
+              "examples": [
+                "name,sys_class_name,operational_status,ip_address,environment,owned_by"
+              ]
+            },
+            "sysparm_display_value": {
+              "type": "string",
+              "description": "Return display values instead of raw values.",
+              "enum": [
+                "true",
+                "false",
+                "all"
+              ]
+            }
+          },
+          "required": [],
+          "visible": [
+            "sysparm_query",
+            "sysparm_limit",
+            "sysparm_offset",
+            "sysparm_fields",
+            "sysparm_display_value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [],
+      "visible": [
+        "query"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__GET_CMDB_CI",
+    "description": "Retrieve a single Configuration Item (CI) from the ServiceNow CMDB by its sys_id.",
+    "tags": [
+      "cmdb",
+      "assets",
+      "itsm"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/api/now/v2/table/cmdb_ci/{sys_id}",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "object",
+          "description": "Path parameters to identify the CI.",
+          "properties": {
+            "sys_id": {
+              "type": "string",
+              "description": "The unique sys_id of the configuration item.",
+              "examples": [
+                "ci1234abcd5678efgh9012ijkl3456mn"
+              ]
+            }
+          },
+          "required": [
+            "sys_id"
+          ],
+          "visible": [
+            "sys_id"
+          ],
+          "additionalProperties": false
+        },
+        "query": {
+          "type": "object",
+          "description": "Optional query parameters.",
+          "properties": {
+            "sysparm_display_value": {
+              "type": "string",
+              "description": "Return display values instead of raw values.",
+              "enum": [
+                "true",
+                "false",
+                "all"
+              ]
+            },
+            "sysparm_fields": {
+              "type": "string",
+              "description": "Comma-separated list of fields to return."
+            }
+          },
+          "required": [],
+          "visible": [
+            "sysparm_display_value",
+            "sysparm_fields"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "visible": [
+        "path",
+        "query"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__LIST_USERS",
+    "description": "Retrieve a list of users from ServiceNow's sys_user table. Used for looking up user accounts, roles, and profile information.",
+    "tags": [
+      "users",
+      "itsm"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/api/now/v2/table/sys_user",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "object",
+          "description": "Query parameters for filtering and paginating users.",
+          "properties": {
+            "sysparm_query": {
+              "type": "string",
+              "description": "Encoded query to filter users.",
+              "examples": [
+                "active=true^department=IT",
+                "email=john.doe@company.com"
+              ]
+            },
+            "sysparm_limit": {
+              "type": "integer",
+              "description": "Maximum number of records to return.",
+              "examples": [
+                10,
+                50
+              ]
+            },
+            "sysparm_offset": {
+              "type": "integer",
+              "description": "Starting record index for pagination.",
+              "examples": [
+                0,
+                50
+              ]
+            },
+            "sysparm_fields": {
+              "type": "string",
+              "description": "Comma-separated list of fields to return.",
+              "examples": [
+                "name,email,user_name,department,active,title,manager"
+              ]
+            },
+            "sysparm_display_value": {
+              "type": "string",
+              "description": "Return display values instead of raw values.",
+              "enum": [
+                "true",
+                "false",
+                "all"
+              ]
+            }
+          },
+          "required": [],
+          "visible": [
+            "sysparm_query",
+            "sysparm_limit",
+            "sysparm_offset",
+            "sysparm_fields",
+            "sysparm_display_value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [],
+      "visible": [
+        "query"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__GET_USER",
+    "description": "Retrieve a single user record from ServiceNow by sys_id. Used to look up user details such as name, email, department, and manager.",
+    "tags": [
+      "users",
+      "itsm"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/api/now/v2/table/sys_user/{sys_id}",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "object",
+          "description": "Path parameters to identify the user.",
+          "properties": {
+            "sys_id": {
+              "type": "string",
+              "description": "The unique sys_id of the user record.",
+              "examples": [
+                "user1234abcd5678efgh9012ijkl3456"
+              ]
+            }
+          },
+          "required": [
+            "sys_id"
+          ],
+          "visible": [
+            "sys_id"
+          ],
+          "additionalProperties": false
+        },
+        "query": {
+          "type": "object",
+          "description": "Optional query parameters.",
+          "properties": {
+            "sysparm_display_value": {
+              "type": "string",
+              "description": "Return display values instead of raw values.",
+              "enum": [
+                "true",
+                "false",
+                "all"
+              ]
+            },
+            "sysparm_fields": {
+              "type": "string",
+              "description": "Comma-separated list of fields to return.",
+              "examples": [
+                "name,email,user_name,department,active,title,manager,phone"
+              ]
+            }
+          },
+          "required": [],
+          "visible": [
+            "sysparm_display_value",
+            "sysparm_fields"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "visible": [
+        "path",
+        "query"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__LIST_KNOWLEDGE_ARTICLES",
+    "description": "Retrieve knowledge base articles from ServiceNow. Used to surface self-service documentation, FAQs, and known error workarounds.",
+    "tags": [
+      "knowledge-management",
+      "self-service"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/api/now/v2/table/kb_knowledge",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "object",
+          "description": "Query parameters for filtering and paginating knowledge articles.",
+          "properties": {
+            "sysparm_query": {
+              "type": "string",
+              "description": "Encoded query to filter knowledge articles.",
+              "examples": [
+                "workflow_state=published^active=true",
+                "short_description=VPN^workflow_state=published"
+              ]
+            },
+            "sysparm_limit": {
+              "type": "integer",
+              "description": "Maximum number of records to return.",
+              "examples": [
+                10,
+                25,
+                50
+              ]
+            },
+            "sysparm_offset": {
+              "type": "integer",
+              "description": "Starting record index for pagination.",
+              "examples": [
+                0,
+                25
+              ]
+            },
+            "sysparm_fields": {
+              "type": "string",
+              "description": "Comma-separated list of fields to return.",
+              "examples": [
+                "number,short_description,text,category,kb_knowledge_base,author,view_count"
+              ]
+            },
+            "sysparm_display_value": {
+              "type": "string",
+              "description": "Return display values instead of raw values.",
+              "enum": [
+                "true",
+                "false",
+                "all"
+              ]
+            }
+          },
+          "required": [],
+          "visible": [
+            "sysparm_query",
+            "sysparm_limit",
+            "sysparm_offset",
+            "sysparm_fields",
+            "sysparm_display_value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [],
+      "visible": [
+        "query"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__GET_KNOWLEDGE_ARTICLE",
+    "description": "Retrieve a single knowledge base article from ServiceNow by its sys_id, including full article body content.",
+    "tags": [
+      "knowledge-management",
+      "self-service"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/api/now/v2/table/kb_knowledge/{sys_id}",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "object",
+          "description": "Path parameters to identify the knowledge article.",
+          "properties": {
+            "sys_id": {
+              "type": "string",
+              "description": "The unique sys_id of the knowledge article.",
+              "examples": [
+                "kb1234abcd5678efgh9012ijkl3456mn"
+              ]
+            }
+          },
+          "required": [
+            "sys_id"
+          ],
+          "visible": [
+            "sys_id"
+          ],
+          "additionalProperties": false
+        },
+        "query": {
+          "type": "object",
+          "description": "Optional query parameters.",
+          "properties": {
+            "sysparm_display_value": {
+              "type": "string",
+              "description": "Return display values instead of raw values.",
+              "enum": [
+                "true",
+                "false",
+                "all"
+              ]
+            },
+            "sysparm_fields": {
+              "type": "string",
+              "description": "Comma-separated list of fields to return.",
+              "examples": [
+                "number,short_description,text,category,author,workflow_state"
+              ]
+            }
+          },
+          "required": [],
+          "visible": [
+            "sysparm_display_value",
+            "sysparm_fields"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "visible": [
+        "path",
+        "query"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__SEARCH_KNOWLEDGE_BASE",
+    "description": "Search the ServiceNow Knowledge Base using the full-text search API. Returns relevant articles matching keywords or phrases.",
+    "tags": [
+      "knowledge-management",
+      "search",
+      "self-service"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/api/now/v2/table/kb_knowledge",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "object",
+          "description": "Search parameters for the knowledge base.",
+          "properties": {
+            "sysparm_query": {
+              "type": "string",
+              "description": "Encoded query with search terms using CONTAINS or LIKE operators on the short_description or text field.",
+              "examples": [
+                "short_descriptionCONTAINSVPN^workflow_state=published",
+                "textCONTAINSpassword reset^active=true"
+              ]
+            },
+            "sysparm_limit": {
+              "type": "integer",
+              "description": "Maximum number of articles to return.",
+              "examples": [
+                5,
+                10
+              ]
+            },
+            "sysparm_fields": {
+              "type": "string",
+              "description": "Comma-separated list of fields to return.",
+              "examples": [
+                "number,short_description,text,category"
+              ]
+            },
+            "sysparm_display_value": {
+              "type": "string",
+              "description": "Return display values instead of raw values.",
+              "enum": [
+                "true",
+                "false",
+                "all"
+              ]
+            }
+          },
+          "required": [
+            "sysparm_query"
+          ],
+          "visible": [
+            "sysparm_query",
+            "sysparm_limit",
+            "sysparm_fields",
+            "sysparm_display_value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "visible": [
+        "query"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__ADD_COMMENT_TO_RECORD",
+    "description": "Add a public comment or internal work note to any ServiceNow task record (incident, change request, problem, RITM, etc.).",
+    "tags": [
+      "comments",
+      "collaboration",
+      "itsm"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "PATCH",
+      "path": "/api/now/v2/table/{table_name}/{sys_id}",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "object",
+          "description": "Path parameters to identify the target record.",
+          "properties": {
+            "table_name": {
+              "type": "string",
+              "description": "The name of the ServiceNow table containing the record.",
+              "enum": [
+                "incident",
+                "change_request",
+                "problem",
+                "sc_req_item",
+                "task"
+              ]
+            },
+            "sys_id": {
+              "type": "string",
+              "description": "The unique sys_id of the record to add a comment to.",
+              "examples": [
+                "1234abcd1234abcd1234abcd1234abcd"
+              ]
+            }
+          },
+          "required": [
+            "table_name",
+            "sys_id"
+          ],
+          "visible": [
+            "table_name",
+            "sys_id"
+          ],
+          "additionalProperties": false
+        },
+        "body": {
+          "type": "object",
+          "description": "Comment or work note content to add.",
+          "properties": {
+            "comments": {
+              "type": "string",
+              "description": "Public comment visible to the caller/customer and agents.",
+              "examples": [
+                "We are investigating the issue and will provide an update within 30 minutes."
+              ]
+            },
+            "work_notes": {
+              "type": "string",
+              "description": "Internal work note visible only to agents and not to the end user.",
+              "examples": [
+                "Checked with the network team. The issue is related to a misconfigured firewall rule."
+              ]
+            }
+          },
+          "required": [],
+          "visible": [
+            "comments",
+            "work_notes"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "path",
+        "body"
+      ],
+      "visible": [
+        "path",
+        "body"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__QUERY_TABLE",
+    "description": "Generic API to query any ServiceNow table by name. Use this for tables not covered by specific functions, such as custom tables, approvals (sysapproval_approver), or SLAs (task_sla).",
+    "tags": [
+      "generic",
+      "itsm",
+      "table-api"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/api/now/v2/table/{table_name}",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "object",
+          "description": "Path parameters specifying the target table.",
+          "properties": {
+            "table_name": {
+              "type": "string",
+              "description": "The name of the ServiceNow table to query.",
+              "examples": [
+                "sysapproval_approver",
+                "task_sla",
+                "sys_journal_field",
+                "cmdb_rel_ci",
+                "sc_catalog_item"
+              ]
+            }
+          },
+          "required": [
+            "table_name"
+          ],
+          "visible": [
+            "table_name"
+          ],
+          "additionalProperties": false
+        },
+        "query": {
+          "type": "object",
+          "description": "Query parameters for filtering, selecting fields, and paginating results.",
+          "properties": {
+            "sysparm_query": {
+              "type": "string",
+              "description": "Encoded query string to filter and sort records. Use '^' as AND operator. Append '^ORDERBYfield' or '^ORDERBYDESCfield' for sorting. e.g., 'active=true^state=requested^ORDERBYDESCsys_created_on'.",
+              "examples": [
+                "active=true^state=requested^ORDERBYDESCsys_created_on",
+                "source_id=1234abcd1234abcd1234abcd1234abcd^ORDERBYnumber"
+              ]
+            },
+            "sysparm_limit": {
+              "type": "integer",
+              "description": "Maximum number of records to return.",
+              "examples": [
+                10,
+                50,
+                100
+              ]
+            },
+            "sysparm_offset": {
+              "type": "integer",
+              "description": "Starting record index for pagination.",
+              "examples": [
+                0,
+                50
+              ]
+            },
+            "sysparm_fields": {
+              "type": "string",
+              "description": "Comma-separated list of fields to return. Omit to return all fields.",
+              "examples": [
+                "sys_id,number,state,short_description"
+              ]
+            },
+            "sysparm_display_value": {
+              "type": "string",
+              "description": "Return display values instead of raw values.",
+              "enum": [
+                "true",
+                "false",
+                "all"
+              ]
+            }
+          },
+          "required": [],
+          "visible": [
+            "sysparm_query",
+            "sysparm_limit",
+            "sysparm_offset",
+            "sysparm_fields",
+            "sysparm_display_value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "visible": [
+        "path",
+        "query"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__GET_AGGREGATE_STATS",
+    "description": "Retrieve aggregate statistics (count, sum, avg, min, max) over any ServiceNow table. Useful for reporting, KPIs, and dashboards \u2014 e.g., count of open P1 incidents, average resolution time.",
+    "tags": [
+      "reporting",
+      "analytics",
+      "itsm"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/api/now/stats/{table_name}",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "object",
+          "description": "Path parameters specifying the target table.",
+          "properties": {
+            "table_name": {
+              "type": "string",
+              "description": "The ServiceNow table to aggregate over.",
+              "examples": [
+                "incident",
+                "change_request",
+                "problem",
+                "sc_request"
+              ]
+            }
+          },
+          "required": [
+            "table_name"
+          ],
+          "visible": [
+            "table_name"
+          ],
+          "additionalProperties": false
+        },
+        "query": {
+          "type": "object",
+          "description": "Query parameters for aggregation.",
+          "properties": {
+            "sysparm_query": {
+              "type": "string",
+              "description": "Encoded query to filter records before aggregation.",
+              "examples": [
+                "state=1^priority=1",
+                "active=true^type=normal"
+              ]
+            },
+            "sysparm_count": {
+              "type": "boolean",
+              "description": "Set to true to include a record count in the response.",
+              "examples": [
+                true
+              ]
+            },
+            "sysparm_sum_fields": {
+              "type": "string",
+              "description": "Comma-separated list of numeric fields to sum.",
+              "examples": [
+                "business_duration",
+                "reassignment_count"
+              ]
+            },
+            "sysparm_avg_fields": {
+              "type": "string",
+              "description": "Comma-separated list of numeric fields to average.",
+              "examples": [
+                "business_duration",
+                "reopen_count"
+              ]
+            },
+            "sysparm_min_fields": {
+              "type": "string",
+              "description": "Comma-separated list of fields to find minimum values for.",
+              "examples": [
+                "opened_at"
+              ]
+            },
+            "sysparm_max_fields": {
+              "type": "string",
+              "description": "Comma-separated list of fields to find maximum values for.",
+              "examples": [
+                "resolved_at"
+              ]
+            },
+            "sysparm_group_by": {
+              "type": "string",
+              "description": "Field to group aggregated results by.",
+              "examples": [
+                "priority",
+                "state",
+                "assignment_group"
+              ]
+            },
+            "sysparm_display_value": {
+              "type": "string",
+              "description": "Return display values instead of raw values.",
+              "enum": [
+                "true",
+                "false",
+                "all"
+              ]
+            }
+          },
+          "required": [],
+          "visible": [
+            "sysparm_query",
+            "sysparm_count",
+            "sysparm_sum_fields",
+            "sysparm_avg_fields",
+            "sysparm_min_fields",
+            "sysparm_max_fields",
+            "sysparm_group_by",
+            "sysparm_display_value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "visible": [
+        "path",
+        "query"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__LIST_ATTACHMENTS",
+    "description": "List all attachments linked to a specific ServiceNow record such as an incident, change request, or problem. Returns file name, size, content type, and sys_id for each attachment.",
+    "tags": [
+      "attachments",
+      "files",
+      "itsm"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/api/now/attachment",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "object",
+          "description": "Query parameters to filter attachments by record.",
+          "properties": {
+            "sysparm_query": {
+              "type": "string",
+              "description": "Filter attachments by table and record sys_id. e.g., table_name=incident^table_sys_id=1234abcd1234abcd1234abcd1234abcd",
+              "examples": [
+                "table_name=incident^table_sys_id=1234abcd1234abcd1234abcd1234abcd",
+                "table_name=change_request^table_sys_id=abcd1234abcd1234abcd1234abcd1234"
+              ]
+            },
+            "sysparm_limit": {
+              "type": "string",
+              "description": "Maximum number of attachments to return.",
+              "examples": [
+                "10",
+                "50"
+              ]
+            },
+            "sysparm_fields": {
+              "type": "string",
+              "description": "Comma-separated list of fields to return.",
+              "examples": [
+                "file_name,size_bytes,content_type,table_name,table_sys_id,sys_id,download_link"
+              ]
+            },
+            "sysparm_display_value": {
+              "type": "string",
+              "description": "Return display values instead of raw values.",
+              "enum": [
+                "true",
+                "false",
+                "all"
+              ]
+            }
+          },
+          "required": [],
+          "visible": [
+            "sysparm_query",
+            "sysparm_limit",
+            "sysparm_fields",
+            "sysparm_display_value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [],
+      "visible": [
+        "query"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__GET_ATTACHMENT_METADATA",
+    "description": "Get metadata of a specific attachment by its sys_id. Returns file name, size, content type, and which record it is attached to. Use LIST_ATTACHMENTS first to find the sys_id.",
+    "tags": [
+      "attachments",
+      "files",
+      "itsm"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/api/now/attachment/{sys_id}",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "object",
+          "description": "Path parameters to identify the attachment.",
+          "properties": {
+            "sys_id": {
+              "type": "string",
+              "description": "The unique sys_id of the attachment record.",
+              "examples": [
+                "attach1234abcd5678efgh9012ijkl3456"
+              ]
+            }
+          },
+          "required": [
+            "sys_id"
+          ],
+          "visible": [
+            "sys_id"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "visible": [
+        "path"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__DOWNLOAD_ATTACHMENT",
+    "description": "Download the binary file content of an attachment by its sys_id. Returns the raw file with its original content type such as PDF, PNG, or text. Use GET_ATTACHMENT_METADATA first to find the sys_id.",
+    "tags": [
+      "attachments",
+      "files",
+      "download",
+      "itsm"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/api/now/attachment/{sys_id}/file",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "object",
+          "description": "Path parameters to identify the attachment to download.",
+          "properties": {
+            "sys_id": {
+              "type": "string",
+              "description": "The unique sys_id of the attachment to download.",
+              "examples": [
+                "attach1234abcd5678efgh9012ijkl3456"
+              ]
+            }
+          },
+          "required": [
+            "sys_id"
+          ],
+          "visible": [
+            "sys_id"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "visible": [
+        "path"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__UPLOAD_ATTACHMENT",
+    "description": "Upload a file attachment to any ServiceNow record such as an incident, change request, or problem. Use this to attach error logs, screenshots, or documents directly to a record.",
+    "tags": [
+      "attachments",
+      "files",
+      "upload",
+      "itsm"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "POST",
+      "path": "/api/now/attachment/file",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "object",
+          "description": "Query parameters specifying which record to attach the file to.",
+          "properties": {
+            "table_name": {
+              "type": "string",
+              "description": "The ServiceNow table name of the record to attach the file to.",
+              "examples": [
+                "incident",
+                "change_request",
+                "problem",
+                "sc_req_item",
+                "kb_knowledge"
+              ]
+            },
+            "table_sys_id": {
+              "type": "string",
+              "description": "The sys_id of the specific record to attach the file to.",
+              "examples": [
+                "1234abcd1234abcd1234abcd1234abcd"
+              ]
+            },
+            "file_name": {
+              "type": "string",
+              "description": "The name of the file being uploaded including extension.",
+              "examples": [
+                "error_log.txt",
+                "screenshot.png",
+                "report.pdf"
+              ]
+            },
+            "content_type": {
+              "type": "string",
+              "description": "MIME type of the file being uploaded.",
+              "examples": [
+                "text/plain",
+                "image/png",
+                "application/pdf",
+                "image/jpeg"
+              ]
+            }
+          },
+          "required": [
+            "table_name",
+            "table_sys_id",
+            "file_name",
+            "content_type"
+          ],
+          "visible": [
+            "table_name",
+            "table_sys_id",
+            "file_name",
+            "content_type"
+          ],
+          "additionalProperties": false
+        },
+        "body": {
+          "type": "object",
+          "description": "File content to upload.",
+          "properties": {
+            "content": {
+              "type": "string",
+              "description": "The file content as a base64-encoded string for binary files, or plain text for text files.",
+              "examples": [
+                "SGVsbG8gV29ybGQ=",
+                "Error: connection refused at 10:42 AM"
+              ]
+            }
+          },
+          "required": [
+            "content"
+          ],
+          "visible": [
+            "content"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "query",
+        "body"
+      ],
+      "visible": [
+        "query",
+        "body"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__DELETE_ATTACHMENT",
+    "description": "Permanently delete a specific attachment from a ServiceNow record by its sys_id. Use LIST_ATTACHMENTS first to confirm the correct sys_id before deleting.",
+    "tags": [
+      "attachments",
+      "files",
+      "delete",
+      "itsm"
+    ],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "DELETE",
+      "path": "/api/now/attachment/{sys_id}",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "object",
+          "description": "Path parameters to identify the attachment to delete.",
+          "properties": {
+            "sys_id": {
+              "type": "string",
+              "description": "The unique sys_id of the attachment to permanently delete.",
+              "examples": [
+                "attach1234abcd5678efgh9012ijkl3456"
+              ]
+            }
+          },
+          "required": [
+            "sys_id"
+          ],
+          "visible": [
+            "sys_id"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "visible": [
+        "path"
+      ],
+      "additionalProperties": false
+    }
+  },
+  [
+  {
+    "name": "SERVICE_NOW__CREATE_HR_CASE",
+    "description": "Create a new HR case in ServiceNow HR Service Delivery. Used to log HR requests such as onboarding, offboarding, benefits, payroll queries, or employee relations issues.",
+    "tags": ["hr", "cases", "itsm"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "POST",
+      "path": "/api/now/table/sn_hr_core_case",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "body": {
+          "type": "object",
+          "description": "Fields to set on the new HR case record.",
+          "properties": {
+            "short_description": {
+              "type": "string",
+              "description": "Brief summary of the HR case.",
+              "examples": [
+                "Employee relocation request for John Smith",
+                "Benefits enrollment issue for new joiner"
+              ]
+            },
+            "description": {
+              "type": "string",
+              "description": "Detailed description of the HR case and what the employee needs.",
+              "examples": [
+                "Employee John Smith is relocating from London to New York and needs HR support for the transition including visa and tax documentation."
+              ]
+            },
+            "subject_person": {
+              "type": "string",
+              "description": "sys_id or username of the employee this HR case is about.",
+              "examples": ["john.smith", "jane.doe@wtw.com"]
+            },
+            "hr_service": {
+              "type": "string",
+              "description": "sys_id or name of the HR service this case belongs to.",
+              "examples": ["Payroll", "Benefits", "Onboarding", "Offboarding", "Employee Relations"]
+            },
+            "category": {
+              "type": "string",
+              "description": "Category of the HR case.",
+              "examples": ["payroll", "benefits", "leave", "onboarding", "offboarding", "general_inquiry"]
+            },
+            "priority": {
+              "type": "string",
+              "description": "Priority of the HR case. 1=Critical, 2=High, 3=Moderate, 4=Low.",
+              "enum": ["1", "2", "3", "4"]
+            },
+            "assignment_group": {
+              "type": "string",
+              "description": "Name or sys_id of the HR team to assign this case to.",
+              "examples": ["HR Operations", "Benefits Team", "Payroll Team"]
+            },
+            "assigned_to": {
+              "type": "string",
+              "description": "sys_id or username of the HR agent to assign this case to.",
+              "examples": ["hr.agent@wtw.com"]
+            },
+            "opened_for": {
+              "type": "string",
+              "description": "sys_id or username of the employee who the case is opened for.",
+              "examples": ["john.smith@wtw.com"]
+            },
+            "contact_type": {
+              "type": "string",
+              "description": "How the case was submitted.",
+              "enum": ["email", "phone", "self-service", "chat", "walk-in"]
+            }
+          },
+          "required": ["short_description"],
+          "visible": [
+            "short_description",
+            "description",
+            "subject_person",
+            "hr_service",
+            "category",
+            "priority",
+            "assignment_group",
+            "assigned_to",
+            "opened_for",
+            "contact_type"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": ["body"],
+      "visible": ["body"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__UPDATE_HR_CASE",
+    "description": "Update an existing HR case in ServiceNow. Used to change state, reassign, add comments, or close an HR case.",
+    "tags": ["hr", "cases", "itsm", "update"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "PATCH",
+      "path": "/api/now/table/sn_hr_core_case/{sys_id}",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "object",
+          "description": "Path parameters to identify the HR case.",
+          "properties": {
+            "sys_id": {
+              "type": "string",
+              "description": "The unique sys_id of the HR case to update.",
+              "examples": ["1234abcd1234abcd1234abcd1234abcd"]
+            }
+          },
+          "required": ["sys_id"],
+          "visible": ["sys_id"],
+          "additionalProperties": false
+        },
+        "body": {
+          "type": "object",
+          "description": "Fields to update on the HR case.",
+          "properties": {
+            "state": {
+              "type": "string",
+              "description": "Updated state of the HR case.",
+              "enum": ["1", "2", "3", "4", "5", "6"],
+              "examples": ["1=Draft, 2=Ready, 3=In Progress, 4=Closed Complete, 5=Closed Incomplete, 6=Cancelled"]
+            },
+            "short_description": {
+              "type": "string",
+              "description": "Updated summary of the HR case.",
+              "examples": ["Updated: Employee relocation request for John Smith"]
+            },
+            "description": {
+              "type": "string",
+              "description": "Updated detailed description of the case."
+            },
+            "assignment_group": {
+              "type": "string",
+              "description": "Name or sys_id of the HR team to reassign this case to.",
+              "examples": ["HR Operations", "Benefits Team"]
+            },
+            "assigned_to": {
+              "type": "string",
+              "description": "sys_id or username of the HR agent to reassign to.",
+              "examples": ["hr.agent@wtw.com"]
+            },
+            "comments": {
+              "type": "string",
+              "description": "Public comment visible to the employee.",
+              "examples": ["We have received your request and are processing it. Expected resolution within 3 business days."]
+            },
+            "work_notes": {
+              "type": "string",
+              "description": "Internal work note visible only to HR agents.",
+              "examples": ["Escalated to senior HR advisor. Awaiting approval from line manager."]
+            },
+            "close_notes": {
+              "type": "string",
+              "description": "Resolution notes when closing the case.",
+              "examples": ["Relocation package approved and communicated to employee. Case resolved."]
+            },
+            "priority": {
+              "type": "string",
+              "description": "Updated priority. 1=Critical, 2=High, 3=Moderate, 4=Low.",
+              "enum": ["1", "2", "3", "4"]
+            }
+          },
+          "required": [],
+          "visible": [
+            "state",
+            "short_description",
+            "description",
+            "assignment_group",
+            "assigned_to",
+            "comments",
+            "work_notes",
+            "close_notes",
+            "priority"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": ["path", "body"],
+      "visible": ["path", "body"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__GET_HR_CASE",
+    "description": "Retrieve full details of a specific HR case by its sys_id including state, subject employee, HR service, assigned team, comments, and work notes.",
+    "tags": ["hr", "cases", "itsm"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/api/now/table/sn_hr_core_case/{sys_id}",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "object",
+          "description": "Path parameters to identify the HR case.",
+          "properties": {
+            "sys_id": {
+              "type": "string",
+              "description": "The unique sys_id of the HR case to retrieve.",
+              "examples": ["1234abcd1234abcd1234abcd1234abcd"]
+            }
+          },
+          "required": ["sys_id"],
+          "visible": ["sys_id"],
+          "additionalProperties": false
+        },
+        "query": {
+          "type": "object",
+          "description": "Optional query parameters.",
+          "properties": {
+            "sysparm_display_value": {
+              "type": "string",
+              "description": "Return human-readable display values instead of raw sys_ids.",
+              "enum": ["true", "false", "all"]
+            },
+            "sysparm_fields": {
+              "type": "string",
+              "description": "Comma-separated list of fields to return. Omit to return all fields.",
+              "examples": [
+                "number,short_description,state,priority,assigned_to,opened_at,subject_person,hr_service"
+              ]
+            }
+          },
+          "required": [],
+          "visible": ["sysparm_display_value", "sysparm_fields"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["path"],
+      "visible": ["path", "query"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SERVICE_NOW__ADD_ATTACHMENT_TO_HR_CASE",
+    "description": "Upload and attach a file to an HR case in ServiceNow. Use this to attach supporting documents such as offer letters, medical certificates, payslips, or ID documents to an HR case.",
+    "tags": ["hr", "cases", "attachments", "upload", "itsm"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "POST",
+      "path": "/api/now/attachment/file",
+      "server_url": "https://wtwdev.service-now.com"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "object",
+          "description": "Query parameters specifying which HR case to attach the file to.",
+          "properties": {
+            "table_name": {
+              "type": "string",
+              "description": "The ServiceNow table for HR cases. Always use sn_hr_core_case for HR cases.",
+              "enum": ["sn_hr_core_case"]
+            },
+            "table_sys_id": {
+              "type": "string",
+              "description": "The sys_id of the HR case to attach the file to.",
+              "examples": ["1234abcd1234abcd1234abcd1234abcd"]
+            },
+            "file_name": {
+              "type": "string",
+              "description": "The name of the file being uploaded including its extension.",
+              "examples": [
+                "medical_certificate.pdf",
+                "offer_letter.pdf",
+                "payslip_june.pdf",
+                "id_document.png"
+              ]
+            },
+            "content_type": {
+              "type": "string",
+              "description": "MIME type of the file being uploaded.",
+              "examples": [
+                "application/pdf",
+                "image/png",
+                "image/jpeg",
+                "text/plain",
+                "application/msword",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              ]
+            }
+          },
+          "required": ["table_name", "table_sys_id", "file_name", "content_type"],
+          "visible": ["table_name", "table_sys_id", "file_name", "content_type"],
+          "additionalProperties": false
+        },
+        "body": {
+          "type": "object",
+          "description": "File content to upload.",
+          "properties": {
+            "content": {
+              "type": "string",
+              "description": "The file content as a base64-encoded string for binary files such as PDFs and images, or plain text for text files.",
+              "examples": [
+                "SGVsbG8gV29ybGQ=",
+                "Medical certificate content here..."
+              ]
+            }
+          },
+          "required": ["content"],
+          "visible": ["content"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["query", "body"],
+      "visible": ["query", "body"],
+      "additionalProperties": false
+    }
+  }
+]
+]
