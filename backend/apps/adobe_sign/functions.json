@@ -1,0 +1,3789 @@
+[
+    {
+        "name": "ADOBE_SIGN__GET_BASE_URIS",
+        "description": "Retrieve the base URIs (API access point and web access point) for the authenticated user's account. This must be called first to discover the correct shard-specific API endpoint.",
+        "tags": [
+            "base",
+            "configuration"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/api/rest/v6/baseUris",
+            "server_url": "https://api.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "visible": [],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__UPLOAD_TRANSIENT_DOCUMENT",
+        "description": "Upload a document to Adobe Sign servers as a transient document. The returned transientDocumentId can be used in agreement, widget, or library document creation calls. Transient documents are automatically deleted after 7 days.",
+        "tags": [
+            "documents",
+            "upload",
+            "transient"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "POST",
+            "path": "/api/rest/v6/transientDocuments",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "header": {
+                    "type": "object",
+                    "description": "Request headers",
+                    "properties": {
+                        "Content-Type": {
+                            "type": "string",
+                            "description": "Must be multipart/form-data",
+                            "default": "multipart/form-data"
+                        }
+                    },
+                    "required": [],
+                    "visible": [
+                        "Content-Type"
+                    ],
+                    "additionalProperties": false
+                },
+                "body": {
+                    "type": "object",
+                    "description": "The multipart form data for the document upload",
+                    "properties": {
+                        "File-Name": {
+                            "type": "string",
+                            "description": "The name of the file being uploaded (e.g., 'Contract.pdf')"
+                        },
+                        "File": {
+                            "type": "string",
+                            "description": "The file content to upload",
+                            "format": "binary"
+                        },
+                        "Mime-Type": {
+                            "type": "string",
+                            "description": "The MIME type of the file (e.g., 'application/pdf')"
+                        }
+                    },
+                    "required": [
+                        "File-Name",
+                        "File"
+                    ],
+                    "visible": [
+                        "File-Name",
+                        "File",
+                        "Mime-Type"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "body"
+            ],
+            "visible": [
+                "header",
+                "body"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__LIST_AGREEMENTS",
+        "description": "Retrieve a paginated list of agreements for the authenticated user. Supports filtering by group and pagination using cursor.",
+        "tags": [
+            "agreements",
+            "list"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/api/rest/v6/agreements",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "object",
+                    "description": "Query parameters for filtering and pagination",
+                    "properties": {
+                        "cursor": {
+                            "type": "string",
+                            "description": "Cursor for pagination, returned in previous response"
+                        },
+                        "pageSize": {
+                            "type": "integer",
+                            "description": "Number of agreements per page (default 20)"
+                        },
+                        "groupId": {
+                            "type": "string",
+                            "description": "Filter agreements by group ID"
+                        }
+                    },
+                    "required": [],
+                    "visible": [
+                        "cursor",
+                        "pageSize",
+                        "groupId"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [],
+            "visible": [
+                "query"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__CREATE_AGREEMENT",
+        "description": "Create a new agreement and send it for signature, approval, or save as draft. The agreement can reference transient documents, library documents, or URLs as file sources. State can be IN_PROCESS (send immediately), DRAFT (build incrementally), or AUTHORING (edit form fields).",
+        "tags": [
+            "agreements",
+            "create",
+            "send",
+            "signature"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "POST",
+            "path": "/api/rest/v6/agreements",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "object",
+                    "description": "The agreement creation payload",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "description": "The name of the agreement"
+                        },
+                        "signatureType": {
+                            "type": "string",
+                            "enum": [
+                                "ESIGN",
+                                "WRITTEN"
+                            ],
+                            "description": "The type of signature: ESIGN (electronic) or WRITTEN (fax/physical)"
+                        },
+                        "state": {
+                            "type": "string",
+                            "enum": [
+                                "IN_PROCESS",
+                                "DRAFT",
+                                "AUTHORING"
+                            ],
+                            "description": "The initial state of the agreement. IN_PROCESS sends immediately, DRAFT saves for later editing, AUTHORING allows form field editing."
+                        },
+                        "fileInfos": {
+                            "type": "array",
+                            "description": "List of file sources for the agreement",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "transientDocumentId": {
+                                        "type": "string",
+                                        "description": "ID of a transient document uploaded via /transientDocuments"
+                                    },
+                                    "libraryDocumentId": {
+                                        "type": "string",
+                                        "description": "ID of an existing library document template"
+                                    },
+                                    "urlFileInfo": {
+                                        "type": "object",
+                                        "description": "A publicly accessible URL containing the document",
+                                        "properties": {
+                                            "url": {
+                                                "type": "string",
+                                                "description": "The publicly accessible URL of the document"
+                                            },
+                                            "name": {
+                                                "type": "string",
+                                                "description": "The display name for this file"
+                                            },
+                                            "mimeType": {
+                                                "type": "string",
+                                                "description": "MIME type of the document"
+                                            }
+                                        },
+                                        "required": [
+                                            "url"
+                                        ],
+                                        "visible": [
+                                            "url",
+                                            "name",
+                                            "mimeType"
+                                        ],
+                                        "additionalProperties": false
+                                    }
+                                },
+                                "required": [],
+                                "visible": [
+                                    "transientDocumentId",
+                                    "libraryDocumentId",
+                                    "urlFileInfo"
+                                ],
+                                "additionalProperties": false
+                            }
+                        },
+                        "participantSetsInfo": {
+                            "type": "array",
+                            "description": "List of participant sets for the agreement",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "memberInfos": {
+                                        "type": "array",
+                                        "description": "List of members in this participant set",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "email": {
+                                                    "type": "string",
+                                                    "description": "Email address of the participant"
+                                                }
+                                            },
+                                            "required": [
+                                                "email"
+                                            ],
+                                            "visible": [
+                                                "email"
+                                            ],
+                                            "additionalProperties": false
+                                        }
+                                    },
+                                    "role": {
+                                        "type": "string",
+                                        "enum": [
+                                            "SIGNER",
+                                            "APPROVER",
+                                            "ACCEPTOR",
+                                            "CERTIFIED_RECIPIENT",
+                                            "FORM_FILLER",
+                                            "DELEGATE_TO_SIGNER",
+                                            "DELEGATE_TO_APPROVER",
+                                            "SHARE"
+                                        ],
+                                        "description": "The role of this participant set"
+                                    },
+                                    "order": {
+                                        "type": "integer",
+                                        "description": "The signing order index for this participant set (starting from 1)"
+                                    }
+                                },
+                                "required": [
+                                    "memberInfos",
+                                    "role",
+                                    "order"
+                                ],
+                                "visible": [
+                                    "memberInfos",
+                                    "role",
+                                    "order"
+                                ],
+                                "additionalProperties": false
+                            }
+                        },
+                        "message": {
+                            "type": "string",
+                            "description": "An optional message to the participants"
+                        },
+                        "externalId": {
+                            "type": "object",
+                            "description": "An external identifier for the agreement",
+                            "properties": {
+                                "id": {
+                                    "type": "string",
+                                    "description": "The unique external ID"
+                                }
+                            },
+                            "required": [
+                                "id"
+                            ],
+                            "visible": [
+                                "id"
+                            ],
+                            "additionalProperties": false
+                        },
+                        "ccs": {
+                            "type": "array",
+                            "description": "CC email addresses that will receive a copy of the agreement",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "description": "Email address for CC"
+                                    }
+                                },
+                                "required": [
+                                    "email"
+                                ],
+                                "visible": [
+                                    "email"
+                                ],
+                                "additionalProperties": false
+                            }
+                        },
+                        "emailOption": {
+                            "type": "object",
+                            "description": "Email notification options",
+                            "properties": {
+                                "sendOptions": {
+                                    "type": "object",
+                                    "properties": {
+                                        "completionEmails": {
+                                            "type": "string",
+                                            "enum": [
+                                                "ALL",
+                                                "NONE"
+                                            ],
+                                            "description": "Send completion emails to ALL or NONE"
+                                        },
+                                        "inFlightEmails": {
+                                            "type": "string",
+                                            "enum": [
+                                                "ALL",
+                                                "NONE"
+                                            ],
+                                            "description": "Send in-flight emails to ALL or NONE"
+                                        },
+                                        "initEmails": {
+                                            "type": "string",
+                                            "enum": [
+                                                "ALL",
+                                                "NONE"
+                                            ],
+                                            "description": "Send initiation emails to ALL or NONE"
+                                        }
+                                    },
+                                    "required": [],
+                                    "visible": [
+                                        "completionEmails",
+                                        "inFlightEmails",
+                                        "initEmails"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            },
+                            "required": [],
+                            "visible": [
+                                "sendOptions"
+                            ],
+                            "additionalProperties": false
+                        }
+                    },
+                    "required": [
+                        "name",
+                        "signatureType",
+                        "state",
+                        "fileInfos",
+                        "participantSetsInfo"
+                    ],
+                    "visible": [
+                        "name",
+                        "signatureType",
+                        "state",
+                        "fileInfos",
+                        "participantSetsInfo",
+                        "message",
+                        "externalId",
+                        "ccs",
+                        "emailOption"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "body"
+            ],
+            "visible": [
+                "body"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__GET_AGREEMENT",
+        "description": "Retrieve detailed information about a specific agreement including its status, participants, and metadata.",
+        "tags": [
+            "agreements",
+            "details",
+            "status"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/api/rest/v6/agreements/{agreementId}",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "agreementId": {
+                            "type": "string",
+                            "description": "The unique identifier of the agreement"
+                        }
+                    },
+                    "required": [
+                        "agreementId"
+                    ],
+                    "visible": [
+                        "agreementId"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__UPDATE_AGREEMENT",
+        "description": "Update an existing agreement in draft state, or update the expiration time on an agreement that is already out for signature.",
+        "tags": [
+            "agreements",
+            "update"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "PUT",
+            "path": "/api/rest/v6/agreements/{agreementId}",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "agreementId": {
+                            "type": "string",
+                            "description": "The unique identifier of the agreement to update"
+                        }
+                    },
+                    "required": [
+                        "agreementId"
+                    ],
+                    "visible": [
+                        "agreementId"
+                    ],
+                    "additionalProperties": false
+                },
+                "body": {
+                    "type": "object",
+                    "description": "The agreement update payload",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "description": "The updated name of the agreement"
+                        },
+                        "signatureType": {
+                            "type": "string",
+                            "enum": [
+                                "ESIGN",
+                                "WRITTEN"
+                            ],
+                            "description": "The type of signature"
+                        },
+                        "state": {
+                            "type": "string",
+                            "enum": [
+                                "IN_PROCESS",
+                                "AUTHORING"
+                            ],
+                            "description": "The state to transition the agreement to"
+                        },
+                        "fileInfos": {
+                            "type": "array",
+                            "description": "Updated list of file sources",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "transientDocumentId": {
+                                        "type": "string",
+                                        "description": "ID of a transient document"
+                                    },
+                                    "libraryDocumentId": {
+                                        "type": "string",
+                                        "description": "ID of a library document"
+                                    }
+                                },
+                                "required": [],
+                                "visible": [
+                                    "transientDocumentId",
+                                    "libraryDocumentId"
+                                ],
+                                "additionalProperties": false
+                            }
+                        },
+                        "participantSetsInfo": {
+                            "type": "array",
+                            "description": "Updated participant sets",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "memberInfos": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "email": {
+                                                    "type": "string",
+                                                    "description": "Email of the participant"
+                                                }
+                                            },
+                                            "required": [
+                                                "email"
+                                            ],
+                                            "visible": [
+                                                "email"
+                                            ],
+                                            "additionalProperties": false
+                                        }
+                                    },
+                                    "role": {
+                                        "type": "string",
+                                        "description": "The role of this participant set"
+                                    },
+                                    "order": {
+                                        "type": "integer",
+                                        "description": "Signing order index"
+                                    }
+                                },
+                                "required": [
+                                    "memberInfos",
+                                    "role",
+                                    "order"
+                                ],
+                                "visible": [
+                                    "memberInfos",
+                                    "role",
+                                    "order"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": [
+                        "name",
+                        "signatureType",
+                        "state",
+                        "fileInfos",
+                        "participantSetsInfo"
+                    ],
+                    "visible": [
+                        "name",
+                        "signatureType",
+                        "state",
+                        "fileInfos",
+                        "participantSetsInfo"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path",
+                "body"
+            ],
+            "visible": [
+                "path",
+                "body"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__UPDATE_AGREEMENT_STATE",
+        "description": "Transition an agreement from one state to another, such as cancelling an agreement (IN_PROCESS to CANCELLED).",
+        "tags": [
+            "agreements",
+            "state",
+            "cancel"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "PUT",
+            "path": "/api/rest/v6/agreements/{agreementId}/state",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "agreementId": {
+                            "type": "string",
+                            "description": "The unique identifier of the agreement"
+                        }
+                    },
+                    "required": [
+                        "agreementId"
+                    ],
+                    "visible": [
+                        "agreementId"
+                    ],
+                    "additionalProperties": false
+                },
+                "body": {
+                    "type": "object",
+                    "description": "The state transition payload",
+                    "properties": {
+                        "state": {
+                            "type": "string",
+                            "enum": [
+                                "CANCELLED"
+                            ],
+                            "description": "The target state for the agreement. Currently only CANCELLED is supported."
+                        },
+                        "agreementCancellationInfo": {
+                            "type": "object",
+                            "description": "Information about the cancellation",
+                            "properties": {
+                                "comment": {
+                                    "type": "string",
+                                    "description": "Reason for cancelling the agreement"
+                                },
+                                "notifyOthers": {
+                                    "type": "boolean",
+                                    "description": "Whether to notify other participants about the cancellation"
+                                }
+                            },
+                            "required": [],
+                            "visible": [
+                                "comment",
+                                "notifyOthers"
+                            ],
+                            "additionalProperties": false
+                        }
+                    },
+                    "required": [
+                        "state"
+                    ],
+                    "visible": [
+                        "state",
+                        "agreementCancellationInfo"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path",
+                "body"
+            ],
+            "visible": [
+                "path",
+                "body"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__DELETE_AGREEMENT",
+        "description": "Delete an agreement. This permanently removes the agreement and its documents. Requires API Retention to be enabled on the account.",
+        "tags": [
+            "agreements",
+            "delete"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "DELETE",
+            "path": "/api/rest/v6/agreements/{agreementId}",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "agreementId": {
+                            "type": "string",
+                            "description": "The unique identifier of the agreement to delete"
+                        }
+                    },
+                    "required": [
+                        "agreementId"
+                    ],
+                    "visible": [
+                        "agreementId"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__GET_AGREEMENT_DOCUMENTS",
+        "description": "Retrieve the IDs of the documents associated with an agreement. These document IDs can then be used to download individual documents.",
+        "tags": [
+            "agreements",
+            "documents",
+            "list"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/api/rest/v6/agreements/{agreementId}/documents",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "agreementId": {
+                            "type": "string",
+                            "description": "The unique identifier of the agreement"
+                        }
+                    },
+                    "required": [
+                        "agreementId"
+                    ],
+                    "visible": [
+                        "agreementId"
+                    ],
+                    "additionalProperties": false
+                },
+                "query": {
+                    "type": "object",
+                    "description": "Query parameters",
+                    "properties": {
+                        "versionId": {
+                            "type": "string",
+                            "description": "Version of the agreement documents to retrieve. If not specified, the latest version is returned."
+                        }
+                    },
+                    "required": [],
+                    "visible": [
+                        "versionId"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path",
+                "query"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__GET_AGREEMENT_COMBINED_DOCUMENT",
+        "description": "Download a single combined PDF document for an agreement, containing all the individual documents concatenated. Optionally includes the audit trail.",
+        "tags": [
+            "agreements",
+            "documents",
+            "download",
+            "combined"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/api/rest/v6/agreements/{agreementId}/combinedDocument",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "agreementId": {
+                            "type": "string",
+                            "description": "The unique identifier of the agreement"
+                        }
+                    },
+                    "required": [
+                        "agreementId"
+                    ],
+                    "visible": [
+                        "agreementId"
+                    ],
+                    "additionalProperties": false
+                },
+                "query": {
+                    "type": "object",
+                    "description": "Query parameters",
+                    "properties": {
+                        "attachAuditReport": {
+                            "type": "boolean",
+                            "description": "Whether to attach the audit report to the combined document"
+                        }
+                    },
+                    "required": [],
+                    "visible": [
+                        "attachAuditReport"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path",
+                "query"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__GET_AGREEMENT_DOCUMENT",
+        "description": "Download a specific individual document from an agreement by its document ID.",
+        "tags": [
+            "agreements",
+            "documents",
+            "download"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/api/rest/v6/agreements/{agreementId}/documents/{documentId}",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "agreementId": {
+                            "type": "string",
+                            "description": "The unique identifier of the agreement"
+                        },
+                        "documentId": {
+                            "type": "string",
+                            "description": "The unique identifier of the document within the agreement"
+                        }
+                    },
+                    "required": [
+                        "agreementId",
+                        "documentId"
+                    ],
+                    "visible": [
+                        "agreementId",
+                        "documentId"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__GET_AGREEMENT_AUDIT_TRAIL",
+        "description": "Download the audit trail (audit report) PDF for a specific agreement, showing the complete history of actions taken.",
+        "tags": [
+            "agreements",
+            "audit",
+            "download"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/api/rest/v6/agreements/{agreementId}/auditTrail",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "agreementId": {
+                            "type": "string",
+                            "description": "The unique identifier of the agreement"
+                        }
+                    },
+                    "required": [
+                        "agreementId"
+                    ],
+                    "visible": [
+                        "agreementId"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__GET_AGREEMENT_FORM_DATA",
+        "description": "Retrieve the form field data (CSV) that participants entered when signing the agreement.",
+        "tags": [
+            "agreements",
+            "form",
+            "data"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/api/rest/v6/agreements/{agreementId}/formData",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "agreementId": {
+                            "type": "string",
+                            "description": "The unique identifier of the agreement"
+                        }
+                    },
+                    "required": [
+                        "agreementId"
+                    ],
+                    "visible": [
+                        "agreementId"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__GET_AGREEMENT_MEMBERS",
+        "description": "Retrieve information about all the members (participants, sender, sharees) of an agreement.",
+        "tags": [
+            "agreements",
+            "members",
+            "participants"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/api/rest/v6/agreements/{agreementId}/members",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "agreementId": {
+                            "type": "string",
+                            "description": "The unique identifier of the agreement"
+                        }
+                    },
+                    "required": [
+                        "agreementId"
+                    ],
+                    "visible": [
+                        "agreementId"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__GET_AGREEMENT_SIGNING_URLS",
+        "description": "Retrieve the signing URLs for the current signer(s) of an agreement. Only available when the agreement is OUT_FOR_SIGNATURE.",
+        "tags": [
+            "agreements",
+            "signing",
+            "urls"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/api/rest/v6/agreements/{agreementId}/signingUrls",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "agreementId": {
+                            "type": "string",
+                            "description": "The unique identifier of the agreement"
+                        }
+                    },
+                    "required": [
+                        "agreementId"
+                    ],
+                    "visible": [
+                        "agreementId"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__CREATE_AGREEMENT_REMINDER",
+        "description": "Send a signing reminder to the participants of an agreement who have not yet completed their action.",
+        "tags": [
+            "agreements",
+            "reminders",
+            "send"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "POST",
+            "path": "/api/rest/v6/agreements/{agreementId}/reminders",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "agreementId": {
+                            "type": "string",
+                            "description": "The unique identifier of the agreement"
+                        }
+                    },
+                    "required": [
+                        "agreementId"
+                    ],
+                    "visible": [
+                        "agreementId"
+                    ],
+                    "additionalProperties": false
+                },
+                "body": {
+                    "type": "object",
+                    "description": "Reminder configuration",
+                    "properties": {
+                        "recipientParticipantIds": {
+                            "type": "array",
+                            "description": "List of participant IDs to send reminders to. If empty, all participants are reminded.",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "comment": {
+                            "type": "string",
+                            "description": "An optional comment to include in the reminder"
+                        },
+                        "frequency": {
+                            "type": "string",
+                            "enum": [
+                                "ONCE_ONLY",
+                                "DAILY_UNTIL_SIGNED",
+                                "WEEKDAILY_UNTIL_SIGNED",
+                                "EVERY_OTHER_DAY_UNTIL_SIGNED",
+                                "EVERY_THIRD_DAY_UNTIL_SIGNED",
+                                "EVERY_FIFTH_DAY_UNTIL_SIGNED",
+                                "WEEKLY_UNTIL_SIGNED"
+                            ],
+                            "description": "The frequency at which reminders will be sent"
+                        }
+                    },
+                    "required": [],
+                    "visible": [
+                        "recipientParticipantIds",
+                        "comment",
+                        "frequency"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path",
+                "body"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__GET_AGREEMENT_VIEWS",
+        "description": "Retrieve views (URLs) associated with an agreement such as the signing page, authoring page, manage page, or documents view.",
+        "tags": [
+            "agreements",
+            "views",
+            "urls"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "POST",
+            "path": "/api/rest/v6/agreements/{agreementId}/views",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "agreementId": {
+                            "type": "string",
+                            "description": "The unique identifier of the agreement"
+                        }
+                    },
+                    "required": [
+                        "agreementId"
+                    ],
+                    "visible": [
+                        "agreementId"
+                    ],
+                    "additionalProperties": false
+                },
+                "body": {
+                    "type": "object",
+                    "description": "View request configuration",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "enum": [
+                                "MANAGE",
+                                "DOCUMENT",
+                                "USER_SIGNING",
+                                "POST_SEND",
+                                "AUTHORING",
+                                "ALL"
+                            ],
+                            "description": "The name of the view to retrieve"
+                        }
+                    },
+                    "required": [
+                        "name"
+                    ],
+                    "visible": [
+                        "name"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path",
+                "body"
+            ],
+            "visible": [
+                "path",
+                "body"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__UPDATE_AGREEMENT_VISIBILITY",
+        "description": "Update the visibility of an agreement for the authenticated user. Can be used to hide or show an agreement in the GET /agreements list.",
+        "tags": [
+            "agreements",
+            "visibility",
+            "hide"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "PUT",
+            "path": "/api/rest/v6/agreements/{agreementId}/me/visibility",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "agreementId": {
+                            "type": "string",
+                            "description": "The unique identifier of the agreement"
+                        }
+                    },
+                    "required": [
+                        "agreementId"
+                    ],
+                    "visible": [
+                        "agreementId"
+                    ],
+                    "additionalProperties": false
+                },
+                "body": {
+                    "type": "object",
+                    "description": "Visibility configuration",
+                    "properties": {
+                        "visibility": {
+                            "type": "string",
+                            "enum": [
+                                "SHOW",
+                                "HIDE"
+                            ],
+                            "description": "The desired visibility state"
+                        }
+                    },
+                    "required": [
+                        "visibility"
+                    ],
+                    "visible": [
+                        "visibility"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path",
+                "body"
+            ],
+            "visible": [
+                "path",
+                "body"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__SEARCH_AGREEMENTS",
+        "description": "Search for agreement assets using advanced criteria such as date ranges, external IDs, group IDs, and asset types. Returns paginated results.",
+        "tags": [
+            "agreements",
+            "search",
+            "filter"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "POST",
+            "path": "/api/rest/v6/search",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "object",
+                    "description": "Search criteria",
+                    "properties": {
+                        "scope": {
+                            "type": "array",
+                            "description": "The scope of the search",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "AGREEMENT_ASSETS"
+                                ]
+                            }
+                        },
+                        "agreementAssetsCriteria": {
+                            "type": "object",
+                            "description": "Criteria for filtering agreement assets",
+                            "properties": {
+                                "type": {
+                                    "type": "array",
+                                    "description": "Filter by asset type",
+                                    "items": {
+                                        "type": "string",
+                                        "enum": [
+                                            "AGREEMENT",
+                                            "WIDGET",
+                                            "MEGASIGN_CHILD",
+                                            "MEGASIGN_PARENT",
+                                            "WIDGET_INSTANCE",
+                                            "LIBRARY_TEMPLATE"
+                                        ]
+                                    }
+                                },
+                                "status": {
+                                    "type": "array",
+                                    "description": "Filter by agreement status",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "createdDate": {
+                                    "type": "object",
+                                    "description": "Filter by creation date range",
+                                    "properties": {
+                                        "range": {
+                                            "type": "object",
+                                            "properties": {
+                                                "gt": {
+                                                    "type": "string",
+                                                    "description": "Greater than date (ISO 8601 format)"
+                                                },
+                                                "lt": {
+                                                    "type": "string",
+                                                    "description": "Less than date (ISO 8601 format)"
+                                                }
+                                            },
+                                            "required": [],
+                                            "visible": [
+                                                "gt",
+                                                "lt"
+                                            ],
+                                            "additionalProperties": false
+                                        }
+                                    },
+                                    "required": [],
+                                    "visible": [
+                                        "range"
+                                    ],
+                                    "additionalProperties": false
+                                },
+                                "modifiedDate": {
+                                    "type": "object",
+                                    "description": "Filter by modification date range",
+                                    "properties": {
+                                        "range": {
+                                            "type": "object",
+                                            "properties": {
+                                                "gt": {
+                                                    "type": "string",
+                                                    "description": "Greater than date (ISO 8601 format)"
+                                                },
+                                                "lt": {
+                                                    "type": "string",
+                                                    "description": "Less than date (ISO 8601 format)"
+                                                }
+                                            },
+                                            "required": [],
+                                            "visible": [
+                                                "gt",
+                                                "lt"
+                                            ],
+                                            "additionalProperties": false
+                                        }
+                                    },
+                                    "required": [],
+                                    "visible": [
+                                        "range"
+                                    ],
+                                    "additionalProperties": false
+                                },
+                                "externalId": {
+                                    "type": "object",
+                                    "description": "Filter by external ID",
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "description": "The external ID to search for"
+                                        }
+                                    },
+                                    "required": [],
+                                    "visible": [
+                                        "id"
+                                    ],
+                                    "additionalProperties": false
+                                },
+                                "groupId": {
+                                    "type": "string",
+                                    "description": "Filter by group ID"
+                                }
+                            },
+                            "required": [],
+                            "visible": [
+                                "type",
+                                "status",
+                                "createdDate",
+                                "modifiedDate",
+                                "externalId",
+                                "groupId"
+                            ],
+                            "additionalProperties": false
+                        },
+                        "pageSize": {
+                            "type": "integer",
+                            "description": "Number of results per page"
+                        },
+                        "cursor": {
+                            "type": "string",
+                            "description": "Cursor for pagination"
+                        }
+                    },
+                    "required": [
+                        "scope"
+                    ],
+                    "visible": [
+                        "scope",
+                        "agreementAssetsCriteria",
+                        "pageSize",
+                        "cursor"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "body"
+            ],
+            "visible": [
+                "body"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__LIST_LIBRARY_DOCUMENTS",
+        "description": "Retrieve a paginated list of library document templates available to the authenticated user.",
+        "tags": [
+            "library",
+            "templates",
+            "list"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/api/rest/v6/libraryDocuments",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "object",
+                    "description": "Query parameters",
+                    "properties": {
+                        "cursor": {
+                            "type": "string",
+                            "description": "Cursor for pagination"
+                        },
+                        "pageSize": {
+                            "type": "integer",
+                            "description": "Number of items per page"
+                        }
+                    },
+                    "required": [],
+                    "visible": [
+                        "cursor",
+                        "pageSize"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [],
+            "visible": [
+                "query"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__GET_LIBRARY_DOCUMENT",
+        "description": "Retrieve detailed information about a specific library document template.",
+        "tags": [
+            "library",
+            "templates",
+            "details"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/api/rest/v6/libraryDocuments/{libraryDocumentId}",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "libraryDocumentId": {
+                            "type": "string",
+                            "description": "The unique identifier of the library document"
+                        }
+                    },
+                    "required": [
+                        "libraryDocumentId"
+                    ],
+                    "visible": [
+                        "libraryDocumentId"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__CREATE_LIBRARY_DOCUMENT",
+        "description": "Create a new library document template from a transient document. Templates can be reused across multiple agreements.",
+        "tags": [
+            "library",
+            "templates",
+            "create"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "POST",
+            "path": "/api/rest/v6/libraryDocuments",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "object",
+                    "description": "Library document creation payload",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "description": "The name of the library document template"
+                        },
+                        "sharingMode": {
+                            "type": "string",
+                            "enum": [
+                                "USER",
+                                "GROUP",
+                                "ACCOUNT",
+                                "GLOBAL"
+                            ],
+                            "description": "The visibility/sharing scope of the library document"
+                        },
+                        "state": {
+                            "type": "string",
+                            "enum": [
+                                "AUTHORING",
+                                "ACTIVE"
+                            ],
+                            "description": "The initial state of the library document"
+                        },
+                        "templateTypes": {
+                            "type": "array",
+                            "description": "The types of templates",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "DOCUMENT",
+                                    "FORM_FIELD_LAYER"
+                                ]
+                            }
+                        },
+                        "fileInfos": {
+                            "type": "array",
+                            "description": "Source files for the library document",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "transientDocumentId": {
+                                        "type": "string",
+                                        "description": "ID of a transient document"
+                                    }
+                                },
+                                "required": [
+                                    "transientDocumentId"
+                                ],
+                                "visible": [
+                                    "transientDocumentId"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": [
+                        "name",
+                        "sharingMode",
+                        "state",
+                        "templateTypes",
+                        "fileInfos"
+                    ],
+                    "visible": [
+                        "name",
+                        "sharingMode",
+                        "state",
+                        "templateTypes",
+                        "fileInfos"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "body"
+            ],
+            "visible": [
+                "body"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__UPDATE_LIBRARY_DOCUMENT_STATE",
+        "description": "Transition a library document from one state to another (e.g., AUTHORING to ACTIVE).",
+        "tags": [
+            "library",
+            "templates",
+            "state"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "PUT",
+            "path": "/api/rest/v6/libraryDocuments/{libraryDocumentId}/state",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "libraryDocumentId": {
+                            "type": "string",
+                            "description": "The unique identifier of the library document"
+                        }
+                    },
+                    "required": [
+                        "libraryDocumentId"
+                    ],
+                    "visible": [
+                        "libraryDocumentId"
+                    ],
+                    "additionalProperties": false
+                },
+                "body": {
+                    "type": "object",
+                    "description": "State transition payload",
+                    "properties": {
+                        "state": {
+                            "type": "string",
+                            "enum": [
+                                "ACTIVE"
+                            ],
+                            "description": "The target state"
+                        }
+                    },
+                    "required": [
+                        "state"
+                    ],
+                    "visible": [
+                        "state"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path",
+                "body"
+            ],
+            "visible": [
+                "path",
+                "body"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__UPDATE_LIBRARY_DOCUMENT_VISIBILITY",
+        "description": "Update the visibility of a library document for the authenticated user (show or hide).",
+        "tags": [
+            "library",
+            "templates",
+            "visibility"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "PUT",
+            "path": "/api/rest/v6/libraryDocuments/{libraryDocumentId}/me/visibility",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "libraryDocumentId": {
+                            "type": "string",
+                            "description": "The unique identifier of the library document"
+                        }
+                    },
+                    "required": [
+                        "libraryDocumentId"
+                    ],
+                    "visible": [
+                        "libraryDocumentId"
+                    ],
+                    "additionalProperties": false
+                },
+                "body": {
+                    "type": "object",
+                    "description": "Visibility configuration",
+                    "properties": {
+                        "visibility": {
+                            "type": "string",
+                            "enum": [
+                                "SHOW",
+                                "HIDE"
+                            ],
+                            "description": "The desired visibility state"
+                        }
+                    },
+                    "required": [
+                        "visibility"
+                    ],
+                    "visible": [
+                        "visibility"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path",
+                "body"
+            ],
+            "visible": [
+                "path",
+                "body"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__LIST_WIDGETS",
+        "description": "Retrieve a paginated list of web forms (widgets) for the authenticated user.",
+        "tags": [
+            "widgets",
+            "webforms",
+            "list"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/api/rest/v6/widgets",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "object",
+                    "description": "Query parameters",
+                    "properties": {
+                        "cursor": {
+                            "type": "string",
+                            "description": "Cursor for pagination"
+                        },
+                        "pageSize": {
+                            "type": "integer",
+                            "description": "Number of items per page"
+                        }
+                    },
+                    "required": [],
+                    "visible": [
+                        "cursor",
+                        "pageSize"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [],
+            "visible": [
+                "query"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__CREATE_WIDGET",
+        "description": "Create a new web form (widget) that can be embedded or shared via URL. Web forms allow anyone with the link to sign a document.",
+        "tags": [
+            "widgets",
+            "webforms",
+            "create"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "POST",
+            "path": "/api/rest/v6/widgets",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "object",
+                    "description": "Widget creation payload",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "description": "The name of the web form"
+                        },
+                        "state": {
+                            "type": "string",
+                            "enum": [
+                                "ACTIVE",
+                                "DRAFT",
+                                "AUTHORING"
+                            ],
+                            "description": "The initial state of the web form"
+                        },
+                        "fileInfos": {
+                            "type": "array",
+                            "description": "Source files for the web form",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "transientDocumentId": {
+                                        "type": "string",
+                                        "description": "ID of a transient document"
+                                    },
+                                    "libraryDocumentId": {
+                                        "type": "string",
+                                        "description": "ID of a library document"
+                                    }
+                                },
+                                "required": [],
+                                "visible": [
+                                    "transientDocumentId",
+                                    "libraryDocumentId"
+                                ],
+                                "additionalProperties": false
+                            }
+                        },
+                        "widgetParticipantSetInfo": {
+                            "type": "object",
+                            "description": "Participant set info for the widget",
+                            "properties": {
+                                "memberInfos": {
+                                    "type": "array",
+                                    "description": "Members of the participant set",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "email": {
+                                                "type": "string",
+                                                "description": "Email of the participant (leave empty for public web forms)"
+                                            }
+                                        },
+                                        "required": [],
+                                        "visible": [
+                                            "email"
+                                        ],
+                                        "additionalProperties": false
+                                    }
+                                },
+                                "role": {
+                                    "type": "string",
+                                    "enum": [
+                                        "SIGNER",
+                                        "APPROVER"
+                                    ],
+                                    "description": "Role of the participant"
+                                }
+                            },
+                            "required": [
+                                "memberInfos",
+                                "role"
+                            ],
+                            "visible": [
+                                "memberInfos",
+                                "role"
+                            ],
+                            "additionalProperties": false
+                        }
+                    },
+                    "required": [
+                        "name",
+                        "state",
+                        "fileInfos",
+                        "widgetParticipantSetInfo"
+                    ],
+                    "visible": [
+                        "name",
+                        "state",
+                        "fileInfos",
+                        "widgetParticipantSetInfo"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "body"
+            ],
+            "visible": [
+                "body"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__GET_WIDGET",
+        "description": "Retrieve detailed information about a specific web form (widget).",
+        "tags": [
+            "widgets",
+            "webforms",
+            "details"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/api/rest/v6/widgets/{widgetId}",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "widgetId": {
+                            "type": "string",
+                            "description": "The unique identifier of the widget"
+                        }
+                    },
+                    "required": [
+                        "widgetId"
+                    ],
+                    "visible": [
+                        "widgetId"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__UPDATE_WIDGET_STATE",
+        "description": "Transition a widget from one state to another (e.g., ACTIVE to INACTIVE, or DRAFT to CANCELLED).",
+        "tags": [
+            "widgets",
+            "webforms",
+            "state"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "PUT",
+            "path": "/api/rest/v6/widgets/{widgetId}/state",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "widgetId": {
+                            "type": "string",
+                            "description": "The unique identifier of the widget"
+                        }
+                    },
+                    "required": [
+                        "widgetId"
+                    ],
+                    "visible": [
+                        "widgetId"
+                    ],
+                    "additionalProperties": false
+                },
+                "body": {
+                    "type": "object",
+                    "description": "State transition payload",
+                    "properties": {
+                        "state": {
+                            "type": "string",
+                            "enum": [
+                                "ACTIVE",
+                                "INACTIVE",
+                                "CANCELLED"
+                            ],
+                            "description": "The target state for the widget"
+                        }
+                    },
+                    "required": [
+                        "state"
+                    ],
+                    "visible": [
+                        "state"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path",
+                "body"
+            ],
+            "visible": [
+                "path",
+                "body"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__GET_WIDGET_AGREEMENTS",
+        "description": "Retrieve a paginated list of agreements created from a specific web form (widget).",
+        "tags": [
+            "widgets",
+            "webforms",
+            "agreements"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/api/rest/v6/widgets/{widgetId}/agreements",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "widgetId": {
+                            "type": "string",
+                            "description": "The unique identifier of the widget"
+                        }
+                    },
+                    "required": [
+                        "widgetId"
+                    ],
+                    "visible": [
+                        "widgetId"
+                    ],
+                    "additionalProperties": false
+                },
+                "query": {
+                    "type": "object",
+                    "description": "Query parameters",
+                    "properties": {
+                        "cursor": {
+                            "type": "string",
+                            "description": "Cursor for pagination"
+                        },
+                        "pageSize": {
+                            "type": "integer",
+                            "description": "Number of items per page"
+                        }
+                    },
+                    "required": [],
+                    "visible": [
+                        "cursor",
+                        "pageSize"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path",
+                "query"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__GET_WIDGET_FORM_DATA",
+        "description": "Retrieve the form field data (CSV) entered by signers of a web form (widget).",
+        "tags": [
+            "widgets",
+            "webforms",
+            "form",
+            "data"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/api/rest/v6/widgets/{widgetId}/formData",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "widgetId": {
+                            "type": "string",
+                            "description": "The unique identifier of the widget"
+                        }
+                    },
+                    "required": [
+                        "widgetId"
+                    ],
+                    "visible": [
+                        "widgetId"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__LIST_MEGASIGNS",
+        "description": "Retrieve a paginated list of MegaSign (bulk send) agreements for the authenticated user.",
+        "tags": [
+            "megasign",
+            "bulk",
+            "list"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/api/rest/v6/megaSigns",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "object",
+                    "description": "Query parameters",
+                    "properties": {
+                        "cursor": {
+                            "type": "string",
+                            "description": "Cursor for pagination"
+                        },
+                        "pageSize": {
+                            "type": "integer",
+                            "description": "Number of items per page"
+                        }
+                    },
+                    "required": [],
+                    "visible": [
+                        "cursor",
+                        "pageSize"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [],
+            "visible": [
+                "query"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__GET_MEGASIGN",
+        "description": "Retrieve detailed information about a specific MegaSign (bulk send) agreement.",
+        "tags": [
+            "megasign",
+            "bulk",
+            "details"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/api/rest/v6/megaSigns/{megaSignId}",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "megaSignId": {
+                            "type": "string",
+                            "description": "The unique identifier of the MegaSign"
+                        }
+                    },
+                    "required": [
+                        "megaSignId"
+                    ],
+                    "visible": [
+                        "megaSignId"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__UPDATE_MEGASIGN_STATE",
+        "description": "Transition a MegaSign from one state to another (e.g., IN_PROCESS to CANCELLED).",
+        "tags": [
+            "megasign",
+            "bulk",
+            "state",
+            "cancel"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "PUT",
+            "path": "/api/rest/v6/megaSigns/{megaSignId}/state",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "megaSignId": {
+                            "type": "string",
+                            "description": "The unique identifier of the MegaSign"
+                        }
+                    },
+                    "required": [
+                        "megaSignId"
+                    ],
+                    "visible": [
+                        "megaSignId"
+                    ],
+                    "additionalProperties": false
+                },
+                "body": {
+                    "type": "object",
+                    "description": "State transition payload",
+                    "properties": {
+                        "state": {
+                            "type": "string",
+                            "enum": [
+                                "CANCELLED"
+                            ],
+                            "description": "The target state (CANCELLED)"
+                        }
+                    },
+                    "required": [
+                        "state"
+                    ],
+                    "visible": [
+                        "state"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path",
+                "body"
+            ],
+            "visible": [
+                "path",
+                "body"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__LIST_WORKFLOWS",
+        "description": "Retrieve a list of workflows available to the authenticated user.",
+        "tags": [
+            "workflows",
+            "list"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/api/rest/v6/workflows",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "object",
+                    "description": "Query parameters",
+                    "properties": {
+                        "groupId": {
+                            "type": "string",
+                            "description": "Filter workflows by group ID"
+                        },
+                        "includeDraftWorkflows": {
+                            "type": "boolean",
+                            "description": "Whether to include draft workflows"
+                        },
+                        "includeInactiveWorkflows": {
+                            "type": "boolean",
+                            "description": "Whether to include inactive workflows"
+                        }
+                    },
+                    "required": [],
+                    "visible": [
+                        "groupId",
+                        "includeDraftWorkflows",
+                        "includeInactiveWorkflows"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [],
+            "visible": [
+                "query"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__GET_WORKFLOW",
+        "description": "Retrieve detailed information about a specific workflow.",
+        "tags": [
+            "workflows",
+            "details"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/api/rest/v6/workflows/{workflowId}",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "workflowId": {
+                            "type": "string",
+                            "description": "The unique identifier of the workflow"
+                        }
+                    },
+                    "required": [
+                        "workflowId"
+                    ],
+                    "visible": [
+                        "workflowId"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__LIST_USERS",
+        "description": "Retrieve a paginated list of users in the account. Can filter by admin status.",
+        "tags": [
+            "users",
+            "list",
+            "account"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/api/rest/v6/users",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "object",
+                    "description": "Query parameters",
+                    "properties": {
+                        "cursor": {
+                            "type": "string",
+                            "description": "Cursor for pagination"
+                        },
+                        "pageSize": {
+                            "type": "integer",
+                            "description": "Number of items per page"
+                        }
+                    },
+                    "required": [],
+                    "visible": [
+                        "cursor",
+                        "pageSize"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [],
+            "visible": [
+                "query"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__GET_USER",
+        "description": "Retrieve detailed information about a specific user in the account.",
+        "tags": [
+            "users",
+            "details"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/api/rest/v6/users/{userId}",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "userId": {
+                            "type": "string",
+                            "description": "The unique identifier of the user"
+                        }
+                    },
+                    "required": [
+                        "userId"
+                    ],
+                    "visible": [
+                        "userId"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__CREATE_USER",
+        "description": "Create a new user in the Acrobat Sign account.",
+        "tags": [
+            "users",
+            "create"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "POST",
+            "path": "/api/rest/v6/users",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "object",
+                    "description": "User creation payload",
+                    "properties": {
+                        "email": {
+                            "type": "string",
+                            "description": "Email address of the new user"
+                        },
+                        "firstName": {
+                            "type": "string",
+                            "description": "First name of the user"
+                        },
+                        "lastName": {
+                            "type": "string",
+                            "description": "Last name of the user"
+                        },
+                        "company": {
+                            "type": "string",
+                            "description": "Company name"
+                        },
+                        "title": {
+                            "type": "string",
+                            "description": "Job title"
+                        },
+                        "phone": {
+                            "type": "string",
+                            "description": "Phone number"
+                        }
+                    },
+                    "required": [
+                        "email"
+                    ],
+                    "visible": [
+                        "email",
+                        "firstName",
+                        "lastName",
+                        "company",
+                        "title",
+                        "phone"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "body"
+            ],
+            "visible": [
+                "body"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__UPDATE_USER_GROUP",
+        "description": "Migrate a user to a different group or update their role within an existing group.",
+        "tags": [
+            "users",
+            "groups",
+            "update"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "PUT",
+            "path": "/api/rest/v6/users/{userId}/groups",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "userId": {
+                            "type": "string",
+                            "description": "The unique identifier of the user"
+                        }
+                    },
+                    "required": [
+                        "userId"
+                    ],
+                    "visible": [
+                        "userId"
+                    ],
+                    "additionalProperties": false
+                },
+                "body": {
+                    "type": "object",
+                    "description": "Group assignment payload",
+                    "properties": {
+                        "groupInfoList": {
+                            "type": "array",
+                            "description": "List of groups and roles for the user",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "id": {
+                                        "type": "string",
+                                        "description": "The group ID"
+                                    },
+                                    "isGroupAdmin": {
+                                        "type": "boolean",
+                                        "description": "Whether the user is an admin of the group"
+                                    }
+                                },
+                                "required": [
+                                    "id"
+                                ],
+                                "visible": [
+                                    "id",
+                                    "isGroupAdmin"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": [
+                        "groupInfoList"
+                    ],
+                    "visible": [
+                        "groupInfoList"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path",
+                "body"
+            ],
+            "visible": [
+                "path",
+                "body"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__LIST_GROUPS",
+        "description": "Retrieve a paginated list of groups in the account.",
+        "tags": [
+            "groups",
+            "list"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/api/rest/v6/groups",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "object",
+                    "description": "Query parameters",
+                    "properties": {
+                        "cursor": {
+                            "type": "string",
+                            "description": "Cursor for pagination"
+                        },
+                        "pageSize": {
+                            "type": "integer",
+                            "description": "Number of items per page"
+                        }
+                    },
+                    "required": [],
+                    "visible": [
+                        "cursor",
+                        "pageSize"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [],
+            "visible": [
+                "query"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__GET_GROUP",
+        "description": "Retrieve detailed information about a specific group.",
+        "tags": [
+            "groups",
+            "details"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/api/rest/v6/groups/{groupId}",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "groupId": {
+                            "type": "string",
+                            "description": "The unique identifier of the group"
+                        }
+                    },
+                    "required": [
+                        "groupId"
+                    ],
+                    "visible": [
+                        "groupId"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__CREATE_GROUP",
+        "description": "Create a new group in the Acrobat Sign account.",
+        "tags": [
+            "groups",
+            "create"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "POST",
+            "path": "/api/rest/v6/groups",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "object",
+                    "description": "Group creation payload",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "description": "The name of the group"
+                        }
+                    },
+                    "required": [
+                        "name"
+                    ],
+                    "visible": [
+                        "name"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "body"
+            ],
+            "visible": [
+                "body"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__UPDATE_GROUP",
+        "description": "Update the name of an existing group.",
+        "tags": [
+            "groups",
+            "update"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "PUT",
+            "path": "/api/rest/v6/groups/{groupId}",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "groupId": {
+                            "type": "string",
+                            "description": "The unique identifier of the group"
+                        }
+                    },
+                    "required": [
+                        "groupId"
+                    ],
+                    "visible": [
+                        "groupId"
+                    ],
+                    "additionalProperties": false
+                },
+                "body": {
+                    "type": "object",
+                    "description": "Group update payload",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "description": "The new name for the group"
+                        }
+                    },
+                    "required": [
+                        "name"
+                    ],
+                    "visible": [
+                        "name"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path",
+                "body"
+            ],
+            "visible": [
+                "path",
+                "body"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__DELETE_GROUP",
+        "description": "Delete an existing group from the account.",
+        "tags": [
+            "groups",
+            "delete"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "DELETE",
+            "path": "/api/rest/v6/groups/{groupId}",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "groupId": {
+                            "type": "string",
+                            "description": "The unique identifier of the group to delete"
+                        }
+                    },
+                    "required": [
+                        "groupId"
+                    ],
+                    "visible": [
+                        "groupId"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__LIST_WEBHOOKS",
+        "description": "Retrieve a list of webhooks configured for the authenticated user or account.",
+        "tags": [
+            "webhooks",
+            "list"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/api/rest/v6/webhooks",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "object",
+                    "description": "Query parameters",
+                    "properties": {
+                        "cursor": {
+                            "type": "string",
+                            "description": "Cursor for pagination"
+                        },
+                        "pageSize": {
+                            "type": "integer",
+                            "description": "Number of items per page"
+                        }
+                    },
+                    "required": [],
+                    "visible": [
+                        "cursor",
+                        "pageSize"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [],
+            "visible": [
+                "query"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__CREATE_WEBHOOK",
+        "description": "Create a new webhook to receive real-time notifications when agreement events occur (e.g., signed, cancelled, declined).",
+        "tags": [
+            "webhooks",
+            "create",
+            "notifications"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "POST",
+            "path": "/api/rest/v6/webhooks",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "object",
+                    "description": "Webhook creation payload",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "description": "The name of the webhook"
+                        },
+                        "scope": {
+                            "type": "string",
+                            "enum": [
+                                "ACCOUNT",
+                                "GROUP",
+                                "USER",
+                                "RESOURCE"
+                            ],
+                            "description": "The scope of events the webhook listens to"
+                        },
+                        "state": {
+                            "type": "string",
+                            "enum": [
+                                "ACTIVE"
+                            ],
+                            "description": "The initial state of the webhook"
+                        },
+                        "webhookUrlInfo": {
+                            "type": "object",
+                            "description": "The URL to receive webhook notifications",
+                            "properties": {
+                                "url": {
+                                    "type": "string",
+                                    "description": "The HTTPS URL endpoint that will receive webhook POST requests"
+                                }
+                            },
+                            "required": [
+                                "url"
+                            ],
+                            "visible": [
+                                "url"
+                            ],
+                            "additionalProperties": false
+                        },
+                        "webhookSubscriptionEvents": {
+                            "type": "array",
+                            "description": "The events to subscribe to",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "AGREEMENT_ALL",
+                                    "AGREEMENT_CREATED",
+                                    "AGREEMENT_ACTION_COMPLETED",
+                                    "AGREEMENT_ACTION_DELEGATED",
+                                    "AGREEMENT_ACTION_REQUESTED",
+                                    "AGREEMENT_AUTO_CANCELLED_CONVERSION_PROBLEM",
+                                    "AGREEMENT_DOCUMENTS_DELETED",
+                                    "AGREEMENT_EMAIL_BOUNCED",
+                                    "AGREEMENT_EMAIL_VIEWED",
+                                    "AGREEMENT_EXPIRED",
+                                    "AGREEMENT_KBA_AUTHENTICATED",
+                                    "AGREEMENT_MODIFIED",
+                                    "AGREEMENT_OFFLINE_SYNC",
+                                    "AGREEMENT_RECALLED",
+                                    "AGREEMENT_REJECTED",
+                                    "AGREEMENT_SHARED",
+                                    "AGREEMENT_UPLOADED_BY_SENDER",
+                                    "AGREEMENT_VAULTED",
+                                    "AGREEMENT_WEB_IDENTITY_AUTHENTICATED",
+                                    "AGREEMENT_WORKFLOW_COMPLETED",
+                                    "MEGASIGN_ALL",
+                                    "MEGASIGN_CREATED",
+                                    "MEGASIGN_RECALLED",
+                                    "MEGASIGN_SHARED",
+                                    "WIDGET_ALL",
+                                    "WIDGET_CREATED",
+                                    "WIDGET_ENABLED",
+                                    "WIDGET_DISABLED",
+                                    "WIDGET_MODIFIED",
+                                    "WIDGET_SHARED"
+                                ]
+                            }
+                        },
+                        "webhookConditionalParams": {
+                            "type": "object",
+                            "description": "Optional parameters to customize the webhook payload",
+                            "properties": {
+                                "webhookAgreementEvents": {
+                                    "type": "object",
+                                    "properties": {
+                                        "includeDetailedInfo": {
+                                            "type": "boolean",
+                                            "description": "Include detailed agreement info in the payload"
+                                        },
+                                        "includeDocumentsInfo": {
+                                            "type": "boolean",
+                                            "description": "Include document info in the payload"
+                                        },
+                                        "includeParticipantsInfo": {
+                                            "type": "boolean",
+                                            "description": "Include participant info in the payload"
+                                        },
+                                        "includeSignedDocuments": {
+                                            "type": "boolean",
+                                            "description": "Include signed documents (base64) in the payload"
+                                        }
+                                    },
+                                    "required": [],
+                                    "visible": [
+                                        "includeDetailedInfo",
+                                        "includeDocumentsInfo",
+                                        "includeParticipantsInfo",
+                                        "includeSignedDocuments"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            },
+                            "required": [],
+                            "visible": [
+                                "webhookAgreementEvents"
+                            ],
+                            "additionalProperties": false
+                        },
+                        "resourceId": {
+                            "type": "string",
+                            "description": "The ID of the resource (required when scope is RESOURCE)"
+                        }
+                    },
+                    "required": [
+                        "name",
+                        "scope",
+                        "state",
+                        "webhookUrlInfo",
+                        "webhookSubscriptionEvents"
+                    ],
+                    "visible": [
+                        "name",
+                        "scope",
+                        "state",
+                        "webhookUrlInfo",
+                        "webhookSubscriptionEvents",
+                        "webhookConditionalParams",
+                        "resourceId"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "body"
+            ],
+            "visible": [
+                "body"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__GET_WEBHOOK",
+        "description": "Retrieve detailed information about a specific webhook.",
+        "tags": [
+            "webhooks",
+            "details"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/api/rest/v6/webhooks/{webhookId}",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "webhookId": {
+                            "type": "string",
+                            "description": "The unique identifier of the webhook"
+                        }
+                    },
+                    "required": [
+                        "webhookId"
+                    ],
+                    "visible": [
+                        "webhookId"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__UPDATE_WEBHOOK",
+        "description": "Update an existing webhook's configuration including name, events, URL, and state.",
+        "tags": [
+            "webhooks",
+            "update"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "PUT",
+            "path": "/api/rest/v6/webhooks/{webhookId}",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "webhookId": {
+                            "type": "string",
+                            "description": "The unique identifier of the webhook"
+                        }
+                    },
+                    "required": [
+                        "webhookId"
+                    ],
+                    "visible": [
+                        "webhookId"
+                    ],
+                    "additionalProperties": false
+                },
+                "body": {
+                    "type": "object",
+                    "description": "Webhook update payload",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "description": "The updated name of the webhook"
+                        },
+                        "scope": {
+                            "type": "string",
+                            "enum": [
+                                "ACCOUNT",
+                                "GROUP",
+                                "USER",
+                                "RESOURCE"
+                            ],
+                            "description": "The scope of events"
+                        },
+                        "state": {
+                            "type": "string",
+                            "enum": [
+                                "ACTIVE",
+                                "INACTIVE"
+                            ],
+                            "description": "The state of the webhook"
+                        },
+                        "webhookUrlInfo": {
+                            "type": "object",
+                            "properties": {
+                                "url": {
+                                    "type": "string",
+                                    "description": "The webhook URL"
+                                }
+                            },
+                            "required": [
+                                "url"
+                            ],
+                            "visible": [
+                                "url"
+                            ],
+                            "additionalProperties": false
+                        },
+                        "webhookSubscriptionEvents": {
+                            "type": "array",
+                            "description": "Updated list of events to subscribe to",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "required": [
+                        "name",
+                        "scope",
+                        "state",
+                        "webhookUrlInfo",
+                        "webhookSubscriptionEvents"
+                    ],
+                    "visible": [
+                        "name",
+                        "scope",
+                        "state",
+                        "webhookUrlInfo",
+                        "webhookSubscriptionEvents"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path",
+                "body"
+            ],
+            "visible": [
+                "path",
+                "body"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__DELETE_WEBHOOK",
+        "description": "Delete an existing webhook.",
+        "tags": [
+            "webhooks",
+            "delete"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "DELETE",
+            "path": "/api/rest/v6/webhooks/{webhookId}",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "webhookId": {
+                            "type": "string",
+                            "description": "The unique identifier of the webhook to delete"
+                        }
+                    },
+                    "required": [
+                        "webhookId"
+                    ],
+                    "visible": [
+                        "webhookId"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__GET_USER_VIEWS",
+        "description": "Retrieve user-level views such as the manage page, account settings page, or profile page.",
+        "tags": [
+            "users",
+            "views"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "POST",
+            "path": "/api/rest/v6/users/{userId}/views",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "userId": {
+                            "type": "string",
+                            "description": "The unique identifier of the user (use 'me' for the authenticated user)"
+                        }
+                    },
+                    "required": [
+                        "userId"
+                    ],
+                    "visible": [
+                        "userId"
+                    ],
+                    "additionalProperties": false
+                },
+                "body": {
+                    "type": "object",
+                    "description": "View request payload",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "enum": [
+                                "MANAGE",
+                                "ACCOUNT_SETTINGS",
+                                "USER_PROFILE",
+                                "ALL"
+                            ],
+                            "description": "The name of the view to retrieve"
+                        }
+                    },
+                    "required": [
+                        "name"
+                    ],
+                    "visible": [
+                        "name"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path",
+                "body"
+            ],
+            "visible": [
+                "path",
+                "body"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__DELETE_AGREEMENT_DOCUMENTS",
+        "description": "Delete all documents associated with a specific agreement. Requires API Retention to be enabled.",
+        "tags": [
+            "agreements",
+            "documents",
+            "delete"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "DELETE",
+            "path": "/api/rest/v6/agreements/{agreementId}/documents",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "agreementId": {
+                            "type": "string",
+                            "description": "The unique identifier of the agreement"
+                        }
+                    },
+                    "required": [
+                        "agreementId"
+                    ],
+                    "visible": [
+                        "agreementId"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__GET_AGREEMENT_EVENTS",
+        "description": "Retrieve the event history (timeline) for a specific agreement, showing all actions and status changes.",
+        "tags": [
+            "agreements",
+            "events",
+            "history"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/api/rest/v6/agreements/{agreementId}/events",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "agreementId": {
+                            "type": "string",
+                            "description": "The unique identifier of the agreement"
+                        }
+                    },
+                    "required": [
+                        "agreementId"
+                    ],
+                    "visible": [
+                        "agreementId"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__SHARE_AGREEMENT",
+        "description": "Share an agreement with other users, giving them visibility into the agreement.",
+        "tags": [
+            "agreements",
+            "share"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "POST",
+            "path": "/api/rest/v6/agreements/{agreementId}/members/share",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "agreementId": {
+                            "type": "string",
+                            "description": "The unique identifier of the agreement"
+                        }
+                    },
+                    "required": [
+                        "agreementId"
+                    ],
+                    "visible": [
+                        "agreementId"
+                    ],
+                    "additionalProperties": false
+                },
+                "body": {
+                    "type": "object",
+                    "description": "Share configuration",
+                    "properties": {
+                        "shareeListInfo": {
+                            "type": "array",
+                            "description": "List of users to share the agreement with",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "shareeEmail": {
+                                        "type": "string",
+                                        "description": "Email of the user to share with"
+                                    }
+                                },
+                                "required": [
+                                    "shareeEmail"
+                                ],
+                                "visible": [
+                                    "shareeEmail"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": [
+                        "shareeListInfo"
+                    ],
+                    "visible": [
+                        "shareeListInfo"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path",
+                "body"
+            ],
+            "visible": [
+                "path",
+                "body"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__GET_AGREEMENT_NOTES",
+        "description": "Retrieve notes attached to a specific agreement.",
+        "tags": [
+            "agreements",
+            "notes"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/api/rest/v6/agreements/{agreementId}/me/note",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "agreementId": {
+                            "type": "string",
+                            "description": "The unique identifier of the agreement"
+                        }
+                    },
+                    "required": [
+                        "agreementId"
+                    ],
+                    "visible": [
+                        "agreementId"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "ADOBE_SIGN__UPDATE_AGREEMENT_NOTE",
+        "description": "Add or update a note on a specific agreement for the authenticated user.",
+        "tags": [
+            "agreements",
+            "notes",
+            "update"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "PUT",
+            "path": "/api/rest/v6/agreements/{agreementId}/me/note",
+            "server_url": "https://api.na1.adobesign.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "Path parameters",
+                    "properties": {
+                        "agreementId": {
+                            "type": "string",
+                            "description": "The unique identifier of the agreement"
+                        }
+                    },
+                    "required": [
+                        "agreementId"
+                    ],
+                    "visible": [
+                        "agreementId"
+                    ],
+                    "additionalProperties": false
+                },
+                "body": {
+                    "type": "object",
+                    "description": "Note content",
+                    "properties": {
+                        "note": {
+                            "type": "string",
+                            "description": "The note text to add or update on the agreement"
+                        }
+                    },
+                    "required": [
+                        "note"
+                    ],
+                    "visible": [
+                        "note"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path",
+                "body"
+            ],
+            "visible": [
+                "path",
+                "body"
+            ],
+            "additionalProperties": false
+        }
+    }
+]
