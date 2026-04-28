@@ -2459,7 +2459,6 @@
       "additionalProperties": false
     }
   },
-  [
   {
     "name": "SERVICE_NOW__CREATE_HR_CASE",
     "description": "Create a new HR case in ServiceNow HR Service Delivery. Used to log HR requests such as onboarding, offboarding, benefits, payroll queries, or employee relations issues.",
@@ -2790,5 +2789,4 @@
       "additionalProperties": false
     }
   }
-]
 ]
