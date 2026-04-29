@@ -2788,5 +2788,133 @@
         "visible": ["query", "body"],
         "additionalProperties": false
       }
+    },
+    {
+      "name": "SERVICE_NOW__LIST_HR_CASES",
+      "description": "Retrieve a list of HR cases from ServiceNow HR Service Delivery (sn_hr_core_case table). Supports filtering by state, subject person, HR service, category, priority, and assignment group with full pagination and field selection support.",
+      "tags": [
+        "hr",
+        "cases",
+        "itsm"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+        "method": "GET",
+        "path": "/api/now/table/sn_hr_core_case",
+        "server_url": "https://wtwdev.service-now.com"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "object",
+            "description": "Query parameters for filtering, sorting, and paginating HR cases.",
+            "properties": {
+              "sysparm_query": {
+                "type": "string",
+                "description": "Encoded query string to filter and sort HR cases. Use '^' as AND operator. Append '^ORDERBYfield' or '^ORDERBYDESCfield' for sorting.",
+                "examples": [
+                  "state=2^active=true^ORDERBYDESCopened_at",
+                  "priority=1^active=true",
+                  "assigned_to=javascript:gs.getUserID()^active=true",
+                  "hr_service=Payroll^state=2",
+                  "subject_person.email=john.smith@wtw.com^active=true"
+                ]
+              },
+              "sysparm_limit": {
+                "type": "string",
+                "description": "Maximum number of HR cases to return. Default is 10, max is 10000.",
+                "examples": [
+                  "10",
+                  "25",
+                  "50",
+                  "100"
+                ]
+              },
+              "sysparm_offset": {
+                "type": "string",
+                "description": "Number of records to skip for pagination. Use with sysparm_limit for paging through results.",
+                "examples": [
+                  "0",
+                  "10",
+                  "25",
+                  "50"
+                ]
+              },
+              "sysparm_fields": {
+                "type": "string",
+                "description": "Comma-separated list of fields to return. Omit to return all fields. Recommended to always specify to reduce payload size.",
+                "examples": [
+                  "number,short_description,state,priority,assigned_to,opened_at,subject_person,hr_service",
+                  "number,short_description,state,priority,assignment_group,opened_at,closed_at,category",
+                  "sys_id,number,short_description,state,priority,assigned_to,subject_person"
+                ]
+              },
+              "sysparm_display_value": {
+                "type": "string",
+                "description": "Controls whether to return display values or raw values. Use 'true' for human-readable labels, 'false' for raw sys_ids, 'all' for both.",
+                "enum": [
+                  "true",
+                  "false",
+                  "all"
+                ]
+              },
+              "sysparm_exclude_reference_link": {
+                "type": "string",
+                "description": "Set to 'true' to exclude reference links from the response. Reduces response size when reference field navigation URLs are not needed.",
+                "enum": [
+                  "true",
+                  "false"
+                ]
+              },
+              "sysparm_suppress_pagination_header": {
+                "type": "string",
+                "description": "Set to 'true' to suppress the X-Total-Count header in the response. Use when total count is not needed to improve performance.",
+                "enum": [
+                  "true",
+                  "false"
+                ]
+              },
+              "sysparm_view": {
+                "type": "string",
+                "description": "UI view to use for field selection. Determines which fields are returned when sysparm_fields is not specified.",
+                "examples": [
+                  "desktop",
+                  "mobile",
+                  "both"
+                ]
+              },
+              "sysparm_no_count": {
+                "type": "string",
+                "description": "Set to 'true' to skip the total record count query. Improves performance on large tables.",
+                "enum": [
+                  "true",
+                  "false"
+                ]
+              }
+            },
+            "required": [],
+            "visible": [
+              "sysparm_query",
+              "sysparm_limit",
+              "sysparm_offset",
+              "sysparm_fields",
+              "sysparm_display_value",
+              "sysparm_exclude_reference_link",
+              "sysparm_suppress_pagination_header",
+              "sysparm_view",
+              "sysparm_no_count"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [],
+        "visible": [
+          "query"
+        ],
+        "additionalProperties": false
+      }
     }
   ]
