@@ -2790,7 +2790,7 @@
       }
     },
     {
-      "name": "SERVICE_NOW__LIST_HR_CASES",
+      "name": "SERVICE_NOW_V2__LIST_HR_CASES",
       "description": "Retrieve a list of HR cases from ServiceNow HR Service Delivery (sn_hr_core_case table). Supports filtering by state, subject person, HR service, category, priority, and assignment group with full pagination and field selection support.",
       "tags": [
         "hr",
