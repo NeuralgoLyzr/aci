@@ -2,96 +2,372 @@
   {
     "name": "TAVILY__SEARCH",
     "description": "Tavily Search API is a search engine optimized for LLMs, aimed at efficient, quick and persistent search results.",
-    "tags": ["search"],
+    "tags": [
+        "search"
+    ],
     "visibility": "public",
     "active": true,
     "protocol": "rest",
     "protocol_data": {
-      "method": "POST",
-      "path": "/search",
-      "server_url": "https://api.tavily.com"
+        "method": "POST",
+        "path": "/search",
+        "server_url": "https://api.tavily.com"
     },
     "parameters": {
-      "type": "object",
-      "properties": {
-        "body": {
-          "type": "object",
-          "description": "body parameters",
-          "properties": {
-            "query": {
-              "type": "string",
-              "description": "The search query you want to execute with Tavily."
-            },
-            "api_key": {
-              "type": "string",
-              "default": "X-API-KEY",
-              "description": "Your Tavily API Key."
-            },
-            "search_depth": {
-              "type": "string",
-              "default": "basic",
-              "description": "The depth of the search. It can be 'basic' or 'advanced'. Default is 'basic'.",
-              "enum": ["basic", "advanced"]
-            },
-            "topic": {
-              "type": "string",
-              "default": "general",
-              "description": "The category of the search. This will determine which of our agents will be used for the search. Currently: only 'general' and 'news' are supported. Default is 'general'.",
-              "enum": ["general", "news"]
-            },
-            "days": {
-              "type": "integer",
-              "default": 3,
-              "description": "The number of days back from the current date to include in the search results. This specifies the time frame of data to be retrieved. Please note that this feature is only available when using the 'news' search topic. Default is 3."
-            },
-            "max_results": {
-              "type": "integer",
-              "default": 5,
-              "description": "The maximum number of search results to return. Default is 5."
-            },
-            "include_images": {
-              "type": "boolean",
-              "default": false,
-              "description": "Include a list of query-related images in the response. Default is False."
-            },
-            "include_image_descriptions": {
-              "type": "boolean",
-              "default": false,
-              "description": "When include_images is set to True, this option adds descriptive text for each image. Default is False."
-            },
-            "include_answer": {
-              "type": "boolean",
-              "default": false,
-              "description": "Include a short answer to original query. Default is False."
-            },
-            "include_raw_content": {
-              "type": "boolean",
-              "default": false,
-              "description": "Include the cleaned and parsed HTML content of each search result. Default is False."
-            },
-            "include_domains": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "description": "A list of domains to specifically include in the search results. Default is [], which includes all domains."
-            },
-            "exclude_domains": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "description": "A list of domains to specifically exclude from the search results. Default is [], which doesn't exclude any domains."
+        "type": "object",
+        "properties": {
+            "body": {
+                "type": "object",
+                "description": "body parameters",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "The search query you want to execute with Tavily."
+                    },
+                    "api_key": {
+                        "type": "string",
+                        "default": "X-API-KEY",
+                        "description": "Your Tavily API Key."
+                    },
+                    "search_depth": {
+                        "type": "string",
+                        "default": "basic",
+                        "description": "Controls the latency vs. relevance tradeoff. 'advanced': highest relevance, increased latency, 2 API credits. 'basic': balanced relevance and latency, 1 credit. 'fast': lower latency, good relevance, 1 credit. 'ultra-fast': minimum latency, 1 credit.",
+                        "enum": [
+                            "advanced",
+                            "basic",
+                            "fast",
+                            "ultra-fast"
+                        ]
+                    },
+                    "chunks_per_source": {
+                        "type": "integer",
+                        "default": 3,
+                        "minimum": 1,
+                        "maximum": 3,
+                        "description": "Maximum number of relevant content chunks (up to 500 characters each) returned per source. Only available when search_depth is 'advanced'."
+                    },
+                    "topic": {
+                        "type": "string",
+                        "default": "general",
+                        "description": "The category of the search. 'news' is useful for real-time updates on politics, sports, and major events. 'general' is for broader searches. 'finance' is for financial data.",
+                        "enum": [
+                            "general",
+                            "news",
+                            "finance"
+                        ]
+                    },
+                    "time_range": {
+                        "type": "string",
+                        "default": null,
+                        "description": "The time range back from the current date to filter results based on publish or last updated date. Options: 'day'/'d', 'week'/'w', 'month'/'m', 'year'/'y'.",
+                        "enum": [
+                            "day",
+                            "week",
+                            "month",
+                            "year",
+                            "d",
+                            "w",
+                            "m",
+                            "y"
+                        ]
+                    },
+                    "start_date": {
+                        "type": "string",
+                        "default": null,
+                        "description": "Return results published or updated after this date. Format: YYYY-MM-DD (e.g. '2025-02-09')."
+                    },
+                    "end_date": {
+                        "type": "string",
+                        "default": null,
+                        "description": "Return results published or updated before this date. Format: YYYY-MM-DD (e.g. '2025-12-29')."
+                    },
+                    "max_results": {
+                        "type": "integer",
+                        "default": 5,
+                        "minimum": 0,
+                        "maximum": 20,
+                        "description": "The maximum number of search results to return. Default is 5."
+                    },
+                    "include_images": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Include a list of query-related images in the response, plus per-result images. Default is false."
+                    },
+                    "include_image_descriptions": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "When include_images is true, also add a descriptive text for each image. Default is false."
+                    },
+                    "include_answer": {
+                        "type": "string",
+                        "default": "false",
+                        "description": "Include an LLM-generated answer to the query. 'basic' or true returns a quick answer. 'advanced' returns a more detailed answer. Default is false.",
+                        "enum": [
+                            "false",
+                            "basic",
+                            "advanced"
+                        ]
+                    },
+                    "include_raw_content": {
+                        "type": "string",
+                        "default": "false",
+                        "description": "Include the cleaned and parsed HTML content of each search result. 'markdown' or true returns content in markdown format. 'text' returns plain text. Default is false.",
+                        "enum": [
+                            "false",
+                            "markdown",
+                            "text"
+                        ]
+                    },
+                    "include_favicon": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Whether to include the favicon URL for each result. Default is false."
+                    },
+                    "include_domains": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "A list of domains to specifically include in the search results. Maximum 300 domains. Default is []."
+                    },
+                    "exclude_domains": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "A list of domains to specifically exclude from the search results. Maximum 150 domains. Default is []."
+                    },
+                    "country": {
+                        "type": "string",
+                        "default": null,
+                        "description": "Boost search results from a specific country. Prioritizes content from the selected country. Only available when topic is 'general'.",
+                        "enum": [
+                            "afghanistan",
+                            "albania",
+                            "algeria",
+                            "andorra",
+                            "angola",
+                            "argentina",
+                            "armenia",
+                            "australia",
+                            "austria",
+                            "azerbaijan",
+                            "bahamas",
+                            "bahrain",
+                            "bangladesh",
+                            "barbados",
+                            "belarus",
+                            "belgium",
+                            "belize",
+                            "benin",
+                            "bhutan",
+                            "bolivia",
+                            "bosnia and herzegovina",
+                            "botswana",
+                            "brazil",
+                            "brunei",
+                            "bulgaria",
+                            "burkina faso",
+                            "burundi",
+                            "cambodia",
+                            "cameroon",
+                            "canada",
+                            "cape verde",
+                            "central african republic",
+                            "chad",
+                            "chile",
+                            "china",
+                            "colombia",
+                            "comoros",
+                            "congo",
+                            "costa rica",
+                            "croatia",
+                            "cuba",
+                            "cyprus",
+                            "czech republic",
+                            "denmark",
+                            "djibouti",
+                            "dominican republic",
+                            "ecuador",
+                            "egypt",
+                            "el salvador",
+                            "equatorial guinea",
+                            "eritrea",
+                            "estonia",
+                            "ethiopia",
+                            "fiji",
+                            "finland",
+                            "france",
+                            "gabon",
+                            "gambia",
+                            "georgia",
+                            "germany",
+                            "ghana",
+                            "greece",
+                            "guatemala",
+                            "guinea",
+                            "haiti",
+                            "honduras",
+                            "hungary",
+                            "iceland",
+                            "india",
+                            "indonesia",
+                            "iran",
+                            "iraq",
+                            "ireland",
+                            "israel",
+                            "italy",
+                            "jamaica",
+                            "japan",
+                            "jordan",
+                            "kazakhstan",
+                            "kenya",
+                            "kuwait",
+                            "kyrgyzstan",
+                            "latvia",
+                            "lebanon",
+                            "lesotho",
+                            "liberia",
+                            "libya",
+                            "liechtenstein",
+                            "lithuania",
+                            "luxembourg",
+                            "madagascar",
+                            "malawi",
+                            "malaysia",
+                            "maldives",
+                            "mali",
+                            "malta",
+                            "mauritania",
+                            "mauritius",
+                            "mexico",
+                            "moldova",
+                            "monaco",
+                            "mongolia",
+                            "montenegro",
+                            "morocco",
+                            "mozambique",
+                            "myanmar",
+                            "namibia",
+                            "nepal",
+                            "netherlands",
+                            "new zealand",
+                            "nicaragua",
+                            "niger",
+                            "nigeria",
+                            "north korea",
+                            "north macedonia",
+                            "norway",
+                            "oman",
+                            "pakistan",
+                            "panama",
+                            "papua new guinea",
+                            "paraguay",
+                            "peru",
+                            "philippines",
+                            "poland",
+                            "portugal",
+                            "qatar",
+                            "romania",
+                            "russia",
+                            "rwanda",
+                            "saudi arabia",
+                            "senegal",
+                            "serbia",
+                            "singapore",
+                            "slovakia",
+                            "slovenia",
+                            "somalia",
+                            "south africa",
+                            "south korea",
+                            "south sudan",
+                            "spain",
+                            "sri lanka",
+                            "sudan",
+                            "sweden",
+                            "switzerland",
+                            "syria",
+                            "taiwan",
+                            "tajikistan",
+                            "tanzania",
+                            "thailand",
+                            "togo",
+                            "trinidad and tobago",
+                            "tunisia",
+                            "turkey",
+                            "turkmenistan",
+                            "uganda",
+                            "ukraine",
+                            "united arab emirates",
+                            "united kingdom",
+                            "united states",
+                            "uruguay",
+                            "uzbekistan",
+                            "venezuela",
+                            "vietnam",
+                            "yemen",
+                            "zambia",
+                            "zimbabwe"
+                        ]
+                    },
+                    "auto_parameters": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "When enabled, Tavily automatically configures search parameters based on query content and intent. Explicit values override automatic ones. Uses 2 API credits per request. Default is false."
+                    },
+                    "exact_match": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Ensure only results containing the exact quoted phrase(s) in the query are returned. Wrap target phrases in quotes within your query (e.g. '\"John Smith\" CEO'). Default is false."
+                    },
+                    "include_usage": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Whether to include credit usage information in the response. Default is false."
+                    },
+                    "safe_search": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Enterprise only. Whether to filter out adult or unsafe content from results. Not supported for 'fast' or 'ultra-fast' search depths. Default is false."
+                    }
+                },
+                "required": [
+                    "query",
+                    "api_key"
+                ],
+                "visible": [
+                    "query",
+                    "search_depth",
+                    "chunks_per_source",
+                    "topic",
+                    "time_range",
+                    "start_date",
+                    "end_date",
+                    "max_results",
+                    "include_images",
+                    "include_image_descriptions",
+                    "include_answer",
+                    "include_raw_content",
+                    "include_favicon",
+                    "include_domains",
+                    "exclude_domains",
+                    "country",
+                    "auto_parameters",
+                    "exact_match",
+                    "include_usage",
+                    "safe_search"
+                ],
+                "additionalProperties": false
             }
-          },
-          "required": ["query", "api_key"],
-          "visible": ["query", "search_depth", "topic", "days", "max_results", "include_images", "include_image_descriptions", "include_answer"],
-          "additionalProperties": false
-        }
-      },
-      "required": ["body"],
-      "visible": ["body"],
-      "additionalProperties": false
+        },
+        "required": [
+            "body"
+        ],
+        "visible": [
+            "body"
+        ],
+        "additionalProperties": false
     },
     "response": {}
   },
