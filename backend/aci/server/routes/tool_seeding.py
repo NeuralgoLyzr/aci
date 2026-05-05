@@ -520,7 +520,7 @@ async def upsert_app_from_json(
         logger.error(f"Error upserting app from JSON content: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to upsert app from JSON content: {str(e)}"
+            detail=f"{str(e)}"
         )
 
 
