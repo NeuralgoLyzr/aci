@@ -1,0 +1,459 @@
+[
+  {
+    "name": "SNOWFLAKE__LIST_DATABASES",
+    "description": "List only user-created Snowflake databases, excluding system databases.",
+    "tags": ["database", "metadata"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "POST",
+      "path": "/api/v2/statements",
+      "server_url": "https://{snowflake_account_url}"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "object",
+          "properties": {
+            "snowflake_account_url": {
+              "type": "string",
+              "description": "Snowflake account hostname, e.g. yhnviyi-yy93776.snowflakecomputing.com"
+            }
+          },
+          "required": ["snowflake_account_url"],
+          "visible": ["snowflake_account_url"],
+          "additionalProperties": false
+        },
+        "header": {
+          "type": "object",
+          "properties": {
+            "Accept": { "type": "string", "default": "application/json" },
+            "User-Agent": { "type": "string", "default": "aci-platform/1.0" },
+            "Content-Type": { "type": "string", "default": "application/json" }
+          },
+          "required": ["Accept", "User-Agent", "Content-Type"],
+          "visible": [],
+          "additionalProperties": false
+        },
+        "body": {
+          "type": "object",
+          "properties": {
+            "statement": {
+              "type": "string",
+              "default": "SHOW DATABASES"
+            },
+            "timeout": { "type": "integer", "default": 60 }
+          },
+          "required": ["statement", "timeout"],
+          "visible": [],
+          "additionalProperties": false
+        }
+      },
+      "required": ["path", "header", "body"],
+      "visible": ["path"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SNOWFLAKE__SHOW_SCHEMAS",
+    "description": "Lists schemas in a Snowflake database by executing a SHOW SCHEMAS statement through the SQL API.",
+    "tags": ["database", "metadata", "schemas"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "POST",
+      "path": "/api/v2/statements",
+      "server_url": "https://{snowflake_account_url}"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "object",
+          "properties": {
+            "snowflake_account_url": {
+              "type": "string",
+              "description": "Snowflake account hostname, e.g. yhnviyi-yy93776.snowflakecomputing.com"
+            }
+          },
+          "required": ["snowflake_account_url"],
+          "visible": ["snowflake_account_url"],
+          "additionalProperties": false
+        },
+        "header": {
+          "type": "object",
+          "properties": {
+            "Accept": { "type": "string", "default": "application/json" },
+            "User-Agent": { "type": "string", "default": "aci-platform/1.0" },
+            "Content-Type": { "type": "string", "default": "application/json" }
+          },
+          "required": ["Accept", "User-Agent", "Content-Type"],
+          "visible": [],
+          "additionalProperties": false
+        },
+        "body": {
+          "type": "object",
+          "properties": {
+            "statement": {
+              "type": "string",
+              "default": "SHOW SCHEMAS"
+            },
+            "database": {
+              "type": "string",
+              "description": "Database name to list schemas from, e.g. LYZR_DB"
+            },
+            "warehouse": {
+              "type": "string",
+              "description": "Optional warehouse to use for execution."
+            },
+            "role": {
+              "type": "string",
+              "description": "Optional role to use for execution."
+            },
+            "timeout": { "type": "integer", "default": 60 }
+          },
+          "required": ["statement", "timeout"],
+          "visible": ["database", "warehouse", "role"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["path", "header", "body"],
+      "visible": ["path", "body"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SNOWFLAKE__SHOW_TABLES",
+    "description": "Lists tables in a Snowflake schema by executing a SHOW TABLES statement through the SQL API.",
+    "tags": ["database", "metadata", "tables"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "POST",
+      "path": "/api/v2/statements",
+      "server_url": "https://{snowflake_account_url}"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "object",
+          "properties": {
+            "snowflake_account_url": {
+              "type": "string",
+              "description": "Snowflake account hostname, e.g. yhnviyi-yy93776.snowflakecomputing.com"
+            }
+          },
+          "required": ["snowflake_account_url"],
+          "visible": ["snowflake_account_url"],
+          "additionalProperties": false
+        },
+        "header": {
+          "type": "object",
+          "properties": {
+            "Accept": { "type": "string", "default": "application/json" },
+            "User-Agent": { "type": "string", "default": "aci-platform/1.0" },
+            "Content-Type": { "type": "string", "default": "application/json" }
+          },
+          "required": ["Accept", "User-Agent", "Content-Type"],
+          "visible": [],
+          "additionalProperties": false
+        },
+        "body": {
+          "type": "object",
+          "properties": {
+            "statement": {
+              "type": "string",
+              "default": "SHOW TABLES"
+            },
+            "database": {
+              "type": "string",
+              "description": "Database name containing the target schema, e.g. LYZR_DB"
+            },
+            "schema": {
+              "type": "string",
+              "description": "Schema name to list tables from, e.g. PUBLIC"
+            },
+            "warehouse": {
+              "type": "string",
+              "description": "Optional warehouse to use for execution."
+            },
+            "role": {
+              "type": "string",
+              "description": "Optional role to use for execution."
+            },
+            "timeout": { "type": "integer", "default": 60 }
+          },
+          "required": ["statement", "timeout"],
+          "visible": ["database", "schema", "warehouse", "role"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["path", "header", "body"],
+      "visible": ["path", "body"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SNOWFLAKE__DESCRIBE_TABLE",
+    "description": "Returns table definition details by executing a DESCRIBE TABLE statement through the SQL API.",
+    "tags": ["database", "metadata", "table", "describe"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "POST",
+      "path": "/api/v2/statements",
+      "server_url": "https://{snowflake_account_url}"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "object",
+          "properties": {
+            "snowflake_account_url": {
+              "type": "string",
+              "description": "Snowflake account hostname, e.g. yhnviyi-yy93776.snowflakecomputing.com"
+            }
+          },
+          "required": ["snowflake_account_url"],
+          "visible": ["snowflake_account_url"],
+          "additionalProperties": false
+        },
+        "header": {
+          "type": "object",
+          "properties": {
+            "Accept": { "type": "string", "default": "application/json" },
+            "User-Agent": { "type": "string", "default": "aci-platform/1.0" },
+            "Content-Type": { "type": "string", "default": "application/json" }
+          },
+          "required": ["Accept", "User-Agent", "Content-Type"],
+          "visible": [],
+          "additionalProperties": false
+        },
+        "body": {
+          "type": "object",
+          "properties": {
+            "statement": {
+              "type": "string",
+              "description": "DESCRIBE TABLE statement, e.g. DESCRIBE TABLE LYZR_DB.PUBLIC.MY_TABLE"
+            },
+            "database": {
+              "type": "string",
+              "description": "Database containing the table, e.g. LYZR_DB"
+            },
+            "schema": {
+              "type": "string",
+              "description": "Schema containing the table, e.g. PUBLIC"
+            },
+            "warehouse": {
+              "type": "string",
+              "description": "Optional warehouse to use for execution."
+            },
+            "role": {
+              "type": "string",
+              "description": "Optional role to use for execution."
+            },
+            "timeout": { "type": "integer", "default": 60 }
+          },
+          "required": ["statement", "timeout"],
+          "visible": ["statement", "database", "schema", "warehouse", "role"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["path", "header", "body"],
+      "visible": ["path", "body"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SNOWFLAKE__EXPLORE_COLUMNS",
+    "description": "Returns column metadata for a table by querying the INFORMATION_SCHEMA.COLUMNS view through the SQL API.",
+    "tags": ["database", "metadata", "columns", "schema"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "POST",
+      "path": "/api/v2/statements",
+      "server_url": "https://{snowflake_account_url}"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "object",
+          "properties": {
+            "snowflake_account_url": {
+              "type": "string",
+              "description": "Snowflake account hostname, e.g. yhnviyi-yy93776.snowflakecomputing.com"
+            }
+          },
+          "required": ["snowflake_account_url"],
+          "visible": ["snowflake_account_url"],
+          "additionalProperties": false
+        },
+        "header": {
+          "type": "object",
+          "properties": {
+            "Accept": { "type": "string", "default": "application/json" },
+            "User-Agent": { "type": "string", "default": "aci-platform/1.0" },
+            "Content-Type": { "type": "string", "default": "application/json" }
+          },
+          "required": ["Accept", "User-Agent", "Content-Type"],
+          "visible": [],
+          "additionalProperties": false
+        },
+        "body": {
+          "type": "object",
+          "properties": {
+            "statement": {
+              "type": "string",
+              "description": "SQL to query columns, e.g. SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = 'PUBLIC' AND TABLE_NAME = 'MY_TABLE'"
+            },
+            "database": {
+              "type": "string",
+              "description": "Database whose INFORMATION_SCHEMA to query, e.g. LYZR_DB"
+            },
+            "warehouse": {
+              "type": "string",
+              "description": "Optional warehouse to use for execution."
+            },
+            "role": {
+              "type": "string",
+              "description": "Optional role to use for execution."
+            },
+            "timeout": { "type": "integer", "default": 60 }
+          },
+          "required": ["statement", "timeout"],
+          "visible": ["statement", "database", "warehouse", "role"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["path", "header", "body"],
+      "visible": ["path", "body"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SNOWFLAKE__RUN_QUERY",
+    "description": "Executes a SQL statement in Snowflake using the SQL API. Use this for ad hoc queries, DDL, DML, and metadata exploration statements.",
+    "tags": ["database", "sql", "query", "analytics"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "POST",
+      "path": "/api/v2/statements",
+      "server_url": "https://{snowflake_account_url}"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "object",
+          "properties": {
+            "snowflake_account_url": {
+              "type": "string",
+              "description": "Snowflake account hostname, e.g. yhnviyi-yy93776.snowflakecomputing.com"
+            }
+          },
+          "required": ["snowflake_account_url"],
+          "visible": ["snowflake_account_url"],
+          "additionalProperties": false
+        },
+        "header": {
+          "type": "object",
+          "properties": {
+            "Accept": { "type": "string", "default": "application/json" },
+            "User-Agent": { "type": "string", "default": "aci-platform/1.0" },
+            "Content-Type": { "type": "string", "default": "application/json" }
+          },
+          "required": ["Accept", "User-Agent", "Content-Type"],
+          "visible": [],
+          "additionalProperties": false
+        },
+        "query": {
+          "type": "object",
+          "properties": {
+            "requestId": {
+              "type": "string",
+              "description": "Optional UUID to uniquely identify the request and safely retry without duplicate execution."
+            },
+            "async": {
+              "type": "boolean",
+              "description": "Set to true to force asynchronous execution and return a statement handle instead of waiting for results.",
+              "default": false
+            },
+            "nullable": {
+              "type": "boolean",
+              "description": "Set to false to return SQL NULL values as the string \"null\" instead of JSON null.",
+              "default": true
+            }
+          },
+          "required": [],
+          "visible": ["requestId", "async", "nullable"],
+          "additionalProperties": false
+        },
+        "body": {
+          "type": "object",
+          "properties": {
+            "statement": {
+              "type": "string",
+              "description": "The SQL statement to execute. Can be a query, DDL, DML, or metadata command."
+            },
+            "timeout": {
+              "type": "integer",
+              "description": "Timeout in seconds for statement execution. Use 0 for maximum allowed timeout.",
+              "default": 60,
+              "minimum": 0
+            },
+            "database": {
+              "type": "string",
+              "description": "Optional database context for execution, e.g. LYZR_DB"
+            },
+            "schema": {
+              "type": "string",
+              "description": "Optional schema context for execution, e.g. PUBLIC"
+            },
+            "warehouse": {
+              "type": "string",
+              "description": "Optional warehouse to use for execution."
+            },
+            "role": {
+              "type": "string",
+              "description": "Optional role to use for execution."
+            },
+            "bindings": {
+              "type": "object",
+              "description": "Optional bind variables for parameterized SQL statements.",
+              "properties": {},
+              "required": [],
+              "visible": [],
+              "additionalProperties": true
+            },
+            "parameters": {
+              "type": "object",
+              "description": "Optional Snowflake session parameters, e.g. query_tag or rows_per_resultset.",
+              "properties": {},
+              "required": [],
+              "visible": [],
+              "additionalProperties": true
+            }
+          },
+          "required": ["statement", "timeout"],
+          "visible": ["statement", "database", "schema", "warehouse", "role", "bindings", "parameters"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["path", "header", "body"],
+      "visible": ["path", "query", "body"],
+      "additionalProperties": false
+    }
+  }
+]
