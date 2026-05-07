@@ -9,7 +9,7 @@
       "protocol_data": {
         "method": "POST",
         "path": "/schedules/",
-        "server_url": "https://scheduler.studio.lyzr.ai"
+        "server_url": "https://lyzr-scheduler.icyriver-4d3a26d7.centralus.azurecontainerapps.io"
       },
       "parameters": {
         "type": "object",
@@ -56,7 +56,7 @@
       "protocol_data": {
         "method": "GET",
         "path": "/schedules/",
-        "server_url": "https://scheduler.studio.lyzr.ai"
+        "server_url": "https://lyzr-scheduler.icyriver-4d3a26d7.centralus.azurecontainerapps.io"
       },
       "parameters": {
         "type": "object",
@@ -97,7 +97,7 @@
       "protocol_data": {
         "method": "GET",
         "path": "/schedules/{schedule_id}",
-        "server_url": "https://scheduler.studio.lyzr.ai"
+        "server_url": "https://lyzr-scheduler.icyriver-4d3a26d7.centralus.azurecontainerapps.io"
       },
       "parameters": {
         "type": "object",
@@ -137,7 +137,7 @@
       "protocol_data": {
         "method": "GET",
         "path": "/schedules/{schedule_id}/logs",
-        "server_url": "https://scheduler.studio.lyzr.ai"
+        "server_url": "https://lyzr-scheduler.icyriver-4d3a26d7.centralus.azurecontainerapps.io"
       },
       "parameters": {
         "type": "object",
@@ -187,7 +187,7 @@
       "protocol_data": {
         "method": "DELETE",
         "path": "/schedules/{schedule_id}",
-        "server_url": "https://scheduler.studio.lyzr.ai"
+        "server_url": "https://lyzr-scheduler.icyriver-4d3a26d7.centralus.azurecontainerapps.io"
       },
       "parameters": {
         "type": "object",
@@ -227,7 +227,7 @@
       "protocol_data": {
         "method": "POST",
         "path": "/schedules/{schedule_id}/pause",
-        "server_url": "https://scheduler.studio.lyzr.ai"
+        "server_url": "https://lyzr-scheduler.icyriver-4d3a26d7.centralus.azurecontainerapps.io"
       },
       "parameters": {
         "type": "object",
@@ -267,7 +267,7 @@
       "protocol_data": {
         "method": "POST",
         "path": "/schedules/{schedule_id}/resume",
-        "server_url": "https://scheduler.studio.lyzr.ai"
+        "server_url": "https://lyzr-scheduler.icyriver-4d3a26d7.centralus.azurecontainerapps.io"
       },
       "parameters": {
         "type": "object",
