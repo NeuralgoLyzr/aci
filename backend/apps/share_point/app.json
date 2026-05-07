@@ -10,6 +10,7 @@
         "location": "header",
         "name": "Authorization",
         "prefix": "Bearer",
+        "prompt": "select_account",
         "client_id": "{{ AIPOLABS_SHARE_POINT_CLIENT_ID }}",
         "client_secret": "{{ AIPOLABS_SHARE_POINT_CLIENT_SECRET }}",
         "scope": "Sites.Manage.All Sites.Read.All Sites.ReadWrite.All Sites.Selected Files.ReadWrite.All User.Read offline_access",
