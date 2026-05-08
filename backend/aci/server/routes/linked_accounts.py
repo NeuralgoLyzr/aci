@@ -630,6 +630,7 @@ async def link_oauth2_account(
         redirect_uri=redirect_uri,
         state=oauth2_state_jwt,
         code_verifier=oauth2_state.code_verifier,
+        prompt=oauth2_scheme.prompt or "consent",
     )
 
     # rewrite the authorization url for some apps that need special handling
