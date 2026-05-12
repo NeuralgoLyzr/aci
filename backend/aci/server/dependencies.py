@@ -18,7 +18,12 @@ from aci.common.exceptions import (
     ProjectNotFound,
 )
 from aci.common.logging_setup import get_logger
-from aci.server import billing, config
+from aci.common.utils import is_azure_environment
+from aci.server import config
+
+# billing module is only available in AWS (SaaS) environment
+if not is_azure_environment():
+    from aci.server import billing
 
 logger = get_logger(__name__)
 http_bearer = HTTPBearer(auto_error=True, description="login to receive a JWT token")
@@ -131,6 +136,10 @@ def validate_monthly_api_quota(
     2. Reset quota if it's a new month
     3. Increment usage or raise error if exceeded
     """
+    # Skip billing-based quota enforcement in Azure (on-prem) environment
+    if is_azure_environment():
+        return
+
     # Only check quota for app search and function search/execute endpoints
     path = request.url.path
     is_quota_limited_endpoint = path.startswith(f"{config.ROUTER_PREFIX_APPS}/search") or (

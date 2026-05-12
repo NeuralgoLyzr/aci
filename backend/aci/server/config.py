@@ -1,11 +1,76 @@
-from aci.common.utils import check_and_get_env_variable, construct_db_url, construct_db_url_sync
+import os
+
+from aci.common.utils import (
+    check_and_get_env_variable,
+    construct_db_url,
+    construct_db_url_sync,
+    get_environment,
+    get_wtw_config,
+    is_azure_environment,
+    is_wtw_environment,
+    map_wtw_model_name,
+)
 
 ENVIRONMENT = check_and_get_env_variable("SERVER_ENVIRONMENT")
+CLOUD_ENVIRONMENT = get_environment()  # AWS, AZURE, or AZURE/WTW
 
-# LLM
-OPENAI_API_KEY = check_and_get_env_variable("SERVER_OPENAI_API_KEY")
-OPENAI_EMBEDDING_MODEL = check_and_get_env_variable("SERVER_OPENAI_EMBEDDING_MODEL")
-OPENAI_EMBEDDING_DIMENSION = int(check_and_get_env_variable("SERVER_OPENAI_EMBEDDING_DIMENSION"))
+# LLM Configuration - differs based on environment
+if is_wtw_environment():
+    # AZURE/WTW configuration - uses WTW-specific endpoints
+    WTW_CONFIG = get_wtw_config()
+    WTW_API_BASE = WTW_CONFIG["wtw_api_base"]
+    WTW_API_VERSION = WTW_CONFIG["wtw_api_version"]
+    WTW_API_SCOPE = WTW_CONFIG["wtw_api_scope"]
+
+    # WTW uses deployment names mapped from standard model names
+    _wtw_embedding_model = os.getenv("WTW_EMBEDDING_MODEL", "text-embedding-3-small")
+    OPENAI_EMBEDDING_MODEL = map_wtw_model_name(_wtw_embedding_model, is_embedding=True)
+    OPENAI_EMBEDDING_DIMENSION = int(check_and_get_env_variable("SERVER_OPENAI_EMBEDDING_DIMENSION"))
+
+    # For compatibility - WTW uses Managed Identity, no API key needed
+    OPENAI_API_KEY = ""
+    AZURE_OPENAI_ENDPOINT = WTW_API_BASE
+    AZURE_OPENAI_API_KEY = None
+    AZURE_OPENAI_API_VERSION = WTW_API_VERSION
+    AZURE_OPENAI_EMBEDDING_DEPLOYMENT = OPENAI_EMBEDDING_MODEL
+
+elif is_azure_environment():
+    # Standard Azure OpenAI configuration
+    AZURE_OPENAI_ENDPOINT = check_and_get_env_variable("AZURE_OPENAI_ENDPOINT")
+    AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")  # Optional if using Managed Identity
+    AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-01")
+    AZURE_OPENAI_EMBEDDING_DEPLOYMENT = check_and_get_env_variable("AZURE_OPENAI_EMBEDDING_DEPLOYMENT")
+    OPENAI_EMBEDDING_DIMENSION = int(check_and_get_env_variable("SERVER_OPENAI_EMBEDDING_DIMENSION"))
+
+    # For compatibility with existing code that references these
+    OPENAI_API_KEY = AZURE_OPENAI_API_KEY or ""
+    OPENAI_EMBEDDING_MODEL = AZURE_OPENAI_EMBEDDING_DEPLOYMENT
+
+    # WTW variables not used in standard Azure
+    WTW_CONFIG = None
+    WTW_API_BASE = None
+    WTW_API_VERSION = None
+    WTW_API_SCOPE = None
+
+else:
+    # Standard OpenAI configuration (AWS environment)
+    OPENAI_API_KEY = check_and_get_env_variable("SERVER_OPENAI_API_KEY")
+    OPENAI_EMBEDDING_MODEL = check_and_get_env_variable("SERVER_OPENAI_EMBEDDING_MODEL")
+    OPENAI_EMBEDDING_DIMENSION = int(check_and_get_env_variable("SERVER_OPENAI_EMBEDDING_DIMENSION"))
+
+    # Azure/WTW variables not used in AWS
+    AZURE_OPENAI_ENDPOINT = None
+    AZURE_OPENAI_API_KEY = None
+    AZURE_OPENAI_API_VERSION = None
+    AZURE_OPENAI_EMBEDDING_DEPLOYMENT = None
+    WTW_CONFIG = None
+    WTW_API_BASE = None
+    WTW_API_VERSION = None
+    WTW_API_SCOPE = None
+
+# Anthropic (used by agent playground)
+ANTHROPIC_API_KEY = os.getenv("SERVER_ANTHROPIC_API_KEY", "")
+ANTHROPIC_MODEL_FOR_FRONTEND_QA_AGENT = "claude-3-5-sonnet-latest"
 
 # JWT
 SIGNING_KEY = check_and_get_env_variable("SERVER_SIGNING_KEY")
@@ -32,7 +97,6 @@ DB_FULL_URL: str | None = None
 def get_db_full_url_sync() -> str:
     """
     Lazily initializes and returns the database URL synchronously.
-    Fetches password from AWS Secrets Manager on first call.
     """
     global DB_FULL_URL
     if DB_FULL_URL is not None:
@@ -45,7 +109,6 @@ def get_db_full_url_sync() -> str:
 async def get_db_full_url() -> str:
     """
     Lazily initializes and returns the database URL asynchronously.
-    Fetches password from AWS Secrets Manager on first call.
     """
     global DB_FULL_URL
     if DB_FULL_URL is not None:
@@ -53,13 +116,6 @@ async def get_db_full_url() -> str:
 
     DB_FULL_URL = await construct_db_url(DB_SCHEME, DB_USER, DB_HOST, DB_PORT, DB_NAME)
     return DB_FULL_URL
-
-# PropelAuth
-PROPELAUTH_AUTH_URL = check_and_get_env_variable("SERVER_PROPELAUTH_AUTH_URL")
-PROPELAUTH_API_KEY = check_and_get_env_variable("SERVER_PROPELAUTH_API_KEY")
-
-# SVIX
-SVIX_SIGNING_SECRET = check_and_get_env_variable("SERVER_SVIX_SIGNING_SECRET")
 
 # RATE LIMITS
 RATE_LIMIT_IP_PER_SECOND = int(check_and_get_env_variable("SERVER_RATE_LIMIT_IP_PER_SECOND"))
@@ -89,24 +145,11 @@ ROUTER_PREFIX_FUNCTIONS = "/v1/functions"
 ROUTER_PREFIX_APP_CONFIGURATIONS = "/v1/app-configurations"
 ROUTER_PREFIX_LINKED_ACCOUNTS = "/v1/linked-accounts"
 ROUTER_PREFIX_AGENT = "/v1/agent"
-ROUTER_PREFIX_ANALYTICS = "/v1/analytics"
-ROUTER_PREFIX_WEBHOOKS = "/v1/webhooks"
-ROUTER_PREFIX_BILLING = "/v1/billing"
-ROUTER_PREFIX_ORGANIZATIONS = "/v1/organizations"
-ROUTER_PREFIX_DOCS = "/v1/docs"
 ROUTER_PREFIX_TOOL_SEEDING = "/v1/tool-seeding"
 ROUTER_PREFIX_SEEDING_INFO = "/v1/seeding-info"
 
 # DEV PORTAL
-DEV_PORTAL_URL = check_and_get_env_variable("SERVER_DEV_PORTAL_URL")
-
-# LOGFIRE
-LOGFIRE_WRITE_TOKEN = check_and_get_env_variable("SERVER_LOGFIRE_WRITE_TOKEN")
-LOGFIRE_READ_TOKEN = check_and_get_env_variable("SERVER_LOGFIRE_READ_TOKEN")
-
-# STRIPE
-STRIPE_SECRET_KEY = check_and_get_env_variable("SERVER_STRIPE_SECRET_KEY")
-STRIPE_WEBHOOK_SIGNING_SECRET = check_and_get_env_variable("SERVER_STRIPE_WEBHOOK_SIGNING_SECRET")
+DEV_PORTAL_URL = os.getenv("SERVER_DEV_PORTAL_URL", "http://localhost:3000")
 
 # HEADERS
 ACI_ORG_ID_HEADER = "X-ACI-ORG-ID"
@@ -115,9 +158,23 @@ ACI_API_KEY_HEADER = "X-API-KEY"
 # 8KB
 MAX_LOG_FIELD_SIZE = 8 * 1024
 
-# Agentic Apps
-ANTHROPIC_API_KEY = check_and_get_env_variable("SERVER_ANTHROPIC_API_KEY")
-ANTHROPIC_MODEL_FOR_FRONTEND_QA_AGENT = "claude-3-5-sonnet-latest"
 
-# Vector DB
-VECTOR_DB_FULL_URL = check_and_get_env_variable("SERVER_VECTOR_DB_FULL_URL")
+# OpenAI client singleton
+_openai_client = None
+
+
+def get_openai_client():
+    """
+    Get the OpenAI client instance (singleton pattern).
+    Returns AzureOpenAI for Azure environments, standard OpenAI for AWS.
+    """
+    global _openai_client
+    if _openai_client is None:
+        from aci.common.utils import get_openai_client as create_openai_client
+
+        _openai_client = create_openai_client(
+            api_key=OPENAI_API_KEY if OPENAI_API_KEY else None,
+            azure_endpoint=AZURE_OPENAI_ENDPOINT,
+            azure_api_version=AZURE_OPENAI_API_VERSION,
+        )
+    return _openai_client

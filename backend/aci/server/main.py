@@ -1,7 +1,3 @@
-from typing import Any
-
-import logfire
-import stripe
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
@@ -14,7 +10,6 @@ from aci.common.exceptions import ACIException
 from aci.common.logging_setup import setup_logging
 from aci.server import config
 from aci.server import dependencies as deps
-from aci.server.acl import get_propelauth
 from aci.server.dependency_check import check_dependencies
 from aci.server.fix_schema import fix_schema
 from aci.server.log_schema_filter import LogSchemaFilter
@@ -22,20 +17,14 @@ from aci.server.middleware.interceptor import InterceptorMiddleware, RequestCont
 from aci.server.middleware.ratelimit import RateLimitMiddleware
 from aci.server.routes import (
     agent,
-    analytics,
     app_configurations,
     apps,
-    billing,
-    docs,
     functions,
     health,
     linked_accounts,
-    organizations,
     projects,
     tool_seeding,
-    webhooks,
 )
-from aci.server.fix_schema import fix_schema
 from aci.server.sentry import setup_sentry
 
 # Run simple schema fixes first (if RUN_SCHEMA_FIXES=true)
@@ -43,12 +32,7 @@ fix_schema()
 
 check_dependencies()
 
-# Run schema fixes
-fix_schema()
-
 setup_sentry()
-
-# Lambda-based seeding will run in background after server starts
 
 setup_logging(
     formatter=JsonFormatter(
@@ -59,8 +43,6 @@ setup_logging(
     filters=[RequestContextFilter(), LogSchemaFilter()],
     environment=config.ENVIRONMENT,
 )
-
-stripe.api_key = config.STRIPE_SECRET_KEY
 
 
 def custom_generate_unique_id(route: APIRoute) -> str:
@@ -78,42 +60,15 @@ app = FastAPI(
 )
 
 
+import logging
+logger = logging.getLogger(__name__)
+
+
 @app.on_event("startup")
 async def startup_event() -> None:
     """Initialize database connection on server startup."""
     await config.get_db_full_url()
     logger.info("Database URL initialized")
-
-
-auth = get_propelauth()
-
-
-# No auto-seeding - manual seeding only
-import logging
-logger = logging.getLogger(__name__)
-logger.info("Skipping auto-seeding - manual seeding required")
-
-
-def scrubbing_callback(m: logfire.ScrubMatch) -> Any:
-    if m.path == ("attributes", "api_key_id"):
-        return m.value
-
-
-# Skip logfire in production if no valid token
-if config.ENVIRONMENT != "local" and config.LOGFIRE_WRITE_TOKEN and config.LOGFIRE_WRITE_TOKEN != "dummy":
-    try:
-        logfire.configure(
-            console=False,
-            token=config.LOGFIRE_WRITE_TOKEN,
-            environment=config.ENVIRONMENT,
-            scrubbing=logfire.ScrubbingOptions(callback=scrubbing_callback),
-        )
-        logfire.instrument_fastapi(app, capture_headers=True)
-        logfire.instrument_sqlalchemy()
-    except Exception as e:
-        logger.warning(f"Failed to configure logfire: {e}")
-else:
-    logger.info("Skipping logfire configuration - no valid token provided")
 
 """middlewares are executed in the reverse order"""
 app.add_middleware(RateLimitMiddleware)
@@ -168,7 +123,6 @@ app.include_router(
     projects.router,
     prefix=config.ROUTER_PREFIX_PROJECTS,
     tags=[config.ROUTER_PREFIX_PROJECTS.split("/")[-1]],
-    # dependencies=[Depends(auth.require_user)],
 )
 # TODO: add validate_project_quota to all routes
 app.include_router(
@@ -204,38 +158,7 @@ app.include_router(
 )
 
 app.include_router(
-    analytics.router,
-    prefix=config.ROUTER_PREFIX_ANALYTICS,
-    tags=[config.ROUTER_PREFIX_ANALYTICS.split("/")[-1]],
-)
-
-app.include_router(
-    webhooks.router,
-    prefix=config.ROUTER_PREFIX_WEBHOOKS,
-    tags=[config.ROUTER_PREFIX_WEBHOOKS.split("/")[-1]],
-)
-
-app.include_router(
-    billing.router,
-    prefix=config.ROUTER_PREFIX_BILLING,
-    tags=[config.ROUTER_PREFIX_BILLING.split("/")[-1]],
-)
-
-app.include_router(
-    organizations.router,
-    prefix=config.ROUTER_PREFIX_ORGANIZATIONS,
-    tags=[config.ROUTER_PREFIX_ORGANIZATIONS.split("/")[-1]],
-)
-
-app.include_router(
-    docs.router,
-    prefix=config.ROUTER_PREFIX_DOCS,
-    tags=[config.ROUTER_PREFIX_DOCS.split("/")[-1]],
-)
-
-app.include_router(
     tool_seeding.router,
     prefix="/v1/tool-seeding",
     tags=["tool-seeding"],
-    # dependencies=[Depends(auth.require_user)],  # Enable PropelAuth authentication
 )

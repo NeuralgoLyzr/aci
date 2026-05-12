@@ -1,7 +1,7 @@
 import logging
 from logging.handlers import RotatingFileHandler
 
-import logfire
+from aci.common.utils import is_azure_environment
 
 
 # the setup is called once at the start of the app
@@ -40,7 +40,10 @@ def setup_logging(
             file_handler.addFilter(filter)
         root_logger.addHandler(file_handler)
 
-    if environment != "local":
+    # Only add logfire handler in non-local AWS environments
+    if environment != "local" and not is_azure_environment():
+        import logfire
+
         root_logger.addHandler(logfire.LogfireLoggingHandler())
 
     # Set up module-specific loggers if necessary (e.g., with different levels)
