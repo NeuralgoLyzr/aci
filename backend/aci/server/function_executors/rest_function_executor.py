@@ -84,7 +84,7 @@ class RestFunctionExecutor(FunctionExecutor[TScheme, TCred], Generic[TScheme, TC
     def _send_request(self, request: httpx.Request) -> FunctionExecutionResult:
         # TODO: one client for all requests? cache the client? concurrency control? async client?
         # TODO: add retry
-        timeout = httpx.Timeout(10.0, read=30.0)
+        timeout = httpx.Timeout(10.0, read=300.0)
         with httpx.Client(timeout=timeout) as client:
             try:
                 response = client.send(request)
