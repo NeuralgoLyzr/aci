@@ -215,7 +215,7 @@ class OAuth2Manager:
     ) -> dict[str, Any]:
         """Exchange client_id + client_secret for an access token using client_credentials grant."""
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=httpx.Timeout(10.0, read=300.0)) as client:
                 data: dict[str, str] = {
                     "grant_type": "client_credentials",
                     "client_id": client_id,
