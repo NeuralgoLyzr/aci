@@ -23,6 +23,7 @@ class RestMetadata(BaseModel):
     method: HttpMethod
     path: str
     server_url: str
+    auth_mode: str | None = None
 
 
 class ConnectorMetadata(RootModel[dict]):
