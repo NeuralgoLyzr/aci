@@ -1,677 +1,883 @@
 [
-    {
-        "name": "SHARE_POINT_V2__SEARCH_FOR_SITES",
-        "description": "Search across a SharePoint tenant for sites that match keywords provided.",
-        "tags": ["sites"],
-        "visibility": "public",
-        "active": true,
-        "protocol": "rest",
-        "protocol_data": {
-            "method": "GET",
-            "path": "/sites?search={search_text}",
-            "server_url": "https://graph.microsoft.com/v1.0"
-        },
-        "parameters": {
+  {
+      "name": "SHARE_POINT_V2__SEARCH_FOR_SITES",
+      "description": "Search across a SharePoint tenant for sites that match keywords provided.",
+      "tags": [
+          "sites"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+          "method": "GET",
+          "path": "/sites?search={search_text}",
+          "server_url": "https://graph.microsoft.com/v1.0"
+      },
+      "parameters": {
           "type": "object",
           "properties": {
-            "path": {
-              "type": "object",
-              "description": "the http path parameters",
-              "properties": {
-                "search_text": {
-                  "type": "string",
-                  "description": "The search filter is a free text search that uses multiple properties when retrieving the search results"
-                }
-              },
-              "required": ["search_text"],
-              "visible":  ["search_text"],
-              "additionalProperties": false
-            }
+              "path": {
+                  "type": "object",
+                  "description": "the http path parameters",
+                  "properties": {
+                      "search_text": {
+                          "type": "string",
+                          "description": "The search filter is a free text search that uses multiple properties when retrieving the search results"
+                      }
+                  },
+                  "required": [
+                      "search_text"
+                  ],
+                  "visible": [
+                      "search_text"
+                  ],
+                  "additionalProperties": false
+              }
           },
-          "required": ["path"],
-          "visible":  ["path"],
+          "required": [
+              "path"
+          ],
+          "visible": [
+              "path"
+          ],
           "additionalProperties": false
-        }
-    },
-    {
-        "name": "SHARE_POINT_V2__GET_ROOT_SITE",
-        "description": "Get the root site of a SharePoint tenant.",
-        "tags": ["sites"],
-        "visibility": "public",
-        "active": true,
-        "protocol": "rest",
-        "protocol_data": {
-            "method": "GET",
-            "path": "/sites/root",
-            "server_url": "https://graph.microsoft.com/v1.0"
-        },
-        "parameters": {
-            "type": "object",
-            "properties": {},
-            "required": [],
-            "visible": [],
-            "additionalProperties": false
-        }
-    },
-    {
-        "name": "SHARE_POINT_V2__GET_SITE_BY_ID",
-        "description": "Get a site by its ID.",
-        "tags": ["sites"],
-        "visibility": "public",
-        "active": true,
-        "protocol": "rest",
-        "protocol_data": {
-            "method": "GET",
-            "path": "/sites/{site_id}",
-            "server_url": "https://graph.microsoft.com/v1.0"
-        },
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "path": {
-                    "type": "object",
-                    "description": "the http path parameters",
-                    "properties": {
-                        "site_id": {
-                            "type": "string",
-                            "description": "The ID of the site to get. e.g., 'contoso.sharepoint.com,2C712604-1370-44E7-A1F5-426573FDA80A,2D2244C3-251A-49EA-93A8-39E1C3A060FE'"
-                        }
-                    },
-                    "required": ["site_id"],
-                    "visible": ["site_id"],
-                    "additionalProperties": false
-                }
-            },
-            "required": ["path"],
-            "visible": ["path"],
-            "additionalProperties": false
-        }
-    },
-    {
-        "name": "SHARE_POINT_V2__GET_SITE_BY_PATH",
-        "description": "retrieve a site based on server-relative URL path. Site collection hostname and Site path, relative to server hostname.",
-        "tags": ["sites"],
-        "visibility": "public",
-        "active": true,
-        "protocol": "rest",
-        "protocol_data": {
-            "method": "GET",
-            "path": "/sites/{hostname}:/{relative_path}",
-            "server_url": "https://graph.microsoft.com/v1.0"
-        },
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "path": {
-                    "type": "object",
-                    "description": "the http path parameters",
-                    "properties": {
-                        "hostname": {
-                            "type": "string",
-                            "description": "The hostname of the site to get. e.g., 'xxx.sharepoint.com'"
-                        },
-                        "relative_path": {
-                            "type": "string",
-                            "description": "The relative path of the site to get. e.g., '/sites/mySite'"
-                        }
-                    },
-                    "required": ["hostname", "relative_path"],
-                    "visible": ["hostname", "relative_path"],
-                    "additionalProperties": false
-                }
-            },
-            "required": ["path"],
-            "visible": ["path"],
-            "additionalProperties": false
-        }
-    },
-    {
-        "name": "SHARE_POINT_V2__LIST_SUBSITES_FOR_A_SITE",
-        "description": "List all subsites for a site.",
-        "tags": ["sites"],
-        "visibility": "public",
-        "active": true,
-        "protocol": "rest",
-        "protocol_data": {
-            "method": "GET",
-            "path": "/sites/{site_id}/sites",
-            "server_url": "https://graph.microsoft.com/v1.0"
-        },
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "path": {
-                    "type": "object",
-                    "description": "the http path parameters",
-                    "properties": {
-                        "site_id": {
-                            "type": "string",
-                            "description": "The ID of the site to list subsites for. e.g., 'contoso.sharepoint.com,2C712604-1370-44E7-A1F5-426573FDA80A,2D2244C3-251A-49EA-93A8-39E1C3A060FE'"
-                        }
-                    },
-                    "required": ["site_id"],
-                    "visible": ["site_id"],
-                    "additionalProperties": false
-                }
-            },
-            "required": ["path"],
-            "visible": ["path"],
-            "additionalProperties": false
-        }
-    },
-    {
-        "name": "SHARE_POINT_V2__LIST_DRIVES_FOR_A_SITE",
-        "description": "List the document libraries for a site",
-        "tags": ["drives"],
-        "visibility": "public",
-        "active": true,
-        "protocol": "rest",
-        "protocol_data": {
-            "method": "GET",
-            "path": "/sites/{site_id}/drives",
-            "server_url": "https://graph.microsoft.com/v1.0"
-        },
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "path": {
-                    "type": "object",
-                    "description": "the http path parameters",
-                    "properties": {
-                        "site_id": {
-                            "type": "string",
-                            "description": "The ID of the SharePoint site."
-                        }
-                    },
-                    "required": ["site_id"],
-                    "visible": ["site_id"],
-                    "additionalProperties": false
-                }
-            },
-            "required": ["path"],
-            "visible": ["path"],
-            "additionalProperties": false
-        }
-    },
-    {
-        "name": "SHARE_POINT_V2__SERACH_FOR_ITEMS_IN_A_SITE_DRIVE",
-        "description": "Search the hierarchy of items for items matching a query. searches for a match across several fields in the signed-in user's drive items.",
-        "tags": ["drive"],
-        "visibility": "public",
-        "active": true,
-        "protocol": "rest",
-        "protocol_data": {
-            "method": "GET",
-            "path": "/sites/{site_id}/drive/root/search(q='{search_text}')",
-            "server_url": "https://graph.microsoft.com/v1.0"
-        },
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "path": {
-                    "type": "object",
-                    "description": "the http path parameters",
-                    "properties": {
-                        "site_id": {
-                            "type": "string",
-                            "description": "The ID of the SharePoint site."
-                        },
-                        "search_text": {
-                            "type": "string",
-                            "description": "The text to search for."
-                        }
-                    },
-                    "required": ["site_id", "search_text"],
-                    "visible": ["site_id", "search_text"],
-                    "additionalProperties": false
-                }
-            },
-            "required": ["path"],
-            "visible": ["path"],
-            "additionalProperties": false
-        }
-    },
-    {
-        "name": "SHARE_POINT_V2__CREATE_FOLDER_IN_SITE_DRIVE",
-        "description": "Create a new folder in a SharePoint site's document library (drive).",
-        "tags": ["drive", "sharepoint", "folders"],
-        "visibility": "public",
-        "active": true,
-        "protocol": "rest",
-        "protocol_data": {
-            "method": "POST",
-            "path": "/sites/{site_id}/drive/items/{parent_item_id}/children",
-            "server_url": "https://graph.microsoft.com/v1.0"
-        },
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "path": {
-                    "type": "object",
-                    "description": "The path parameters for the request.",
-                    "properties": {
-                        "site_id": {
-                            "type": "string",
-                            "description": "The ID of the SharePoint site."
-                        },
-                        "parent_item_id": {
-                            "type": "string",
-                            "description": "The ID of the parent folder or 'root' to create in the root directory."
-                        }
-                    },
-                    "required": ["site_id", "parent_item_id"],
-                    "visible": ["site_id", "parent_item_id"],
-                    "additionalProperties": false
-                },
-                "body": {
-                    "type": "object",
-                    "description": "The body payload containing the folder information.",
-                    "properties": {
-                        "name": {
-                            "type": "string",
-                            "description": "The name of the new folder."
-                        },
-                        "folder": {
-                            "type": "object",
-                            "description": "An empty object to indicate a folder should be created.",
-                            "properties": {},
-                            "required": [],
-                            "visible": [],
-                            "default": {},
-                            "additionalProperties": false
-                        },
-                        "@microsoft.graph.conflictBehavior": {
-                            "type": "string",
-                            "enum": ["rename", "fail", "replace"],
-                            "description": "Specifies what to do if a folder with the same name already exists."
-                        }
-                    },
-                    "required": ["name", "folder"],
-                    "visible": ["name", "@microsoft.graph.conflictBehavior"],
-                    "additionalProperties": false
-                }
-            },
-            "required": ["path", "body"],
-            "visible": ["path", "body"],
-            "additionalProperties": false
-        }
-    },
-    {
-        "name": "SHARE_POINT_V2__DELETE_ITEM_IN_SITE_DRIVE",
-        "description": "Delete a DriveItem by using its ID from a SharePoint site's document library.",
-        "tags": ["drive", "sharepoint", "delete"],
-        "visibility": "public",
-        "active": true,
-        "protocol": "rest",
-        "protocol_data": {
-            "method": "DELETE",
-            "path": "/sites/{site_id}/drive/items/{item_id}",
-            "server_url": "https://graph.microsoft.com/v1.0"
-        },
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "path": {
-                    "type": "object",
-                    "description": "The path parameters identifying the SharePoint site and the item to delete.",
-                    "properties": {
-                        "site_id": {
-                            "type": "string",
-                            "description": "The ID of the SharePoint site."
-                        },
-                        "item_id": {
-                            "type": "string",
-                            "description": "The ID of the item (file or folder) to delete."
-                        }
-                    },
-                    "required": ["site_id", "item_id"],
-                    "visible": ["site_id", "item_id"],
-                    "additionalProperties": false
-                }
-            },
-            "required": ["path"],
-            "visible": ["path"],
-            "additionalProperties": false
-        }
-    },
-    {
-        "name": "SHARE_POINT_V2__CREATE_LIST_IN_A_SITE",
-        "description": "Creates a new list in a SharePoint site.",
-        "tags": ["sharepoint", "lists", "create"],
-        "visibility": "public",
-        "active": true,
-        "protocol": "rest",
-        "protocol_data": {
-            "method": "POST",
-            "path": "/sites/{site_id}/lists",
-            "server_url": "https://graph.microsoft.com/v1.0"
-        },
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "path": {
-                    "type": "object",
-                    "description": "The path parameters for the request.",
-                    "properties": {
-                        "site_id": {
-                            "type": "string",
-                            "description": "The ID of the SharePoint site where the list will be created."
-                        }
-                    },
-                    "required": ["site_id"],
-                    "visible": ["site_id"],
-                    "additionalProperties": false
-                },
-                "body": {
-                    "type": "object",
-                    "description": "The body payload for creating the list.",
-                    "properties": {
-                        "displayName": {
-                            "type": "string",
-                            "description": "The display name of the list."
-                        },
-                        "columns": {
-                            "type": "array",
-                            "description": "Optional. An array of column definitions for the list.",
-                            "items": {
-                                "type": "object",
-                                "properties": {},
-                                "required": [],
-                                "visible": [],
-                                "additionalProperties": true
-                            }
-                        },
-                        "list": {
-                            "type": "object",
-                            "description": "Metadata for the list creation.",
-                            "properties": {
-                                "template": {
-                                    "type": "string",
-                                    "description": "The list template to use (e.g., 'genericList', 'task', 'issue')."
-                                }
-                            },
-                            "required": ["template"],
-                            "visible": ["template"],
-                            "additionalProperties": false
-                        }
-                    },
-                    "required": ["displayName", "list"],
-                    "visible": ["displayName", "list"],
-                    "additionalProperties": false
-                }
-            },
-            "required": ["path", "body"],
-            "visible": ["path", "body"],
-            "additionalProperties": false
-        }
-    },
-    {
-        "name": "SHARE_POINT_V2__LIST_FILES",
-        "description": "Lists files and folders in a SharePoint site or specific folder path.",
-        "tags": [
+      }
+  },
+  {
+      "name": "SHARE_POINT_V2__GET_ROOT_SITE",
+      "description": "Get the root site of a SharePoint tenant.",
+      "tags": [
+          "sites"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+          "method": "GET",
+          "path": "/sites/root",
+          "server_url": "https://graph.microsoft.com/v1.0"
+      },
+      "parameters": {
+          "type": "object",
+          "properties": {},
+          "required": [],
+          "visible": [],
+          "additionalProperties": false
+      }
+  },
+  {
+      "name": "SHARE_POINT_V2__GET_SITE_BY_ID",
+      "description": "Get a site by its ID.",
+      "tags": [
+          "sites"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+          "method": "GET",
+          "path": "/sites/{site_id}",
+          "server_url": "https://graph.microsoft.com/v1.0"
+      },
+      "parameters": {
+          "type": "object",
+          "properties": {
+              "path": {
+                  "type": "object",
+                  "description": "the http path parameters",
+                  "properties": {
+                      "site_id": {
+                          "type": "string",
+                          "description": "The ID of the site to get. e.g., 'contoso.sharepoint.com,2C712604-1370-44E7-A1F5-426573FDA80A,2D2244C3-251A-49EA-93A8-39E1C3A060FE'"
+                      }
+                  },
+                  "required": [
+                      "site_id"
+                  ],
+                  "visible": [
+                      "site_id"
+                  ],
+                  "additionalProperties": false
+              }
+          },
+          "required": [
+              "path"
+          ],
+          "visible": [
+              "path"
+          ],
+          "additionalProperties": false
+      }
+  },
+  {
+      "name": "SHARE_POINT_V2__GET_SITE_BY_PATH",
+      "description": "retrieve a site based on server-relative URL path. Site collection hostname and Site path, relative to server hostname.",
+      "tags": [
+          "sites"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+          "method": "GET",
+          "path": "/sites/{hostname}:/{relative_path}",
+          "server_url": "https://graph.microsoft.com/v1.0"
+      },
+      "parameters": {
+          "type": "object",
+          "properties": {
+              "path": {
+                  "type": "object",
+                  "description": "the http path parameters",
+                  "properties": {
+                      "hostname": {
+                          "type": "string",
+                          "description": "The hostname of the site to get. e.g., 'xxx.sharepoint.com'"
+                      },
+                      "relative_path": {
+                          "type": "string",
+                          "description": "The relative path of the site to get. e.g., '/sites/mySite'"
+                      }
+                  },
+                  "required": [
+                      "hostname",
+                      "relative_path"
+                  ],
+                  "visible": [
+                      "hostname",
+                      "relative_path"
+                  ],
+                  "additionalProperties": false
+              }
+          },
+          "required": [
+              "path"
+          ],
+          "visible": [
+              "path"
+          ],
+          "additionalProperties": false
+      }
+  },
+  {
+      "name": "SHARE_POINT_V2__LIST_SUBSITES_FOR_A_SITE",
+      "description": "List all subsites for a site.",
+      "tags": [
+          "sites"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+          "method": "GET",
+          "path": "/sites/{site_id}/sites",
+          "server_url": "https://graph.microsoft.com/v1.0"
+      },
+      "parameters": {
+          "type": "object",
+          "properties": {
+              "path": {
+                  "type": "object",
+                  "description": "the http path parameters",
+                  "properties": {
+                      "site_id": {
+                          "type": "string",
+                          "description": "The ID of the site to list subsites for. e.g., 'contoso.sharepoint.com,2C712604-1370-44E7-A1F5-426573FDA80A,2D2244C3-251A-49EA-93A8-39E1C3A060FE'"
+                      }
+                  },
+                  "required": [
+                      "site_id"
+                  ],
+                  "visible": [
+                      "site_id"
+                  ],
+                  "additionalProperties": false
+              }
+          },
+          "required": [
+              "path"
+          ],
+          "visible": [
+              "path"
+          ],
+          "additionalProperties": false
+      }
+  },
+  {
+      "name": "SHARE_POINT_V2__LIST_DRIVES_FOR_A_SITE",
+      "description": "List the document libraries for a site",
+      "tags": [
+          "drives"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+          "method": "GET",
+          "path": "/sites/{site_id}/drives",
+          "server_url": "https://graph.microsoft.com/v1.0"
+      },
+      "parameters": {
+          "type": "object",
+          "properties": {
+              "path": {
+                  "type": "object",
+                  "description": "the http path parameters",
+                  "properties": {
+                      "site_id": {
+                          "type": "string",
+                          "description": "The ID of the SharePoint site."
+                      }
+                  },
+                  "required": [
+                      "site_id"
+                  ],
+                  "visible": [
+                      "site_id"
+                  ],
+                  "additionalProperties": false
+              }
+          },
+          "required": [
+              "path"
+          ],
+          "visible": [
+              "path"
+          ],
+          "additionalProperties": false
+      }
+  },
+  {
+      "name": "SHARE_POINT_V2__SEARCH_FOR_ITEMS_IN_A_SITE_DRIVE",
+      "description": "Search the hierarchy of items for items matching a query across a specific document library (drive) in a SharePoint site. Pass 'default' as drive_id to search the default document library, or use LIST_DRIVES_FOR_A_SITE to get a specific drive_id.",
+      "tags": [
+          "drive"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+          "method": "GET",
+          "path": "/sites/{site_id}/drives/{drive_id}/root/search(q='{search_text}')",
+          "server_url": "https://graph.microsoft.com/v1.0"
+      },
+      "parameters": {
+          "type": "object",
+          "properties": {
+              "path": {
+                  "type": "object",
+                  "description": "the http path parameters",
+                  "properties": {
+                      "site_id": {
+                          "type": "string",
+                          "description": "The ID of the SharePoint site."
+                      },
+                      "search_text": {
+                          "type": "string",
+                          "description": "The text to search for."
+                      },
+                      "drive_id": {
+                          "type": "string",
+                          "description": "The ID of the document library (drive). Pass 'default' to target the default document library, or pass a specific drive ID retrieved from LIST_DRIVES_FOR_A_SITE to target a specific library.",
+                          "examples": [
+                              "default",
+                              "b!abc123xyz..."
+                          ]
+                      }
+                  },
+                  "required": [
+                      "site_id",
+                      "drive_id",
+                      "search_text"
+                  ],
+                  "visible": [
+                      "site_id",
+                      "drive_id",
+                      "search_text"
+                  ],
+                  "additionalProperties": false
+              }
+          },
+          "required": [
+              "path"
+          ],
+          "visible": [
+              "path"
+          ],
+          "additionalProperties": false
+      }
+  },
+  {
+      "name": "SHARE_POINT_V2__CREATE_FOLDER_IN_SITE_DRIVE",
+      "description": "Create a new folder in a specific SharePoint document library (drive). Pass 'default' as drive_id to create in the default library, or use LIST_DRIVES_FOR_A_SITE to get a specific drive_id.",
+      "tags": [
+          "drive",
+          "sharepoint",
+          "folders"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+          "method": "POST",
+          "path": "/sites/{site_id}/drives/{drive_id}/items/{parent_item_id}/children",
+          "server_url": "https://graph.microsoft.com/v1.0"
+      },
+      "parameters": {
+          "type": "object",
+          "properties": {
+              "path": {
+                  "type": "object",
+                  "description": "The path parameters for the request.",
+                  "properties": {
+                      "site_id": {
+                          "type": "string",
+                          "description": "The ID of the SharePoint site."
+                      },
+                      "parent_item_id": {
+                          "type": "string",
+                          "description": "The ID of the parent folder or 'root' to create in the root directory."
+                      },
+                      "drive_id": {
+                          "type": "string",
+                          "description": "The ID of the document library (drive). Pass 'default' to target the default document library, or pass a specific drive ID retrieved from LIST_DRIVES_FOR_A_SITE to target a specific library.",
+                          "examples": [
+                              "default",
+                              "b!abc123xyz..."
+                          ]
+                      }
+                  },
+                  "required": [
+                      "site_id",
+                      "drive_id",
+                      "parent_item_id"
+                  ],
+                  "visible": [
+                      "site_id",
+                      "drive_id",
+                      "parent_item_id"
+                  ],
+                  "additionalProperties": false
+              },
+              "body": {
+                  "type": "object",
+                  "description": "The body payload containing the folder information.",
+                  "properties": {
+                      "name": {
+                          "type": "string",
+                          "description": "The name of the new folder."
+                      },
+                      "folder": {
+                          "type": "object",
+                          "description": "An empty object to indicate a folder should be created.",
+                          "properties": {},
+                          "required": [],
+                          "visible": [],
+                          "default": {},
+                          "additionalProperties": false
+                      },
+                      "@microsoft.graph.conflictBehavior": {
+                          "type": "string",
+                          "enum": [
+                              "rename",
+                              "fail",
+                              "replace"
+                          ],
+                          "description": "Specifies what to do if a folder with the same name already exists."
+                      }
+                  },
+                  "required": [
+                      "name",
+                      "folder"
+                  ],
+                  "visible": [
+                      "name",
+                      "@microsoft.graph.conflictBehavior"
+                  ],
+                  "additionalProperties": false
+              }
+          },
+          "required": [
+              "path",
+              "body"
+          ],
+          "visible": [
+              "path",
+              "body"
+          ],
+          "additionalProperties": false
+      }
+  },
+  {
+      "name": "SHARE_POINT_V2__DELETE_ITEM_IN_SITE_DRIVE",
+      "description": "Delete a DriveItem by using its ID from a specific SharePoint document library (drive). Pass 'default' as drive_id to target the default library, or use LIST_DRIVES_FOR_A_SITE to get a specific drive_id.",
+      "tags": [
+          "drive",
+          "sharepoint",
+          "delete"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+          "method": "DELETE",
+          "path": "/sites/{site_id}/drives/{drive_id}/items/{item_id}",
+          "server_url": "https://graph.microsoft.com/v1.0"
+      },
+      "parameters": {
+          "type": "object",
+          "properties": {
+              "path": {
+                  "type": "object",
+                  "description": "The path parameters identifying the SharePoint site and the item to delete.",
+                  "properties": {
+                      "site_id": {
+                          "type": "string",
+                          "description": "The ID of the SharePoint site."
+                      },
+                      "item_id": {
+                          "type": "string",
+                          "description": "The ID of the item (file or folder) to delete."
+                      },
+                      "drive_id": {
+                          "type": "string",
+                          "description": "The ID of the document library (drive). Pass 'default' to target the default document library, or pass a specific drive ID retrieved from LIST_DRIVES_FOR_A_SITE to target a specific library.",
+                          "examples": [
+                              "default",
+                              "b!abc123xyz..."
+                          ]
+                      }
+                  },
+                  "required": [
+                      "site_id",
+                      "drive_id",
+                      "item_id"
+                  ],
+                  "visible": [
+                      "site_id",
+                      "drive_id",
+                      "item_id"
+                  ],
+                  "additionalProperties": false
+              }
+          },
+          "required": [
+              "path"
+          ],
+          "visible": [
+              "path"
+          ],
+          "additionalProperties": false
+      }
+  },
+  {
+      "name": "SHARE_POINT_V2__CREATE_LIST_IN_A_SITE",
+      "description": "Creates a new list in a SharePoint site.",
+      "tags": [
+          "sharepoint",
+          "lists",
+          "create"
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
+          "method": "POST",
+          "path": "/sites/{site_id}/lists",
+          "server_url": "https://graph.microsoft.com/v1.0"
+      },
+      "parameters": {
+          "type": "object",
+          "properties": {
+              "path": {
+                  "type": "object",
+                  "description": "The path parameters for the request.",
+                  "properties": {
+                      "site_id": {
+                          "type": "string",
+                          "description": "The ID of the SharePoint site where the list will be created."
+                      }
+                  },
+                  "required": [
+                      "site_id"
+                  ],
+                  "visible": [
+                      "site_id"
+                  ],
+                  "additionalProperties": false
+              },
+              "body": {
+                  "type": "object",
+                  "description": "The body payload for creating the list.",
+                  "properties": {
+                      "displayName": {
+                          "type": "string",
+                          "description": "The display name of the list."
+                      },
+                      "columns": {
+                          "type": "array",
+                          "description": "Optional. An array of column definitions for the list.",
+                          "items": {
+                              "type": "object",
+                              "properties": {},
+                              "required": [],
+                              "visible": [],
+                              "additionalProperties": true
+                          }
+                      },
+                      "list": {
+                          "type": "object",
+                          "description": "Metadata for the list creation.",
+                          "properties": {
+                              "template": {
+                                  "type": "string",
+                                  "description": "The list template to use (e.g., 'genericList', 'task', 'issue')."
+                              }
+                          },
+                          "required": [
+                              "template"
+                          ],
+                          "visible": [
+                              "template"
+                          ],
+                          "additionalProperties": false
+                      }
+                  },
+                  "required": [
+                      "displayName",
+                      "list"
+                  ],
+                  "visible": [
+                      "displayName",
+                      "list"
+                  ],
+                  "additionalProperties": false
+              }
+          },
+          "required": [
+              "path",
+              "body"
+          ],
+          "visible": [
+              "path",
+              "body"
+          ],
+          "additionalProperties": false
+      }
+  },
+  {
+      "name": "SHARE_POINT_V2__LIST_FILES",
+      "description": "Lists files and folders in a specific SharePoint document library (drive). First use GET_SITE_BY_PATH to resolve the site_id, then use LIST_DRIVES_FOR_A_SITE to get the drive_id of the target document library, then call this tool.",
+      "tags": [
           "sharepoint",
           "files",
           "list",
           "documents"
-        ],
-        "visibility": "public",
-        "active": true,
-        "protocol": "rest",
-        "protocol_data": {
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
           "method": "GET",
-          "path": "/sites/{site_id}/drive/root/children",
+          "path": "/sites/{site_id}/drives/{drive_id}/root/children",
           "server_url": "https://graph.microsoft.com/v1.0"
-        },
-        "parameters": {
+      },
+      "parameters": {
           "type": "object",
           "properties": {
-            "path": {
-              "type": "object",
-              "description": "Path parameters for the SharePoint site.",
-              "properties": {
-                "site_id": {
-                  "type": "string",
-                  "description": "The SharePoint site ID or site URL (e.g., 'contoso.sharepoint.com,{site-guid},{web-guid}' or site URL).",
-                  "examples": [
-                    "contoso.sharepoint.com,12345678-1234-1234-1234-123456789012,87654321-4321-4321-4321-210987654321"
-                  ]
-                }
+              "path": {
+                  "type": "object",
+                  "description": "Path parameters for the SharePoint site and drive.",
+                  "properties": {
+                      "site_id": {
+                          "type": "string",
+                          "description": "The SharePoint site ID (e.g., 'contoso.sharepoint.com,{site-guid},{web-guid}'). Use GET_SITE_BY_PATH to retrieve this.",
+                          "examples": [
+                              "contoso.sharepoint.com,12345678-1234-1234-1234-123456789012,87654321-4321-4321-4321-210987654321"
+                          ]
+                      },
+                      "drive_id": {
+                          "type": "string",
+                          "description": "The ID of the document library (drive) to list files from. Pass 'default' to list files from the default document library, or pass a specific drive ID retrieved from LIST_DRIVES_FOR_A_SITE to target a specific library.",
+                          "examples": [
+                              "default",
+                              "b!abc123xyz..."
+                          ]
+                      }
+                  },
+                  "required": [
+                      "site_id",
+                      "drive_id"
+                  ],
+                  "visible": [
+                      "site_id",
+                      "drive_id"
+                  ],
+                  "additionalProperties": false
               },
-              "required": [
-                "site_id"
-              ],
-              "visible": [
-                "site_id"
-              ],
-              "additionalProperties": false
-            },
-            "query": {
-              "type": "object",
-              "description": "Optional query parameters for filtering and pagination.",
-              "properties": {
-                "$top": {
-                  "type": "integer",
-                  "description": "Number of items to return (max 1000).",
-                  "examples": [100]
-                },
-                "$skip": {
-                  "type": "integer",
-                  "description": "Number of items to skip for pagination.",
-                  "examples": [0]
-                },
-                "$filter": {
-                  "type": "string",
-                  "description": "Filter expression for items.",
-                  "examples": ["name eq 'document.pdf'"]
-                }
-              },
-              "required": [],
-              "visible": [
-                "$top",
-                "$skip",
-                "$filter"
-              ],
-              "additionalProperties": false
-            }
+              "query": {
+                  "type": "object",
+                  "description": "Optional query parameters for filtering and pagination.",
+                  "properties": {
+                      "$top": {
+                          "type": "integer",
+                          "description": "Number of items to return (max 1000).",
+                          "examples": [
+                              100
+                          ]
+                      },
+                      "$skip": {
+                          "type": "integer",
+                          "description": "Number of items to skip for pagination.",
+                          "examples": [
+                              0
+                          ]
+                      },
+                      "$filter": {
+                          "type": "string",
+                          "description": "Filter expression for items.",
+                          "examples": [
+                              "name eq 'document.pdf'"
+                          ]
+                      }
+                  },
+                  "required": [],
+                  "visible": [
+                      "$top",
+                      "$skip",
+                      "$filter"
+                  ],
+                  "additionalProperties": false
+              }
           },
           "required": [
-            "path"
+              "path"
           ],
           "visible": [
-            "path",
-            "query"
+              "path",
+              "query"
           ],
           "additionalProperties": false
-        }
-      },
-      {
-        "name": "SHARE_POINT_V2__UPLOAD_FILE",
-        "description": "Uploads a file to SharePoint site at the specified path.",
-        "tags": [
+      }
+  },
+  {
+      "name": "SHARE_POINT_V2__UPLOAD_FILE",
+      "description": "Uploads a file to a specific SharePoint document library (drive). Pass 'default' as drive_id to upload to the default library, or use LIST_DRIVES_FOR_A_SITE to get a specific drive_id.",
+      "tags": [
           "sharepoint",
           "files",
           "upload",
           "create"
-        ],
-        "visibility": "public",
-        "active": true,
-        "protocol": "rest",
-        "protocol_data": {
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
           "method": "PUT",
-          "path": "/sites/{site_id}/drive/root:/{file_path}:/content",
+          "path": "/sites/{site_id}/drives/{drive_id}/root:/{file_path}:/content",
           "server_url": "https://graph.microsoft.com/v1.0"
-        },
-        "parameters": {
+      },
+      "parameters": {
           "type": "object",
           "properties": {
-            "path": {
-              "type": "object",
-              "description": "Path parameters for file upload.",
-              "properties": {
-                "site_id": {
-                  "type": "string",
-                  "description": "The SharePoint site ID or site URL.",
-                  "examples": [
-                    "contoso.sharepoint.com,12345678-1234-1234-1234-123456789012,87654321-4321-4321-4321-210987654321"
-                  ]
-                },
-                "file_path": {
-                  "type": "string",
-                  "description": "The path where the file should be uploaded (including filename).",
-                  "examples": [
-                    "Documents/report.pdf",
-                    "Images/photo.jpg",
-                    "newfolder/document.docx"
-                  ]
-                }
+              "path": {
+                  "type": "object",
+                  "description": "Path parameters for file upload.",
+                  "properties": {
+                      "site_id": {
+                          "type": "string",
+                          "description": "The SharePoint site ID or site URL.",
+                          "examples": [
+                              "contoso.sharepoint.com,12345678-1234-1234-1234-123456789012,87654321-4321-4321-4321-210987654321"
+                          ]
+                      },
+                      "file_path": {
+                          "type": "string",
+                          "description": "The path where the file should be uploaded (including filename).",
+                          "examples": [
+                              "Documents/report.pdf",
+                              "Images/photo.jpg",
+                              "newfolder/document.docx"
+                          ]
+                      },
+                      "drive_id": {
+                          "type": "string",
+                          "description": "The ID of the document library (drive). Pass 'default' to target the default document library, or pass a specific drive ID retrieved from LIST_DRIVES_FOR_A_SITE to target a specific library.",
+                          "examples": [
+                              "default",
+                              "b!abc123xyz..."
+                          ]
+                      }
+                  },
+                  "required": [
+                      "site_id",
+                      "drive_id",
+                      "file_path"
+                  ],
+                  "visible": [
+                      "site_id",
+                      "drive_id",
+                      "file_path"
+                  ],
+                  "additionalProperties": false
               },
-              "required": [
-                "site_id",
-                "file_path"
-              ],
-              "visible": [
-                "site_id",
-                "file_path"
-              ],
-              "additionalProperties": false
-            },
-            "body": {
-              "type": "string",
-              "format": "binary",
-              "description": "The file content to upload."
-            }
+              "body": {
+                  "type": "string",
+                  "format": "binary",
+                  "description": "The file content to upload."
+              }
           },
           "required": [
-            "path",
-            "body"
+              "path",
+              "body"
           ],
           "visible": [
-            "path",
-            "body"
+              "path",
+              "body"
           ],
           "additionalProperties": false
-        }
-      },
-      {
-        "name": "SHARE_POINT_V2__DOWNLOAD_FILE",
-        "description": "Downloads a file from SharePoint by file path.",
-        "tags": [
+      }
+  },
+  {
+      "name": "SHARE_POINT_V2__DOWNLOAD_FILE",
+      "description": "Downloads a file from a specific SharePoint document library (drive). Pass 'default' as drive_id to download from the default library, or use LIST_DRIVES_FOR_A_SITE to get a specific drive_id.",
+      "tags": [
           "sharepoint",
           "files",
           "download",
           "read"
-        ],
-        "visibility": "public",
-        "active": true,
-        "protocol": "rest",
-        "protocol_data": {
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
           "method": "GET",
-          "path": "/sites/{site_id}/drive/root:/{file_path}:/content",
+          "path": "/sites/{site_id}/drives/{drive_id}/root:/{file_path}:/content",
           "server_url": "https://graph.microsoft.com/v1.0"
-        },
-        "parameters": {
+      },
+      "parameters": {
           "type": "object",
           "properties": {
-            "path": {
-              "type": "object",
-              "description": "Path parameters for file download.",
-              "properties": {
-                "site_id": {
-                  "type": "string",
-                  "description": "The SharePoint site ID or site URL.",
-                  "examples": [
-                    "contoso.sharepoint.com,12345678-1234-1234-1234-123456789012,87654321-4321-4321-4321-210987654321"
-                  ]
-                },
-                "file_path": {
-                  "type": "string",
-                  "description": "The path to the file to download.",
-                  "examples": [
-                    "Documents/report.pdf",
-                    "Images/photo.jpg",
-                    "folder/document.docx"
-                  ]
-                }
-              },
-              "required": [
-                "site_id",
-                "file_path"
-              ],
-              "visible": [
-                "site_id",
-                "file_path"
-              ],
-              "additionalProperties": false
-            }
+              "path": {
+                  "type": "object",
+                  "description": "Path parameters for file download.",
+                  "properties": {
+                      "site_id": {
+                          "type": "string",
+                          "description": "The SharePoint site ID or site URL.",
+                          "examples": [
+                              "contoso.sharepoint.com,12345678-1234-1234-1234-123456789012,87654321-4321-4321-4321-210987654321"
+                          ]
+                      },
+                      "file_path": {
+                          "type": "string",
+                          "description": "The path to the file to download.",
+                          "examples": [
+                              "Documents/report.pdf",
+                              "Images/photo.jpg",
+                              "folder/document.docx"
+                          ]
+                      },
+                      "drive_id": {
+                          "type": "string",
+                          "description": "The ID of the document library (drive). Pass 'default' to target the default document library, or pass a specific drive ID retrieved from LIST_DRIVES_FOR_A_SITE to target a specific library.",
+                          "examples": [
+                              "default",
+                              "b!abc123xyz..."
+                          ]
+                      }
+                  },
+                  "required": [
+                      "site_id",
+                      "drive_id",
+                      "file_path"
+                  ],
+                  "visible": [
+                      "site_id",
+                      "drive_id",
+                      "file_path"
+                  ],
+                  "additionalProperties": false
+              }
           },
           "required": [
-            "path"
+              "path"
           ],
           "visible": [
-            "path"
+              "path"
           ],
           "additionalProperties": false
-        }
-      },
-      {
-        "name": "SHARE_POINT_V2__GET_FILE_METADATA",
-        "description": "Gets metadata information for a file in SharePoint (size, modified date, etc.).",
-        "tags": [
+      }
+  },
+  {
+      "name": "SHARE_POINT_V2__GET_FILE_METADATA",
+      "description": "Gets metadata information (size, modified date, etc.) for a file in a specific SharePoint document library (drive). Pass 'default' as drive_id to target the default library, or use LIST_DRIVES_FOR_A_SITE to get a specific drive_id.",
+      "tags": [
           "sharepoint",
           "files",
           "metadata",
           "info"
-        ],
-        "visibility": "public",
-        "active": true,
-        "protocol": "rest",
-        "protocol_data": {
+      ],
+      "visibility": "public",
+      "active": true,
+      "protocol": "rest",
+      "protocol_data": {
           "method": "GET",
-          "path": "/sites/{site_id}/drive/root:/{file_path}",
+          "path": "/sites/{site_id}/drives/{drive_id}/root:/{file_path}",
           "server_url": "https://graph.microsoft.com/v1.0"
-        },
-        "parameters": {
+      },
+      "parameters": {
           "type": "object",
           "properties": {
-            "path": {
-              "type": "object",
-              "description": "Path parameters for getting file metadata.",
-              "properties": {
-                "site_id": {
-                  "type": "string",
-                  "description": "The SharePoint site ID or site URL.",
-                  "examples": [
-                    "contoso.sharepoint.com,12345678-1234-1234-1234-123456789012,87654321-4321-4321-4321-210987654321"
-                  ]
-                },
-                "file_path": {
-                  "type": "string",
-                  "description": "The path to the file.",
-                  "examples": [
-                    "Documents/report.pdf",
-                    "Images/photo.jpg",
-                    "folder/document.docx"
-                  ]
-                }
-              },
-              "required": [
-                "site_id",
-                "file_path"
-              ],
-              "visible": [
-                "site_id",
-                "file_path"
-              ],
-              "additionalProperties": false
-            }
+              "path": {
+                  "type": "object",
+                  "description": "Path parameters for getting file metadata.",
+                  "properties": {
+                      "site_id": {
+                          "type": "string",
+                          "description": "The SharePoint site ID or site URL.",
+                          "examples": [
+                              "contoso.sharepoint.com,12345678-1234-1234-1234-123456789012,87654321-4321-4321-4321-210987654321"
+                          ]
+                      },
+                      "file_path": {
+                          "type": "string",
+                          "description": "The path to the file.",
+                          "examples": [
+                              "Documents/report.pdf",
+                              "Images/photo.jpg",
+                              "folder/document.docx"
+                          ]
+                      },
+                      "drive_id": {
+                          "type": "string",
+                          "description": "The ID of the document library (drive). Pass 'default' to target the default document library, or pass a specific drive ID retrieved from LIST_DRIVES_FOR_A_SITE to target a specific library.",
+                          "examples": [
+                              "default",
+                              "b!abc123xyz..."
+                          ]
+                      }
+                  },
+                  "required": [
+                      "site_id",
+                      "drive_id",
+                      "file_path"
+                  ],
+                  "visible": [
+                      "site_id",
+                      "drive_id",
+                      "file_path"
+                  ],
+                  "additionalProperties": false
+              }
           },
           "required": [
-            "path"
+              "path"
           ],
           "visible": [
-            "path"
+              "path"
           ],
           "additionalProperties": false
-        }
       }
+  }
 ]
