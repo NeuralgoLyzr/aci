@@ -3985,5 +3985,573 @@
             ],
             "additionalProperties": false
         }
+    },
+    {
+        "name": "SHARE_POINT_V2__GET_FILE_CONTENT_AS_TEXT",
+        "description": "Read a file's content directly as plain text without downloading it locally. This is the PRIMARY tool to use when an AI agent needs to read and reason over the textual content of a SharePoint file. Uses Microsoft Graph's on-the-fly conversion via the ?format=text query parameter on the /content endpoint.\n\nWORKS FOR (returns readable text directly): plain text files (.txt, .log, .md), CSV/TSV files, HTML files, source code files, JSON/XML files, and some Office documents that Graph can convert (notably some .doc and simple .docx files).\n\nDOES NOT WORK RELIABLY FOR: modern .docx with complex formatting, .pdf files, .xlsx (use GET_EXCEL_WORKSHEET_RANGE or LIST_EXCEL_TABLES instead), .pptx, image files, scanned documents, or any binary format. For these the call will either return an error (415 unsupportedMediaType / 400 invalidRequest) or unreadable bytes — in those cases fall back to GET_FILE_CONTENT_AS_PDF (for Office docs) or DOWNLOAD_FILE + an external parser (for PDFs and complex docs).\n\nPREREQUISITES: First resolve site_id (via GET_SITE_BY_PATH or SEARCH_FOR_SITES), then get the file's item_id (via LIST_FILES, LIST_FILES_IN_FOLDER, SEARCH_FOR_ITEMS_IN_A_SITE_DRIVE, or GET_FILE_METADATA). Pass 'default' as drive_id to target the site's default document library.",
+        "tags": [
+            "sharepoint",
+            "files",
+            "read",
+            "content",
+            "text"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/sites/{site_id}/drives/{drive_id}/items/{item_id}/content?format=text",
+            "server_url": "https://graph.microsoft.com/v1.0"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "The HTTP path parameters identifying the file.",
+                    "properties": {
+                        "site_id": {
+                            "type": "string",
+                            "description": "The SharePoint site ID. Use GET_SITE_BY_PATH or SEARCH_FOR_SITES to obtain it.",
+                            "examples": [
+                                "contoso.sharepoint.com,12345678-1234-1234-1234-123456789012,87654321-4321-4321-4321-210987654321"
+                            ]
+                        },
+                        "drive_id": {
+                            "type": "string",
+                            "description": "The document library (drive) ID. Pass 'default' to target the default document library, or use LIST_DRIVES_FOR_A_SITE to get a specific drive ID.",
+                            "examples": [
+                                "default",
+                                "b!abc123xyz..."
+                            ]
+                        },
+                        "item_id": {
+                            "type": "string",
+                            "description": "The DriveItem ID of the file to read. Obtain from LIST_FILES, LIST_FILES_IN_FOLDER, SEARCH_FOR_ITEMS_IN_A_SITE_DRIVE, or GET_FILE_METADATA.",
+                            "examples": [
+                                "01ABCDEFGHIJKLMNOPQRSTUVWXYZ123456"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "site_id",
+                        "drive_id",
+                        "item_id"
+                    ],
+                    "visible": [
+                        "site_id",
+                        "drive_id",
+                        "item_id"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "SHARE_POINT_V2__GET_FILE_CONTENT_AS_PDF",
+        "description": "Convert a SharePoint file to PDF on the fly and return the PDF bytes, without persisting any new file in SharePoint. Uses Microsoft Graph's ?format=pdf conversion on the /content endpoint. Useful as a UNIVERSAL FALLBACK when GET_FILE_CONTENT_AS_TEXT does not work — the resulting PDF can then be fed to a downstream PDF text-extraction step (e.g., a PDF parser tool) so the agent can still reason over the content.\n\nWORKS FOR (Graph supports conversion to PDF from these formats): .doc, .docx, .epub, .eml, .htm, .html, .md, .msg, .odp, .ods, .odt, .pps, .ppsx, .ppt, .pptx, .rtf, .tif, .tiff, .xls, .xlsm, .xlsx — and .pdf itself (returns the original).\n\nDOES NOT WORK FOR: plain text files (.txt, .csv, .json, .xml — use GET_FILE_CONTENT_AS_TEXT instead), raw images other than tif/tiff, audio/video, or arbitrary binary formats.\n\nIMPORTANT: This returns BINARY PDF DATA, not text. The agent must pair this with a PDF-parsing/text-extraction step downstream. Use GET_FILE_CONTENT_AS_TEXT first when the file is already text-like; use this tool when the source is .docx / .pptx / scanned image and a PDF intermediate is needed.\n\nPREREQUISITES: Resolve site_id, drive_id ('default' is fine), and item_id first.",
+        "tags": [
+            "sharepoint",
+            "files",
+            "read",
+            "content",
+            "pdf",
+            "conversion"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/sites/{site_id}/drives/{drive_id}/items/{item_id}/content?format=pdf",
+            "server_url": "https://graph.microsoft.com/v1.0"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "The HTTP path parameters identifying the file.",
+                    "properties": {
+                        "site_id": {
+                            "type": "string",
+                            "description": "The SharePoint site ID. Use GET_SITE_BY_PATH or SEARCH_FOR_SITES to obtain it.",
+                            "examples": [
+                                "contoso.sharepoint.com,12345678-1234-1234-1234-123456789012,87654321-4321-4321-4321-210987654321"
+                            ]
+                        },
+                        "drive_id": {
+                            "type": "string",
+                            "description": "The document library (drive) ID. Pass 'default' to target the default document library, or use LIST_DRIVES_FOR_A_SITE to get a specific drive ID.",
+                            "examples": [
+                                "default",
+                                "b!abc123xyz..."
+                            ]
+                        },
+                        "item_id": {
+                            "type": "string",
+                            "description": "The DriveItem ID of the file to convert. Obtain from LIST_FILES, LIST_FILES_IN_FOLDER, SEARCH_FOR_ITEMS_IN_A_SITE_DRIVE, or GET_FILE_METADATA.",
+                            "examples": [
+                                "01ABCDEFGHIJKLMNOPQRSTUVWXYZ123456"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "site_id",
+                        "drive_id",
+                        "item_id"
+                    ],
+                    "visible": [
+                        "site_id",
+                        "drive_id",
+                        "item_id"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "SHARE_POINT_V2__LIST_EXCEL_WORKSHEETS",
+        "description": "List all worksheets (tabs) in an Excel workbook stored in SharePoint, returning each sheet's id, name, position, and visibility. Use this as the FIRST step when an agent needs to read structured data from an .xlsx file: call this to discover sheet names, then call GET_EXCEL_WORKSHEET_RANGE with the sheet name to read the actual cell values.\n\nWORKS ONLY FOR: .xlsx, .xlsm files (the Microsoft Graph Workbook API does not support .xls, .csv, or other formats). If the target file is not an Excel workbook, the call returns 415 unsupportedMediaType — in that case use GET_FILE_CONTENT_AS_TEXT (for CSV) or DOWNLOAD_FILE (for legacy .xls).\n\nADVANTAGE OVER DOWNLOADING: returns structured JSON — no need to download the file or parse XLSX zip/XML locally.\n\nPREREQUISITES: Resolve site_id, drive_id ('default' is fine), and item_id of the .xlsx file first.",
+        "tags": [
+            "sharepoint",
+            "files",
+            "excel",
+            "workbook",
+            "worksheets",
+            "read"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/sites/{site_id}/drives/{drive_id}/items/{item_id}/workbook/worksheets",
+            "server_url": "https://graph.microsoft.com/v1.0"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "The HTTP path parameters identifying the workbook.",
+                    "properties": {
+                        "site_id": {
+                            "type": "string",
+                            "description": "The SharePoint site ID. Use GET_SITE_BY_PATH or SEARCH_FOR_SITES to obtain it.",
+                            "examples": [
+                                "contoso.sharepoint.com,12345678-1234-1234-1234-123456789012,87654321-4321-4321-4321-210987654321"
+                            ]
+                        },
+                        "drive_id": {
+                            "type": "string",
+                            "description": "The document library (drive) ID. Pass 'default' to target the default document library, or use LIST_DRIVES_FOR_A_SITE to get a specific drive ID.",
+                            "examples": [
+                                "default",
+                                "b!abc123xyz..."
+                            ]
+                        },
+                        "item_id": {
+                            "type": "string",
+                            "description": "The DriveItem ID of the .xlsx workbook. Obtain from LIST_FILES, SEARCH_FOR_ITEMS_IN_A_SITE_DRIVE, or GET_FILE_METADATA.",
+                            "examples": [
+                                "01ABCDEFGHIJKLMNOPQRSTUVWXYZ123456"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "site_id",
+                        "drive_id",
+                        "item_id"
+                    ],
+                    "visible": [
+                        "site_id",
+                        "drive_id",
+                        "item_id"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "SHARE_POINT_V2__GET_EXCEL_WORKSHEET_RANGE",
+        "description": "Read a specific cell range from an Excel worksheet and get back the values, formulas, number formats, and text representations as JSON. This is the BEST way for an AI agent to read Excel data — no download, no parsing, results come pre-structured. The response includes: 'values' (2D array of raw cell values), 'text' (2D array of displayed strings), 'formulas' (2D array of formulas where present), 'numberFormat', 'rowCount', 'columnCount', 'address', and more.\n\nWORKFLOW: First call LIST_EXCEL_WORKSHEETS to discover sheet names, then call this with a sheet name and an A1-style range. To read an entire used range without knowing dimensions, pass a generous range like 'A1:Z1000' — empty cells return null. For very large sheets prefer paging by smaller ranges, or use LIST_EXCEL_TABLES / GET_EXCEL_TABLE_ROWS for structured tables.\n\nWORKS ONLY FOR: .xlsx and .xlsm files. Returns 415 / 404 for non-Excel files or invalid sheet names.\n\nNOTES: Sheet names containing spaces or special characters must still be passed as-is (the path template handles them); the 'address' parameter uses standard A1 notation (e.g., 'A1:D20', 'B5:B100').",
+        "tags": [
+            "sharepoint",
+            "files",
+            "excel",
+            "workbook",
+            "range",
+            "read"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/sites/{site_id}/drives/{drive_id}/items/{item_id}/workbook/worksheets/{worksheet_name}/range(address='{address}')",
+            "server_url": "https://graph.microsoft.com/v1.0"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "The HTTP path parameters identifying the workbook, sheet, and range.",
+                    "properties": {
+                        "site_id": {
+                            "type": "string",
+                            "description": "The SharePoint site ID. Use GET_SITE_BY_PATH or SEARCH_FOR_SITES to obtain it.",
+                            "examples": [
+                                "contoso.sharepoint.com,12345678-1234-1234-1234-123456789012,87654321-4321-4321-4321-210987654321"
+                            ]
+                        },
+                        "drive_id": {
+                            "type": "string",
+                            "description": "The document library (drive) ID. Pass 'default' to target the default document library, or use LIST_DRIVES_FOR_A_SITE to get a specific drive ID.",
+                            "examples": [
+                                "default",
+                                "b!abc123xyz..."
+                            ]
+                        },
+                        "item_id": {
+                            "type": "string",
+                            "description": "The DriveItem ID of the .xlsx workbook. Obtain from LIST_FILES, SEARCH_FOR_ITEMS_IN_A_SITE_DRIVE, or GET_FILE_METADATA.",
+                            "examples": [
+                                "01ABCDEFGHIJKLMNOPQRSTUVWXYZ123456"
+                            ]
+                        },
+                        "worksheet_name": {
+                            "type": "string",
+                            "description": "The worksheet (tab) name or ID. Get the list of sheet names via LIST_EXCEL_WORKSHEETS first.",
+                            "examples": [
+                                "Sheet1",
+                                "Q4 Report",
+                                "Sales Data"
+                            ]
+                        },
+                        "address": {
+                            "type": "string",
+                            "description": "The cell range in A1 notation. To read all populated data without knowing exact dimensions, use a generous range; empty cells will be returned as null.",
+                            "examples": [
+                                "A1:D20",
+                                "B5:B100",
+                                "A1:Z1000"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "site_id",
+                        "drive_id",
+                        "item_id",
+                        "worksheet_name",
+                        "address"
+                    ],
+                    "visible": [
+                        "site_id",
+                        "drive_id",
+                        "item_id",
+                        "worksheet_name",
+                        "address"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "SHARE_POINT_V2__LIST_EXCEL_TABLES",
+        "description": "List all named tables (formatted as Excel Tables / ListObjects) in an Excel workbook. Returns each table's id, name, range, header row visibility, and which worksheet it lives on. Use this when the spreadsheet is organized as one or more structured tables — it's cleaner than reading raw ranges because tables have explicit column headers and known row counts. After listing tables, call GET_EXCEL_TABLE_ROWS with a table name to fetch its rows as structured records.\n\nWORKS ONLY FOR: .xlsx, .xlsm files that contain at least one defined Excel Table. If the workbook has data but no Table objects (just raw cells), this returns an empty list — fall back to GET_EXCEL_WORKSHEET_RANGE in that case.\n\nPREREQUISITES: Resolve site_id, drive_id ('default' is fine), and item_id of the .xlsx file.",
+        "tags": [
+            "sharepoint",
+            "files",
+            "excel",
+            "workbook",
+            "tables",
+            "read"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/sites/{site_id}/drives/{drive_id}/items/{item_id}/workbook/tables",
+            "server_url": "https://graph.microsoft.com/v1.0"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "The HTTP path parameters identifying the workbook.",
+                    "properties": {
+                        "site_id": {
+                            "type": "string",
+                            "description": "The SharePoint site ID. Use GET_SITE_BY_PATH or SEARCH_FOR_SITES to obtain it.",
+                            "examples": [
+                                "contoso.sharepoint.com,12345678-1234-1234-1234-123456789012,87654321-4321-4321-4321-210987654321"
+                            ]
+                        },
+                        "drive_id": {
+                            "type": "string",
+                            "description": "The document library (drive) ID. Pass 'default' to target the default document library, or use LIST_DRIVES_FOR_A_SITE to get a specific drive ID.",
+                            "examples": [
+                                "default",
+                                "b!abc123xyz..."
+                            ]
+                        },
+                        "item_id": {
+                            "type": "string",
+                            "description": "The DriveItem ID of the .xlsx workbook. Obtain from LIST_FILES, SEARCH_FOR_ITEMS_IN_A_SITE_DRIVE, or GET_FILE_METADATA.",
+                            "examples": [
+                                "01ABCDEFGHIJKLMNOPQRSTUVWXYZ123456"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "site_id",
+                        "drive_id",
+                        "item_id"
+                    ],
+                    "visible": [
+                        "site_id",
+                        "drive_id",
+                        "item_id"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "SHARE_POINT_V2__GET_EXCEL_TABLE_ROWS",
+        "description": "Fetch the data rows of a named Excel table as structured JSON. Each row's 'values' is a 2D array (one row × N columns) in the order of the table's columns. Pair with LIST_EXCEL_TABLES (to discover the table name) and optionally with the workbook/tables/{table}/columns endpoint to map column indices to header names.\n\nBEST USE: when the spreadsheet contains an Excel-formatted table (with headers) and the agent needs row-by-row data for analysis, filtering, or summarization without downloading and parsing the .xlsx file. Supports optional $top and $skip query parameters for paging through large tables.\n\nWORKS ONLY FOR: .xlsx, .xlsm files with at least one defined Excel Table. Returns 404 if table_name is wrong or the workbook has no such table — verify names with LIST_EXCEL_TABLES first.\n\nNOTE: This returns DATA ROWS ONLY (excluding the header row). To get column headers, call the columns endpoint or inspect the first row of a range read.",
+        "tags": [
+            "sharepoint",
+            "files",
+            "excel",
+            "workbook",
+            "tables",
+            "rows",
+            "read"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/sites/{site_id}/drives/{drive_id}/items/{item_id}/workbook/tables/{table_name}/rows",
+            "server_url": "https://graph.microsoft.com/v1.0"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "The HTTP path parameters identifying the workbook and table.",
+                    "properties": {
+                        "site_id": {
+                            "type": "string",
+                            "description": "The SharePoint site ID. Use GET_SITE_BY_PATH or SEARCH_FOR_SITES to obtain it.",
+                            "examples": [
+                                "contoso.sharepoint.com,12345678-1234-1234-1234-123456789012,87654321-4321-4321-4321-210987654321"
+                            ]
+                        },
+                        "drive_id": {
+                            "type": "string",
+                            "description": "The document library (drive) ID. Pass 'default' to target the default document library, or use LIST_DRIVES_FOR_A_SITE to get a specific drive ID.",
+                            "examples": [
+                                "default",
+                                "b!abc123xyz..."
+                            ]
+                        },
+                        "item_id": {
+                            "type": "string",
+                            "description": "The DriveItem ID of the .xlsx workbook. Obtain from LIST_FILES, SEARCH_FOR_ITEMS_IN_A_SITE_DRIVE, or GET_FILE_METADATA.",
+                            "examples": [
+                                "01ABCDEFGHIJKLMNOPQRSTUVWXYZ123456"
+                            ]
+                        },
+                        "table_name": {
+                            "type": "string",
+                            "description": "The name or ID of the Excel table. Discover available tables via LIST_EXCEL_TABLES.",
+                            "examples": [
+                                "SalesTable",
+                                "Table1",
+                                "Employees"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "site_id",
+                        "drive_id",
+                        "item_id",
+                        "table_name"
+                    ],
+                    "visible": [
+                        "site_id",
+                        "drive_id",
+                        "item_id",
+                        "table_name"
+                    ],
+                    "additionalProperties": false
+                },
+                "query": {
+                    "type": "object",
+                    "description": "Optional query parameters for paging.",
+                    "properties": {
+                        "$top": {
+                            "type": "integer",
+                            "description": "Max number of rows to return.",
+                            "examples": [
+                                100
+                            ]
+                        },
+                        "$skip": {
+                            "type": "integer",
+                            "description": "Number of rows to skip for pagination.",
+                            "examples": [
+                                0
+                            ]
+                        }
+                    },
+                    "required": [],
+                    "visible": [
+                        "$top",
+                        "$skip"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "visible": [
+                "path",
+                "query"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "SHARE_POINT_V2__RESOLVE_ITEM_FROM_URL",
+        "description": "Resolve a SharePoint URL or sharing link to its DriveItem, returning everything needed (item_id, drive_id, site_id) to address the file with the rest of the toolset. Use this as a SHORTCUT when an agent already has a URL (e.g., a link the user pasted) and wants to skip the GET_SITE_BY_PATH → LIST_DRIVES_FOR_A_SITE → SEARCH_FOR_ITEMS_IN_A_SITE_DRIVE chain.\n\nACCEPTS (either form): (1) A sharing link created by SharePoint/OneDrive's Share button, e.g. 'https://contoso.sharepoint.com/:b:/g/personal/user_contoso_com/ETjwHEdHl41C...'. (2) A direct web URL to a file or folder, e.g. 'https://contoso.sharepoint.com/sites/Marketing/Shared%20Documents/Q4-Report.xlsx'. (3) A share ID previously returned by another Graph call.\n\nENCODING REQUIREMENT (critical): For URLs (cases 1 and 2), the value must be encoded before being placed in the path. The encoding is: base64-encode the URL bytes, then convert to base64url-safe by replacing '+' with '-' and '/' with '_', strip any trailing '=' padding, and prepend the literal 'u!'. Example: the URL 'https://contoso.sharepoint.com/:w:/g/ETjwHEdHl41C' becomes 'u!aHR0cHM6Ly9jb250b3NvLnNoYXJlcG9pbnQuY29tLzp3Oi9nL0VUandIRWRIbDQxQw'. For share IDs (case 3), pass them as-is without the 'u!' prefix.\n\nRESPONSE: Returns a DriveItem JSON object. The fields the agent should extract for downstream calls are: 'id' (use this as item_id), 'parentReference.driveId' (use this as drive_id), 'parentReference.siteId' (use this as site_id when present). The response also includes 'name', 'webUrl', 'size', 'file' or 'folder' facet, 'createdDateTime', 'lastModifiedDateTime', and 'parentReference.path'. If the URL points to a folder, the response has a 'folder' facet; if a file, a 'file' facet with mimeType.\n\nWORKS FOR: sharing links to files or folders on SharePoint Online, OneDrive for Business, and personal OneDrive. Cross-tenant sharing links work if the caller has been granted access.\n\nDOES NOT WORK FOR / CAVEATS: (a) URLs pointing to SharePoint pages, lists, or list items rather than DriveItems — the call returns 404 or an unexpected resource type. (b) URLs to which the caller has no access — returns 401/403 even if the URL is otherwise valid. (c) Personal OneDrive items may return a response without 'parentReference.siteId' — in that case treat siteId as not applicable and use just driveId + itemId for subsequent calls (Graph supports the '/drives/{drive_id}/items/{item_id}' path shape).\n\nPERMISSIONS: Covered by Files.Read, Files.ReadWrite, Files.Read.All, Files.ReadWrite.All, Sites.Read.All, or Sites.ReadWrite.All — no new scope required if the toolset already has Sites.ReadWrite.All.",
+        "tags": [
+          "sharepoint",
+          "files",
+          "url",
+          "sharing",
+          "resolve",
+          "lookup"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+          "method": "GET",
+          "path": "/shares/{share_id_or_encoded_url}/driveItem",
+          "server_url": "https://graph.microsoft.com/v1.0"
+        },
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "object",
+              "description": "The HTTP path parameters.",
+              "properties": {
+                "share_id_or_encoded_url": {
+                  "type": "string",
+                  "description": "Either a raw share ID (pass as-is), or a SharePoint/OneDrive URL encoded as 'u!{base64url-encoded-url}'. Encoding algorithm: base64-encode the URL, replace '+' with '-' and '/' with '_', strip trailing '=' padding, then prepend 'u!'. The 'u!' prefix tells Graph the value is an encoded URL rather than a share ID.",
+                  "examples": [
+                    "u!aHR0cHM6Ly9jb250b3NvLnNoYXJlcG9pbnQuY29tL3NpdGVzL01hcmtldGluZy9TaGFyZWQlMjBEb2N1bWVudHMvUTQtUmVwb3J0Lnhsc3g",
+                    "u!aHR0cHM6Ly9jb250b3NvLnNoYXJlcG9pbnQuY29tLzpiOi9nL3BlcnNvbmFsL3VzZXJfY29udG9zb19jb20vRVRqd0hFZEhsNDFD",
+                    "s!abc123XyzShareId"
+                  ]
+                }
+              },
+              "required": [
+                "share_id_or_encoded_url"
+              ],
+              "visible": [
+                "share_id_or_encoded_url"
+              ],
+              "additionalProperties": false
+            },
+            "query": {
+              "type": "object",
+              "description": "Optional query parameters.",
+              "properties": {
+                "$select": {
+                  "type": "string",
+                  "description": "Comma-separated fields to return. Use this to trim the response to just what the agent needs.",
+                  "examples": [
+                    "id,name,webUrl,parentReference",
+                    "id,parentReference"
+                  ]
+                },
+                "$expand": {
+                  "type": "string",
+                  "description": "Expand related resources. Rarely needed for this endpoint.",
+                  "examples": [
+                    "thumbnails"
+                  ]
+                }
+              },
+              "required": [],
+              "visible": [
+                "$select",
+                "$expand"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "visible": [
+            "path",
+            "query"
+          ],
+          "additionalProperties": false
+        }
     }
 ]
