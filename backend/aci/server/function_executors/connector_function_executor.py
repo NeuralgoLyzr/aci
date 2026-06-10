@@ -1,3 +1,4 @@
+import asyncio
 import importlib
 from typing import Generic, override
 
@@ -34,7 +35,7 @@ class ConnectorFunctionExecutor(FunctionExecutor[TScheme, TCred], Generic[TSchem
     """
 
     @override
-    def _execute(
+    async def _execute(
         self,
         function: Function,
         function_input: dict,
@@ -53,12 +54,12 @@ class ConnectorFunctionExecutor(FunctionExecutor[TScheme, TCred], Generic[TSchem
 
         app_connector_class = self._get_app_connector_class(module_name, class_name)
         logger.info(f"Got app connector class, app_connector_class={app_connector_class}")
-        # TODO: caching? singleton per app per enduser account? executing in a thread pool?
-        # another tricky thing is the access token expiration if using long-live cached objects
         app_connector_instance = app_connector_class(
             self.linked_account, security_scheme, security_credentials
         )
-        return app_connector_instance.execute(method_name, function_input)
+        return await asyncio.to_thread(
+            app_connector_instance.execute, method_name, function_input
+        )
 
     def _get_app_connector_class(self, module_name: str, class_name: str) -> type[AppConnectorBase]:
         """

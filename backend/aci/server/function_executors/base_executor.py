@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
+import asyncio
 
 import jsonschema
 
@@ -28,7 +29,7 @@ class FunctionExecutor(ABC, Generic[TScheme, TCred]):
     # app_instance: AppBase = app_factory.get_app_instance(function_name)
     # app_instance.validate_input(function.parameters, function_execution_params.function_input)
     # return app_instance.execute(function_name, function_execution_params.function_input)
-    def execute(
+    async def execute(
         self,
         function: Function,
         function_input: dict,
@@ -44,7 +45,7 @@ class FunctionExecutor(ABC, Generic[TScheme, TCred]):
         )
         function_input = self._preprocess_function_input(function, function_input)
 
-        return self._execute(function, function_input, security_scheme, security_credentials)
+        return await self._execute(function, function_input, security_scheme, security_credentials)
 
     def _preprocess_function_input(self, function: Function, function_input: dict) -> dict:
         # validate user input against the "visible" parameters
@@ -82,7 +83,7 @@ class FunctionExecutor(ABC, Generic[TScheme, TCred]):
         return function_input
 
     @abstractmethod
-    def _execute(
+    async def _execute(
         self,
         function: Function,
         function_input: dict,
