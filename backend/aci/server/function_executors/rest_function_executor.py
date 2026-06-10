@@ -34,7 +34,7 @@ class RestFunctionExecutor(FunctionExecutor[TScheme, TCred], Generic[TScheme, TC
         pass
 
     @override
-    def _execute(
+    async def _execute(
         self,
         function: Function,
         function_input: dict,
@@ -79,15 +79,17 @@ class RestFunctionExecutor(FunctionExecutor[TScheme, TCred], Generic[TScheme, TC
             f"method={request.method} url={request.url} "
         )
 
-        return self._send_request(request)
+        return await self._send_request(request)
 
-    def _send_request(self, request: httpx.Request) -> FunctionExecutionResult:
-        # TODO: one client for all requests? cache the client? concurrency control? async client?
+    async def _send_request(self, request: httpx.Request) -> FunctionExecutionResult:
+        # TODO: one client for all requests? cache the client? concurrency control?
+        # A new AsyncClient per request still incurs TLS handshake overhead — consider a
+        # shared app-level client (e.g. via lifespan) to amortise connection costs.
         # TODO: add retry
         timeout = httpx.Timeout(10.0, read=300.0)
-        with httpx.Client(timeout=timeout) as client:
+        async with httpx.AsyncClient(timeout=timeout) as client:
             try:
-                response = client.send(request)
+                response = await client.send(request)
             except Exception as e:
                 logger.exception(f"Failed to send function execution http request, error={e}")
                 return FunctionExecutionResult(success=False, error=str(e))
