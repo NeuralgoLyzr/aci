@@ -83,6 +83,8 @@ class RestFunctionExecutor(FunctionExecutor[TScheme, TCred], Generic[TScheme, TC
 
     async def _send_request(self, request: httpx.Request) -> FunctionExecutionResult:
         # TODO: one client for all requests? cache the client? concurrency control?
+        # A new AsyncClient per request still incurs TLS handshake overhead — consider a
+        # shared app-level client (e.g. via lifespan) to amortise connection costs.
         # TODO: add retry
         timeout = httpx.Timeout(10.0, read=300.0)
         async with httpx.AsyncClient(timeout=timeout) as client:

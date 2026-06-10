@@ -57,6 +57,9 @@ class ConnectorFunctionExecutor(FunctionExecutor[TScheme, TCred], Generic[TSchem
         app_connector_instance = app_connector_class(
             self.linked_account, security_scheme, security_credentials
         )
+        # Connectors are synchronous and run in a thread pool to avoid blocking the event loop.
+        # Constraint: connector execute methods must NOT use the route's shared SQLAlchemy session.
+        # They must create their own sessions (via create_db_session) if DB access is needed.
         return await asyncio.to_thread(
             app_connector_instance.execute, method_name, function_input
         )
