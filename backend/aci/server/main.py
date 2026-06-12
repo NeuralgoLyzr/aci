@@ -8,7 +8,7 @@ from fastapi.routing import APIRoute
 from pythonjsonlogger.json import JsonFormatter
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
-from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
+from aci.server.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from aci.common.exceptions import ACIException
 from aci.common.logging_setup import setup_logging
@@ -130,7 +130,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.add_middleware(InterceptorMiddleware)
-app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=[config.APPLICATION_LOAD_BALANCER_DNS])
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=config.TRUSTED_PROXY_HOSTS)
 
 
 # NOTE: generic exception handler (type Exception) for all exceptions doesn't work
