@@ -92,10 +92,10 @@ class OAuth2Scheme(BaseModel):
         default='consent',
         description="Prompt for OAuth2 authorization.",
     )
-    pkce_disabled: bool = Field(
-        default=False,
-        description="Disable PKCE for providers that do not support it, e.g., Oracle IDCS. "
-        "Defaults to False — existing apps without this field continue to use PKCE.",
+    pkce_enabled: bool = Field(
+        default=True,
+        description="Enable PKCE for this app. Set to false for providers that do not support PKCE, e.g., Oracle IDCS. "
+        "Defaults to True — existing apps without this field continue to use PKCE.",
     )
 
 

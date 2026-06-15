@@ -25,7 +25,7 @@ class OAuth2Manager:
         access_token_url: str,
         refresh_token_url: str,
         token_endpoint_auth_method: str | None = None,
-        pkce_disabled: bool = False,
+        pkce_enabled: bool = True,
     ):
         """
         Initialize the OAuth2Manager
@@ -41,8 +41,8 @@ class OAuth2Manager:
             token_endpoint_auth_method:
                 client_secret_basic (default) | client_secret_post | none
                 Additional options can be achieved by registering a custom auth method
-            pkce_disabled: Set to True for providers that do not support PKCE (e.g., Oracle IDCS).
-                Defaults to False so all existing apps continue using PKCE unchanged.
+            pkce_enabled: Set to False for providers that do not support PKCE (e.g., Oracle IDCS).
+                Defaults to True so all existing apps continue using PKCE unchanged.
         """
         self.app_name = app_name
         self.client_id = client_id
@@ -52,7 +52,7 @@ class OAuth2Manager:
         self.access_token_url = access_token_url
         self.refresh_token_url = refresh_token_url
         self.token_endpoint_auth_method = token_endpoint_auth_method
-        self.pkce_disabled = pkce_disabled
+        self.pkce_enabled = pkce_enabled
 
         # TODO: need to close the client after use
         # Add an aclose() helper (or implement __aenter__/__aexit__) and make callers invoke it during shutdown.
@@ -61,7 +61,7 @@ class OAuth2Manager:
             client_id=client_id,
             client_secret=client_secret,
             token_endpoint_auth_method=token_endpoint_auth_method,
-            code_challenge_method=None if pkce_disabled else "S256",
+            code_challenge_method="S256" if pkce_enabled else None,
             # TODO: use update_token callback to save tokens to the database
             update_token=None,
         )
@@ -103,11 +103,13 @@ class OAuth2Manager:
         # - "scope" can be specified here
         # - "response_type" can be specified here (default is "code")
         # - and additional options can be specified here (like access_type, prompt, etc.)
+        # When PKCE is disabled (e.g. Oracle IDCS), code_verifier is intentionally
+        # dropped here. The caller still generates one but it is harmlessly discarded.
         authorization_url, _ = self.oauth2_client.create_authorization_url(
             url=self.authorize_url,
             redirect_uri=redirect_uri,
             state=state,
-            code_verifier=None if self.pkce_disabled else code_verifier,
+            code_verifier=code_verifier if self.pkce_enabled else None,
             access_type=access_type,
             prompt=prompt,
             scope=self.scope,
@@ -141,7 +143,7 @@ class OAuth2Manager:
                     self.access_token_url,
                     redirect_uri=redirect_uri,
                     code=code,
-                    code_verifier=None if self.pkce_disabled else code_verifier,
+                    code_verifier=code_verifier if self.pkce_enabled else None,
                     scope=self.scope,
                 ),
             )
