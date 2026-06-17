@@ -1,3 +1,4 @@
+import os
 from aci.common.utils import check_and_get_env_variable, construct_db_url, construct_db_url_sync
 
 ENVIRONMENT = check_and_get_env_variable("SERVER_ENVIRONMENT")
@@ -68,7 +69,17 @@ RATE_LIMIT_IP_PER_DAY = int(check_and_get_env_variable("SERVER_RATE_LIMIT_IP_PER
 # QUOTA
 PROJECT_DAILY_QUOTA = int(check_and_get_env_variable("SERVER_PROJECT_DAILY_QUOTA"))
 MAX_AGENTS_PER_PROJECT = int(check_and_get_env_variable("SERVER_MAX_AGENTS_PER_PROJECT"))
-APPLICATION_LOAD_BALANCER_DNS = check_and_get_env_variable("SERVER_APPLICATION_LOAD_BALANCER_DNS")
+# Trusted upstream proxy IPs/hostnames/CIDRs for ProxyHeadersMiddleware.
+# Accepts a comma-separated list of exact IPs, hostnames, or CIDR ranges.
+# AWS ALB:          set to the ALB DNS name or IP
+# Azure App GW:     set to the App Gateway subnet CIDR (e.g. "10.200.0.0/24")
+# Falls back to the legacy SERVER_APPLICATION_LOAD_BALANCER_DNS var if set.
+# Defaults to "*" (trust all) when unset — safe behind a private-subnet proxy.
+TRUSTED_PROXY_HOSTS: str = (
+    os.getenv("SERVER_TRUSTED_PROXY_HOSTS")
+    or os.getenv("SERVER_APPLICATION_LOAD_BALANCER_DNS")
+    or "*"
+)
 OAUTH2_CLIENT_CREDENTIALS_FALLBACK_TTL_SECONDS = int(
         check_and_get_env_variable("CLIENT_CREDENTIALS_FALLBACK_TTL_SECONDS")
     )
