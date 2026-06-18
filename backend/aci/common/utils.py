@@ -27,7 +27,11 @@ _db_url_cache: str | None = None
 
 
 def get_db_password_sync() -> str:
-    """Fetches the DB password from AWS Secrets Manager synchronously."""
+    """Returns the DB password — from an env var on Azure (Key Vault CSI injection),
+    or from AWS Secrets Manager on AWS."""
+    if os.getenv("CLOUD_PLATFORM") == "azure":
+        return check_and_get_env_variable("SERVER_DB_PASSWORD")
+
     secret_name = check_and_get_env_variable("DB_SECRET_NAME")
     region_name = check_and_get_env_variable("AWS_REGION_NAME")
 
@@ -38,7 +42,11 @@ def get_db_password_sync() -> str:
 
 
 async def get_db_password() -> str:
-    """Fetches the DB password from AWS Secrets Manager asynchronously."""
+    """Returns the DB password — from an env var on Azure (Key Vault CSI injection),
+    or from AWS Secrets Manager on AWS."""
+    if os.getenv("CLOUD_PLATFORM") == "azure":
+        return check_and_get_env_variable("SERVER_DB_PASSWORD")
+
     secret_name = check_and_get_env_variable("DB_SECRET_NAME")
     region_name = check_and_get_env_variable("AWS_REGION_NAME")
 
