@@ -29,6 +29,9 @@ dependencies = [
     "google-api-python-client>=2.167.0",
     "aws-encryption-sdk[mpl]>=4.0.1",
     "boto3>=1.37.36",
+    "azure-keyvault-keys>=4.9.0",
+    "azure-identity>=1.17.0",
+    "cryptography>=42.0.0",
     "aioboto3>=13.3.0",
     "rich>=13.9.4",
     "propelauth-fastapi>=4.2.6",
@@ -134,6 +137,10 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "e2b_code_interpreter"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "azure.*"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
