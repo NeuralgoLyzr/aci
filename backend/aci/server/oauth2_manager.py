@@ -26,6 +26,7 @@ class OAuth2Manager:
         refresh_token_url: str,
         token_endpoint_auth_method: str | None = None,
         pkce_enabled: bool = True,
+        scope_in_token_exchange: bool = True,
     ):
         """
         Initialize the OAuth2Manager
@@ -43,6 +44,8 @@ class OAuth2Manager:
                 Additional options can be achieved by registering a custom auth method
             pkce_enabled: Set to False for providers that do not support PKCE (e.g., Oracle IDCS).
                 Defaults to True so all existing apps continue using PKCE unchanged.
+            scope_in_token_exchange: Set to False for providers that reject scope in the
+                authorization_code token exchange (e.g., Oracle IDCS). Defaults to True.
         """
         self.app_name = app_name
         self.client_id = client_id
@@ -53,6 +56,7 @@ class OAuth2Manager:
         self.refresh_token_url = refresh_token_url
         self.token_endpoint_auth_method = token_endpoint_auth_method
         self.pkce_enabled = pkce_enabled
+        self.scope_in_token_exchange = scope_in_token_exchange
 
         # TODO: need to close the client after use
         # Add an aclose() helper (or implement __aenter__/__aexit__) and make callers invoke it during shutdown.
@@ -144,7 +148,7 @@ class OAuth2Manager:
                     redirect_uri=redirect_uri,
                     code=code,
                     code_verifier=code_verifier if self.pkce_enabled else None,
-                    scope=self.scope,
+                    scope=self.scope if self.scope_in_token_exchange else None,
                 ),
             )
             return token
