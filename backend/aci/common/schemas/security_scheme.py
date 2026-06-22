@@ -97,6 +97,11 @@ class OAuth2Scheme(BaseModel):
         description="Enable PKCE for this app. Set to false for providers that do not support PKCE, e.g., Oracle IDCS. "
         "Defaults to True — existing apps without this field continue to use PKCE.",
     )
+    scope_in_token_exchange: bool = Field(
+        default=True,
+        description="Whether to include scope in the token exchange request. Set to false for providers that reject "
+        "scope in the authorization_code token exchange, e.g., Oracle IDCS. Defaults to True.",
+    )
 
 
 # NOTE: need to show these fields for custom oauth2 app feature.
