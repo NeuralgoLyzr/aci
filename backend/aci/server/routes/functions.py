@@ -528,7 +528,7 @@ async def execute_function(
     )
 
     # Execute the function
-    execution_result = function_executor.execute(
+    execution_result = await function_executor.execute(
         function,
         function_input,
         security_credentials_response.scheme,
