@@ -755,12 +755,37 @@ async def linked_accounts_oauth2_callback(
 
     path = request.url_for(LINKED_ACCOUNTS_OAUTH2_CALLBACK_ROUTE_NAME).path
     redirect_uri = oauth2_scheme.redirect_url or f"{config.REDIRECT_URI_BASE}{path}"
-    token_response = await oauth2_manager.fetch_token(
-        redirect_uri=redirect_uri,
-        code=code,
-        code_verifier=state.code_verifier,
-    )
-    security_credentials = oauth2_manager.parse_fetch_token_response(token_response)
+    try:
+        token_response = await oauth2_manager.fetch_token(
+            redirect_uri=redirect_uri,
+            code=code,
+            code_verifier=state.code_verifier,
+        )
+    except OAuth2Error as e:
+        logger.exception(
+            f"Token exchange failed during OAuth2 callback, "
+            f"app_name={state.app_name}, "
+            f"app_id={state.app_id}, "
+            f"project_id={state.project_id}, "
+            f"linked_account_owner_id={state.linked_account_owner_id}, "
+            f"access_token_url={oauth2_scheme.access_token_url}, "
+            f"redirect_uri={redirect_uri}, "
+            f"error={e}"
+        )
+        raise
+
+    try:
+        security_credentials = oauth2_manager.parse_fetch_token_response(token_response)
+    except OAuth2Error as e:
+        logger.exception(
+            f"Failed to parse token response during OAuth2 callback, "
+            f"app_name={state.app_name}, "
+            f"app_id={state.app_id}, "
+            f"project_id={state.project_id}, "
+            f"linked_account_owner_id={state.linked_account_owner_id}, "
+            f"error={e}"
+        )
+        raise
 
     # if the linked account already exists, update it, otherwise create a new one
     # TODO: consider separating the logic for updating and creating a linked account or give warning to clients
