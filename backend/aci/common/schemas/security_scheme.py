@@ -13,7 +13,7 @@ class OAuth2FlowType(StrEnum):
     CLIENT_CREDENTIALS = "client_credentials"
 
 
-class APIKeyScheme(BaseModel):
+class APIKeyScheme(BaseModel, extra="forbid"):
     location: HttpLocation = Field(
         ...,
         description="The location of the API key in the request, e.g., 'header'",
@@ -33,7 +33,7 @@ class APIKeySchemePublic(BaseModel):
     pass
 
 
-class OAuth2Scheme(BaseModel):
+class OAuth2Scheme(BaseModel, extra="forbid"):
     # TODO: consider providing a default value for in_, name, prefix as they are usually the same for most apps
     location: HttpLocation = Field(
         ...,
