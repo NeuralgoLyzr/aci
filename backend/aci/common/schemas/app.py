@@ -44,6 +44,7 @@ class AppUpsert(BaseModel, extra="forbid"):
     ]
 
     @field_validator("name")
+    @classmethod
     def validate_name(cls, v: str) -> str:
         if not re.match(r"^[A-Z0-9_]+$", v) or "__" in v:
             raise PydanticCustomError(
@@ -53,6 +54,7 @@ class AppUpsert(BaseModel, extra="forbid"):
         return v
 
     @field_validator("security_schemes", mode="before")
+    @classmethod
     def validate_security_schemes(
         cls, v: Any
     ) -> dict[SecurityScheme, APIKeyScheme | OAuth2Scheme | NoAuthScheme]:
