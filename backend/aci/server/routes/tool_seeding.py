@@ -20,7 +20,6 @@ from aci.common.db import crud
 from aci.common.db.sql_models import App, Function
 from aci.server import config, dependencies as deps
 from aci.server.acl import get_propelauth
-from aci.common.enums import Visibility
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.app import AppDetails
 from aci.common.schemas.function import FunctionDetails
