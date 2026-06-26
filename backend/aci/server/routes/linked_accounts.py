@@ -769,8 +769,7 @@ async def linked_accounts_oauth2_callback(
             f"project_id={state.project_id}, "
             f"linked_account_owner_id={state.linked_account_owner_id}, "
             f"access_token_url={oauth2_scheme.access_token_url}, "
-            f"redirect_uri={redirect_uri}, "
-            f"error={e}"
+            f"redirect_uri={redirect_uri}"
         )
         raise
 
@@ -782,8 +781,7 @@ async def linked_accounts_oauth2_callback(
             f"app_name={state.app_name}, "
             f"app_id={state.app_id}, "
             f"project_id={state.project_id}, "
-            f"linked_account_owner_id={state.linked_account_owner_id}, "
-            f"error={e}"
+            f"linked_account_owner_id={state.linked_account_owner_id}"
         )
         raise
 

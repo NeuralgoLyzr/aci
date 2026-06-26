@@ -4,7 +4,6 @@ from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
-from pydantic_core import PydanticCustomError
 
 from aci.common.enums import SecurityScheme, Visibility
 from aci.common.schemas.function import BasicFunctionDefinition, FunctionDetails
@@ -47,9 +46,8 @@ class AppUpsert(BaseModel, extra="forbid"):
     @classmethod
     def validate_name(cls, v: str) -> str:
         if not re.match(r"^[A-Z0-9_]+$", v) or "__" in v:
-            raise PydanticCustomError(
-                "name_format_error",
-                "name must be uppercase, contain only letters, numbers and underscores, and not have consecutive underscores",
+            raise ValueError(
+                "name must be uppercase, contain only letters, numbers and underscores, and not have consecutive underscores"
             )
         return v
 
@@ -67,7 +65,7 @@ class AppUpsert(BaseModel, extra="forbid"):
         without re-running union validation.
         """
         if not isinstance(v, dict):
-            raise PydanticCustomError("security_scheme_error", "must be a dict")
+            raise ValueError("must be a dict")
 
         valid_types = ", ".join(s.value for s in SecurityScheme)
         errors: list[str] = []
@@ -99,7 +97,7 @@ class AppUpsert(BaseModel, extra="forbid"):
                     errors.append(f"{path}: {err['msg']}")
 
         if errors:
-            raise PydanticCustomError("security_scheme_error", "{message}", {"message": "; ".join(errors)})
+            raise ValueError("; ".join(errors))
 
         return result
 
