@@ -21,7 +21,7 @@ from aci.common.db.sql_models import App, Function
 from aci.server import config, dependencies as deps
 from aci.server.acl import get_propelauth
 from aci.common.logging_setup import get_logger
-from aci.common.schemas.app import AppDetails, AppUpsert
+from aci.common.schemas.app import AppDetails
 from aci.common.schemas.function import FunctionDetails
 from propelauth_fastapi import User
 
@@ -480,8 +480,6 @@ async def upsert_app_from_json(
     This allows users to paste app.json content directly instead of requiring file paths.
     """
     try:
-        AppUpsert.model_validate(request.app_json)
-
         # Create temporary file with the app JSON content
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
             json.dump(request.app_json, f, indent=2)
