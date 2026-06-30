@@ -222,19 +222,31 @@ class OAuth2Manager:
         client_id: str,
         client_secret: str,
         scope: str,
+        token_endpoint_auth_method: str | None = None,
     ) -> dict[str, Any]:
-        """Exchange client_id + client_secret for an access token using client_credentials grant."""
+        """Exchange client_id + client_secret for an access token using client_credentials grant.
+
+        token_endpoint_auth_method:
+          - "client_secret_basic": credentials sent as HTTP Basic Auth header (e.g. Commercetools)
+          - None / anything else: credentials sent in the request body (default, backward-compatible)
+        """
         try:
             async with httpx.AsyncClient(timeout=httpx.Timeout(10.0, read=300.0)) as client:
-                data: dict[str, str] = {
-                    "grant_type": "client_credentials",
-                    "client_id": client_id,
-                    "client_secret": client_secret,
-                }
+                data: dict[str, str] = {"grant_type": "client_credentials"}
+                httpx_auth = None
+
+                if token_endpoint_auth_method == "client_secret_basic":
+                    # Credentials go in Authorization: Basic header, not the body
+                    httpx_auth = (client_id, client_secret)
+                else:
+                    # Default (client_secret_post): credentials in request body
+                    data["client_id"] = client_id
+                    data["client_secret"] = client_secret
+
                 if scope:
                     data["scope"] = scope
 
-                response = await client.post(token_url, data=data)
+                response = await client.post(token_url, data=data, auth=httpx_auth)
                 if not response.is_success:
                     logger.error(
                         f"client_credentials token request failed, "

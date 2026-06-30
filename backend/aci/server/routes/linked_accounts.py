@@ -935,6 +935,7 @@ async def link_oauth2_client_credentials_account(
         client_id=client_id,
         client_secret=client_secret,
         scope=scope,
+        token_endpoint_auth_method=oauth2_scheme.token_endpoint_auth_method,
     )
 
     expires_at = scm.resolve_oauth2_expires_at(
