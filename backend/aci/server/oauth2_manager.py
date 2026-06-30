@@ -238,18 +238,30 @@ class OAuth2Manager:
                 if token_endpoint_auth_method == "client_secret_basic":
                     # Credentials go in Authorization: Basic header, not the body
                     httpx_auth = (client_id, client_secret)
+                    logger.info(
+                        f"[fetch_client_credentials_token] using client_secret_basic (HTTP Basic Auth), "
+                        f"token_url={token_url}, scope={scope}"
+                    )
                 else:
                     # Default (client_secret_post): credentials in request body
                     data["client_id"] = client_id
                     data["client_secret"] = client_secret
+                    logger.info(
+                        f"[fetch_client_credentials_token] using client_secret_post (body), "
+                        f"token_url={token_url}, scope={scope}"
+                    )
 
                 if scope:
                     data["scope"] = scope
 
                 response = await client.post(token_url, data=data, auth=httpx_auth)
+                logger.info(
+                    f"[fetch_client_credentials_token] response status={response.status_code}, "
+                    f"token_url={token_url}"
+                )
                 if not response.is_success:
                     logger.error(
-                        f"client_credentials token request failed, "
+                        f"[fetch_client_credentials_token] token request failed, "
                         f"token_url={token_url}, status={response.status_code}, "
                         f"response_body={response.text}"
                     )
@@ -259,7 +271,7 @@ class OAuth2Manager:
             raise
         except Exception as e:
             logger.error(
-                f"Failed to fetch client_credentials token, token_url={token_url}, error={e}"
+                f"[fetch_client_credentials_token] exception, token_url={token_url}, error={e}"
             )
             raise OAuth2Error("Failed to fetch client_credentials token") from e
 

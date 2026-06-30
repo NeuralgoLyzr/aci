@@ -929,6 +929,14 @@ async def link_oauth2_client_credentials_account(
     else:
         token_url = f"https://login.microsoftonline.com/{body.tenant_id}/oauth2/v2.0/token"
 
+    logger.info(
+        f"[client_credentials] app={body.app_name}, "
+        f"token_url={token_url}, "
+        f"token_endpoint_auth_method={oauth2_scheme.token_endpoint_auth_method}, "
+        f"scope={scope}, "
+        f"client_id_source={'body' if body.client_id else 'scheme'}"
+    )
+
     # Fetch token using client_credentials grant
     token_response = await OAuth2Manager.fetch_client_credentials_token(
         token_url=token_url,
