@@ -160,6 +160,9 @@ class OAuth2Manager:
             f"redirect_uri_sent={effective_redirect_uri}, "
             f"scope_sent={effective_scope}, "
             f"code_verifier_sent={effective_code_verifier is not None}, "
+            # NOTE: this is the single-use, short-lived authorization code (not an access/refresh
+            # token), and only its first 8 chars are logged, purely to correlate log lines with a
+            # specific exchange attempt without exposing the full code.
             f"code_prefix={code[:8]}..."
         )
 
