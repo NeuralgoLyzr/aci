@@ -102,6 +102,12 @@ class OAuth2Scheme(BaseModel):
         description="Whether to include scope in the token exchange request. Set to false for providers that reject "
         "scope in the authorization_code token exchange, e.g., Oracle IDCS. Defaults to True.",
     )
+    redirect_uri_in_token_exchange: bool = Field(
+        default=True,
+        description="Whether to include redirect_uri in the authorization_code token exchange request. Set to "
+        "false for providers whose confidential/trusted clients reject redirect_uri in the token exchange "
+        "(it's only expected for public clients that lack Basic auth), e.g., Oracle IDCS. Defaults to True.",
+    )
 
 
 # NOTE: need to show these fields for custom oauth2 app feature.
